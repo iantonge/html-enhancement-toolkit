@@ -2,14 +2,23 @@
 <html>
   <head>
     <title>html enhancement toolkit - {{title}}</title>
-    <link rel='stylesheet' href='/css/pico.css' />
+    <link rel='stylesheet' href='/css/simple.css' />
+    <script type="importmap" nonce="{{cspNonce}}">
+      {
+        "imports": {
+          "@preact/signals-core": "/preact-signals/signals-core.module.js",
+          "het": "/het/toolkit.js"
+        }
+      }
+    </script>
   </head>
   <body>
-    <div class="container">
+    <main>
       {{{body}}}
-    </div>
-    <script type="module">
-      import { init } from '/js/toolkit.js';
+    </main>
+    {{> het-components-config }}
+    <script type="module" nonce="{{cspNonce}}">
+      import { init } from 'het';
       init();
     </script>
   </body>

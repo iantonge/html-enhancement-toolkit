@@ -1,2 +1,62 @@
 <h1>{{title}}</h1>
 <p>Welcome to {{title}}</p>
+
+{{> components/tabs tabs=tabs}}
+
+{{> components/new-counter}}
+
+<div het-component="counter">
+  <button het-on="click=increment">+</button>
+  <span het-ref="value"></span>
+</div>
+
+<div het-component="counter2">
+  <button type="button" het-on="click=decrement">-</button>
+  <span het-props="textContent=count:seed[int]" het-class="is-odd=isOdd">1</span>
+  <button type="button" het-on="click=increment">+</button>
+</div>
+
+<div het-component="sliders">
+  <input type="range" name="foo" min="0" max="11" het-model="sliderValue" value="5" />
+  <input type="range" name="bar" min="0" max="11" het-model="sliderValue:seed[int]" value="5" />
+</div>
+
+<style nonce="{{cspNonce}}">
+  .is-odd {
+    background-color: red;
+  }
+</style>
+<script type="module" nonce="{{cspNonce}}">
+  import { registerComponent } from 'het';
+  import { signal, effect } from '@preact/signals-core';
+
+  registerComponent('counter', {
+    setup({ refs }) {
+      const count = signal(0)
+      effect(() => {
+        refs.value.textContent = count.value
+      })
+      return {
+        increment: () => count.value++
+      }
+    }
+  });
+
+  registerComponent('counter2', {
+    setup({ signals }) {
+      signals.isOdd = signal(signals.count.value % 2)
+      return {
+        increment: () => {
+          signals.count.value++
+          signals.isOdd.value = signals.count.value % 2
+        },
+        decrement: () => {
+          signals.count.value--
+          signals.isOdd.value = signals.count.value % 2
+        }
+      }
+    }
+  });
+
+  registerComponent('sliders')
+</script>

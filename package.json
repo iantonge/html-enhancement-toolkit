@@ -6,10 +6,16 @@
     "build": "node build.js",
     "test-app": "node ./test-app/app.js"
   },
+  "peerDependencies": {
+    "@preact/signals-core": "^1.12.1"
+  },
   "devDependencies": {
-    "@picocss/pico": "^2.1.1",
-    "esbuild": "^0.25.8",
-    "express": "^5.1.0",
-    "hbs": "^4.2.0"
+    "@preact/signals-core": "^1.12.1",
+    "esbuild": "^0.27.2",
+    "express": "^5.2.1",
+    "fast-glob": "^3.3.3",
+    "hbs": "^4.2.0",
+    "helmet": "^8.1.0",
+    "simpledotcss": "^2.3.7"
   }
 }

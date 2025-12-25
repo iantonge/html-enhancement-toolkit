@@ -1,0 +1,75 @@
+{{#*inline "het:template"}}
+<div het-component="tabs">
+  <ul role="tablist" het-on="keydown=onTablistKeydown">
+    {{#each tabs}}
+    <li role="presentation">
+      {{#if this.selected}}
+      <a role="tab" href="#{{this.panelId}}" id="{{this.tabId}}" het-on="click=onTablistClick" aria-selected="true">{{this.label}}</a>
+      {{else}}
+      <a role="tab" href="#{{this.panelId}}" id="{{this.tabId}}" het-on="click=onTablistClick">{{this.label}}</a>
+      {{/if}}
+    </li>
+    {{/each}}
+  </ul>
+  {{#each tabs}}
+    {{#if this.selected}}
+    <div role="tabpanel" id="{{this.panelId}}" aria-labelledby="{{this.tabId}}">
+      {{this.content}}
+    </div>
+    {{else}}
+    <div role="tabpanel" id="{{this.panelId}}" aria-labelledby="{{this.tabId}}" hidden="hidden">
+      {{this.content}}
+    </div>
+    {{/if}}
+  {{/each}}
+</div>
+{{/inline}}
+
+{{#*inline "het:config"}}
+<script type="module" nonce="{{cspNonce}}">
+  import { registerComponent } from 'het';
+
+  registerComponent('tabs', {
+    setup({ el }) {
+      const tabs = Array.from(el.querySelectorAll(':scope > [role=tablist] > li > [role=tab]'))
+      const panels = Array.from(el.querySelectorAll(':scope > [role=tabpanel]'))
+      let selectedIndex = tabs.findIndex(t => t.getAttribute('aria-selected') === 'true');
+
+      return {
+        onTablistKeydown(e) {
+          const offset = e.which === 37 ? - 1 // left arrow
+            : e.which === 39 ? + 1 // right arrow
+            : null;
+
+          if (offset !== null) {
+            e.preventDefault()
+            this.selectPanel(selectedIndex + offset)
+          }
+        },
+        onTablistClick(e) {
+          e.preventDefault()
+          this.selectPanel(tabs.indexOf(e.target))
+        },
+        selectPanel(newIndex) {
+          if (newIndex < 0) newIndex = tabs.length - 1
+          if (newIndex >= tabs.length) newIndex = 0
+          const currentTab = selectedIndex >= 0
+            ? tabs[selectedIndex]
+            : undefined
+          const newTab = tabs[newIndex]
+          if(currentTab) {
+            currentTab.removeAttribute('aria-selected');
+            currentTab.setAttribute('tabindex', '-1');
+            panels[selectedIndex].hidden = true;
+          }
+          newTab.focus()
+          newTab.removeAttribute('tabindex')
+          newTab.setAttribute('aria-selected', 'true')
+          panels[newIndex].hidden = false
+          selectedIndex = newIndex
+        }
+      }
+    }
+  });
+</script>
+{{/inline}}
