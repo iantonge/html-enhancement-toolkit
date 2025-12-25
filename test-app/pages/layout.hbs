@@ -2,15 +2,78 @@
 <html>
   <head>
     <title>html enhancement toolkit - {{title}}</title>
-    <link rel='stylesheet' href='/css/pico.css' />
+    <link rel='stylesheet' href='/css/bootstrap.css' />
+    <script type="importmap" nonce="{{cspNonce}}">
+      {
+        "imports": {
+          "@preact/signals-core": "/js/preact-signals/signals-core.module.js",
+          "het": "/js/het/toolkit.js",
+          "idiomorph": "/js/idiomorph/idiomorph.esm.js",
+          "dompurify": "/js/dompurify/purify.es.mjs"
+        }
+      }
+    </script>
+    <script
+      src="/js/trusted-types/trustedtypes.build.js"
+      nonce="{{cspNonce}}"
+      data-csp="trusted-types het dompurify; require-trusted-types-for 'script'">
+    </script>
+    <style nonce="{{cspNonce}}">
+      .het-busy {
+        position: relative;
+      }
+      .het-busy::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: rgba(255, 255, 255, 0.6);
+        backdrop-filter: blur(1px);
+        z-index: 2;
+      }
+      .het-busy::before {
+        content: "Loading…";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 3;
+        padding: 0.35rem 0.75rem;
+        background: rgba(0, 0, 0, 0.7);
+        color: #fff;
+        border-radius: 0.35rem;
+        font-size: 0.9rem;
+      }
+    </style>
   </head>
-  <body>
-    <div class="container">
+  <body class="bg-light">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+      <div class="container-fluid">
+        <a class="navbar-brand fw-semibold" href="/">HET Test Application</a>
+      </div>
+    </nav>
+    <main id="main" class="container-fluid py-4">
       {{{body}}}
-    </div>
-    <script type="module">
-      import { init } from '/js/toolkit.js';
-      init();
+    </main>
+    {{> het-components-config }}
+    <script type="module" nonce="{{cspNonce}}">
+      import { init } from 'het';
+      import { Idiomorph } from 'idiomorph';
+      import DOMPurify from 'dompurify';
+
+      const cspNonce = "{{cspNonce}}";
+
+      const policy = globalThis.trustedTypes.createPolicy("het", {
+        createHTML: (html) => DOMPurify.sanitize(html, { RETURN_TRUSTED_TYPE: false }),
+      });
+
+      init({
+        nonce: cspNonce,
+        replaceContent: (elToReplace, replacementEl) => {
+          Idiomorph.morph(elToReplace, replacementEl)
+          return elToReplace
+        },
+        trustedTypesPolicy: policy
+      });
     </script>
   </body>
 </html>

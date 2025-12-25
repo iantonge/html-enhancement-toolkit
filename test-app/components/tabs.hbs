@@ -1,0 +1,114 @@
+{{#*inline "het:template"}}
+<div het-component="tabs" het-exports="currentlySelectedIndex">
+  <ul class="nav nav-tabs" role="tablist" het-on="keydown=onTablistKeydown">
+    {{#each tabs}}
+    <li class="nav-item" role="presentation">
+      <a
+        het-component="tabs-tab"
+        het-imports="currentlySelectedIndex"
+        het-class="active=isSelected"
+        het-attrs="aria-selected=ariaSelected tabindex=tabIndex"
+        het-on="click=onClick"
+        class="nav-link {{#if this.selected}}active{{/if}}"
+        role="tab"
+        href="#{{this.panelId}}"
+        id="{{this.tabId}}"
+        data-tabs-index="{{@index}}"
+        aria-selected="{{#if this.selected}}true{{else}}false{{/if}}"
+        tabindex="{{#if this.selected}}0{{else}}-1{{/if}}"
+      >{{this.label}}</a>
+    </li>
+    {{/each}}
+  </ul>
+  <div class="tab-content">
+    {{#each tabs}}
+      <div
+        het-component="tabs-panel"
+        het-imports="currentlySelectedIndex"
+        het-class="show=isSelected active=isSelected"
+        het-bool-attrs="hidden=isHidden"
+        class="tab-pane fade {{#if this.selected}}show active{{/if}}"
+        role="tabpanel"
+        id="{{this.panelId}}"
+        aria-labelledby="{{this.tabId}}"
+        data-tabs-index="{{@index}}"
+        {{#unless this.selected}}hidden{{/unless}}
+      >
+        {{this.content}}
+      </div>
+    {{/each}}
+  </div>
+</div>
+{{/inline}}
+
+{{#*inline "het:config"}}
+<script type="module" nonce="{{cspNonce}}">
+  import { registerComponent } from 'het';
+  import { signal, computed } from '@preact/signals-core';
+
+  registerComponent('tabs', {
+    setup({ el, signals }) {
+      const tabs = Array.from(
+        el.querySelectorAll(':scope > [role=tablist] > li > [role=tab]')
+      );
+
+      let selectedIndex = tabs.findIndex(
+        (t) => t.getAttribute('aria-selected') === 'true'
+      );
+      if (selectedIndex < 0) selectedIndex = 0;
+
+      signals.currentlySelectedIndex = signal(selectedIndex);
+
+      return {
+        onTablistKeydown(e) {
+          const offset = e.which === 37 ? - 1 // left arrow
+            : e.which === 39 ? + 1 // right arrow
+            : null;
+
+          if (offset !== null) {
+            e.preventDefault()
+            this.selectPanel(signals.currentlySelectedIndex.value + offset)
+          }
+        },
+        selectPanel(newIndex) {
+          if (newIndex < 0) newIndex = tabs.length - 1
+          if (newIndex >= tabs.length) newIndex = 0
+          signals.currentlySelectedIndex.value = newIndex;
+          tabs[newIndex]?.focus();
+        }
+      }
+    }
+  });
+
+  registerComponent('tabs-tab', {
+    setup({ el, signals }) {
+      const tabIndex = parseInt(el.dataset.tabsIndex || '0', 10);
+
+      signals.isSelected = computed(
+        () => signals.currentlySelectedIndex.value === tabIndex
+      );
+      signals.ariaSelected = computed(() => (signals.isSelected.value ? 'true' : 'false'));
+      signals.tabIndex = computed(() => (signals.isSelected.value ? '0' : '-1'));
+
+      return {
+        onClick(e) {
+          e.preventDefault();
+          signals.currentlySelectedIndex.value = tabIndex;
+          el.focus();
+        },
+      };
+    },
+  });
+
+  registerComponent('tabs-panel', {
+    setup({ el, signals }) {
+      const tabIndex = parseInt(el.dataset.tabsIndex || '0', 10);
+
+      signals.isSelected = computed(
+        () => signals.currentlySelectedIndex.value === tabIndex
+      );
+      signals.isHidden = computed(() => !signals.isSelected.value);
+    },
+  });
+</script>
+{{/inline}}

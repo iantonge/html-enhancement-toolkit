@@ -1,2 +1,39 @@
-<h1>{{title}}</h1>
-<p>Welcome to {{title}}</p>
+<div class="row g-4">
+  <div class="col-lg-7 d-flex flex-column gap-4">
+    <section class="card shadow-sm border-0">
+      <div class="card-body">
+        <p class="text-uppercase text-muted small fw-semibold mb-1">HTML Enhancement Toolkit</p>
+        <h1 class="h3 mb-3">Small, declarative sprinkles on server-rendered HTML</h1>
+        <p class="mb-0">
+          This sample page renders a couple of components from <code>test-app/components</code> and wires in their
+          client-side behavior via <code>het</code>. Inspect the markup to see the <code>het-*</code> attributes that
+          connect the DOM to the component logic defined in the bundled config.
+        </p>
+      </div>
+    </section>
+
+    <section class="card shadow-sm border-0">
+      <div class="card-body">
+        <h2 class="h5 mb-3">Tabs component</h2>
+        <p class="text-muted">
+          The tabs below are rendered on the server using data passed to the template. Focus them and use the arrow keys
+          to cycle between panels; the component handles accessibility state and transitions.
+        </p>
+        {{> components/tabs tabs=tabs }}
+      </div>
+    </section>
+  </div>
+
+  <div class="col-lg-5">
+    <section class="card shadow-sm border-0">
+      <div class="card-body">
+        <h2 class="h5 mb-3">Counter component</h2>
+        <p class="text-muted">
+          Buttons invoke methods registered in the component setup, updating a signal-backed counter without a page
+          refresh.
+        </p>
+        {{> components/counter }}
+      </div>
+    </section>
+  </div>
+</div>

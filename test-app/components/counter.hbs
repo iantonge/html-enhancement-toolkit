@@ -1,0 +1,27 @@
+{{#*inline "het:template"}}
+<div het-component="counter">
+  <button type="button" class="btn btn-primary" het-on="click=decrement">-</button>
+  <span class="badge bg-secondary" het-props="textContent=count:seed[int]">1</span>
+  <button type="button" class="btn btn-primary" het-on="click=increment">+</button>
+</div>
+{{/inline}}
+
+{{#*inline "het:config"}}
+<script type="module" nonce="{{cspNonce}}">
+  import { registerComponent } from 'het';
+
+  registerComponent('counter', {
+    setup({ signals }) {
+      return {
+        increment: () => signals.count.value++,
+        decrement: () => signals.count.value--
+      }
+    }
+  });
+</script>
+<style nonce="{{cspNonce}}">
+  [het-component="counter"] {
+    background-color: greenyellow;
+  }
+</style>
+{{/inline}}
