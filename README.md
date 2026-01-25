@@ -36,7 +36,52 @@ import { init } from 'het';
 init();
 ```
 
-### Developing HET
+## Config
+
+The `init` function accepts an optional config object which can be used to customize the behavioiur of HET. It accepts the followin options:
+
+### `onError(error)`
+
+Handle internal errors with your own logging/reporting. Signature: `(error: Error | DOMException | unknown) => void`. Default behavior is to rethrow; return value is ignored.
+
+```js
+window.HET.init({
+  onError: (error) => {
+    console.error("HET caught error", error);
+    // Forward to your telemetry here
+  },
+});
+```
+
+## Link enhancement
+
+HET can progressively enhance links by replacing the contents of a target **pane** with HTML fetched from the linked page. A pane is any element marked with `het-pane="<name>"`. Links opt into enhancement by pointing at a pane with `het-target="<name>"`.
+
+```html
+<main het-pane="main">
+  <a href="/next" het-target="main">Next page</a>
+</main>
+```
+
+### Pane requirements
+
+- The current document must contain exactly one pane with the target name.
+- The response HTML must also contain exactly one pane with the same name.
+- If the pane is missing or duplicated in either place, HET throws an error.
+
+### When HET will not intercept
+
+- Links to another origin are not enhanced.
+- Links with a `target` attribute are not enhanced.
+- Modifier clicks (Ctrl, Cmd, Shift, or middle click) are not enhanced.
+
+### Things to keep in mind
+
+- HET replaces the pane element itself with the server response pane.
+- If you click inside nested elements (spans, icons), HET still finds the
+  nearest ancestor `<a>` with `het-target`.
+
+## Developing HET
 
 Project layout:
 - `src/` source modules (built into `dist/`).

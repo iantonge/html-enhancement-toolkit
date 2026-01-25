@@ -1,9 +1,11 @@
-function init() {
-  // Placeholder for future module initialization.
+import { init as initRequests, destroy as destroyRequests } from './requests.js';
+
+function init(config) {
+  initRequests(config);
 }
 
 function destroy() {
-  // Placeholder for future module cleanup.
+  destroyRequests();
 }
 
 export { init, destroy };
