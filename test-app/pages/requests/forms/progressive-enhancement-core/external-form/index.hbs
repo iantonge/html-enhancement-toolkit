@@ -1,0 +1,21 @@
+<section het-pane="main" class="card shadow-sm border-0">
+  <div class="card-body">
+    <h1 class="h4 mb-3">{{title}}</h1>
+    <form id="form" method="get" action="/requests/forms/progressive-enhancement-core/get-form" het-target="main">
+      <div class="mb-2">
+        <input id="field" type="text" name="some-field" value="external value" class="form-control" />
+      </div>
+      <button id="form-submit" type="submit" class="btn btn-outline-secondary">Form submit</button>
+    </form>
+    <button
+      id="external-submit"
+      type="submit"
+      form="form"
+      formaction="https://example.com/submit"
+      het-target="main"
+      class="btn btn-danger mt-3"
+    >
+      External submit
+    </button>
+  </div>
+</section>

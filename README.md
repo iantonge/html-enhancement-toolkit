@@ -81,6 +81,28 @@ HET can progressively enhance links by replacing the contents of a target **pane
 - If you click inside nested elements (spans, icons), HET still finds the
   nearest ancestor `<a>` with `het-target`.
 
+## Form enhancement
+
+Forms can be progressively enhanced using the same pane targeting. Put `het-target` on the form or on an individual submit button.
+
+```html
+<form method="get" action="/search" het-target="main">
+  <input name="q" />
+  <button type="submit">Search</button>
+</form>
+```
+
+### Form rules and behavior
+
+- HET respects default browser form behavior, including:
+  - `formaction` and `formmethod` on the clicked submit button, falling back to the form attributes.
+  - `formenctype` on the clicked submit button, falling back to the form `enctype`, with the same defaults as a native form submission.
+  - Submitter name/value pairs are included in the request.
+  - Missing `method` defaults to `GET`, missing `action` defaults to the current URL.
+- `het-target` on the submit button overrides the form's `het-target`.
+- Only same-origin form submissions are enhanced.
+- The response must include exactly one matching pane (same rules as links).
+
 ## Developing HET
 
 Project layout:

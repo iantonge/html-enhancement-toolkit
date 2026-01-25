@@ -13,6 +13,16 @@ const clickPipeline = async (event) => {
   }
 };
 
+const submitPipeline = async (event) => {
+  try {
+    const ctx = getSubmitContext(event);
+    if (!ctx) return;
+    await fetchAndSwap(ctx.request, ctx.targetName, ctx.targetEl);
+  } catch (error) {
+    onError(error);
+  }
+};
+
 const fetchAndSwap = async (request, targetName, targetEl) => {
   const response = await fetch(request);
   const responseHtml = await response.text();
@@ -56,6 +66,75 @@ const getClickContext = (event) => {
   return { request, targetName, targetEl };
 };
 
+const getSubmitContext = (event) => {
+  const targetName =
+    event.submitter?.getAttribute("het-target") ||
+    event.target.getAttribute("het-target");
+  if (!targetName) return;
+  event.preventDefault();
+  const method = (
+    event.submitter?.getAttribute('formmethod') ||
+    event.target.getAttribute('method') ||
+    'GET'
+  ).toUpperCase();
+  const action =
+    event.submitter?.getAttribute('formaction') ||
+    event.target.getAttribute('action') ||
+    window.location.href;
+  const enctype = (
+    event.submitter?.getAttribute('formenctype') ||
+    event.target.getAttribute('enctype') ||
+    'application/x-www-form-urlencoded'
+  ).toLowerCase();
+  if (new URL(action, window.location.origin).origin !== window.location.origin)
+    throw new Error(
+      'HET error: Cannot progressively enhance cross-origin form submissions',
+    );
+  const formData = new FormData(event.target, event.submitter);
+  const request =
+    method === 'GET'
+      ? buildGetRequest(action, formData)
+      : buildPostRequest(action, method, formData, enctype);
+  const targetEl = getTarget(targetName);
+  return { request, targetName, targetEl };
+};
+
+const buildGetRequest = (action, formData) => {
+  const url = new URL(action, window.location.origin);
+  const params = new URLSearchParams(formData);
+  if (params.size) url.search = `?${params.toString()}`;
+  return new Request(url.href, { method: 'GET' });
+};
+
+const buildPostRequest = (action, method, formData, enctype) => {
+  if (enctype === 'multipart/form-data') {
+    return new Request(action, {
+      method,
+      body: formData,
+    });
+  }
+  if (enctype === 'text/plain') {
+    const textBody = Array.from(formData.entries())
+      .map(([key, value]) => `${key}=${value}`)
+      .join('\r\n');
+    return new Request(action, {
+      method,
+      headers: {
+        'Content-Type': 'text/plain;charset=UTF-8',
+      },
+      body: textBody,
+    });
+  }
+  const params = new URLSearchParams(formData);
+  return new Request(action, {
+    method,
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+    },
+    body: params,
+  });
+};
+
 const getTarget = (targetName) => {
   const candidates = document.querySelectorAll(`[het-pane="${targetName}"]`);
   if (candidates.length === 0)
@@ -70,8 +149,10 @@ const getTarget = (targetName) => {
 export function init(config) {
   onError = config?.onError ?? onError;
   document.addEventListener('click', clickPipeline);
+  document.addEventListener('submit', submitPipeline);
 }
 
 export function destroy() {
   document.removeEventListener('click', clickPipeline);
+  document.removeEventListener('submit', submitPipeline);
 }

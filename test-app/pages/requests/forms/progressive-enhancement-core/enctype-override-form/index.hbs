@@ -1,0 +1,24 @@
+<section het-pane="main" class="card shadow-sm border-0">
+  <div class="card-body">
+    <h1 class="h4 mb-3">{{title}}</h1>
+    <form
+      id="form"
+      method="post"
+      action="/requests/forms/progressive-enhancement-core/enctype-override"
+      enctype="multipart/form-data"
+      het-target="main"
+    >
+      <div class="mb-2">
+        <input id="field" type="text" name="some-field" value="override value" class="form-control" />
+      </div>
+      <button
+        id="override-submit"
+        type="submit"
+        formenctype="application/x-www-form-urlencoded"
+        class="btn btn-primary"
+      >
+        Submit
+      </button>
+    </form>
+  </div>
+</section>

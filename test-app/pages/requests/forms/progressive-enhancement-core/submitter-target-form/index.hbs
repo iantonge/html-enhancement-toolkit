@@ -1,0 +1,32 @@
+<section het-pane="main" class="card shadow-sm border-0">
+  <div class="card-body">
+    <h1 class="h4 mb-3">{{title}}</h1>
+    <p id="main-content" class="text-muted">Original page content.</p>
+    <form
+      id="form"
+      method="get"
+      action="/requests/forms/progressive-enhancement-core/get-form"
+      het-target="main"
+    >
+      <div class="mb-2">
+        <input id="field" type="text" name="some-field" value="submitter target value" class="form-control" />
+      </div>
+      <button id="form-submit" type="submit" class="btn btn-outline-secondary">Form submit</button>
+    </form>
+    <button
+      id="submitter-target-submit"
+      type="submit"
+      form="form"
+      formaction="/requests/forms/progressive-enhancement-core/child-target"
+      het-target="child"
+      class="btn btn-primary mt-3"
+    >
+      Submit to child pane
+    </button>
+  </div>
+</section>
+<section het-pane="child" class="card shadow-sm border-0 mt-3">
+  <div class="card-body">
+    <p id="child-content">Original child content.</p>
+  </div>
+</section>

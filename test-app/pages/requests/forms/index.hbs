@@ -1,0 +1,118 @@
+<section het-pane="main" class="card shadow-sm border-0">
+  <div class="card-body">
+    <h1 class="h4 mb-3">{{title}}</h1>
+    <p class="text-muted">Original page content.</p>
+    <form id="get-form" method="get" action="/requests/forms/get-form" het-target="main" class="mb-4">
+      <div class="mb-2">
+        <input type="text" name="some-field" value="some field value" class="form-control" />
+      </div>
+      <div class="d-flex flex-wrap gap-2">
+        <button type="submit" class="btn btn-primary">Plain submit</button>
+        <button type="submit" formaction="/requests/forms/another-get-form" class="btn btn-outline-primary">
+          Formaction submit
+        </button>
+        <button type="submit" formmethod="post" formaction="/requests/forms/post-form" class="btn btn-outline-primary">
+          Formmethod submit
+        </button>
+        <button type="submit" name="additional-value" value="some value" class="btn btn-outline-primary">
+          Additional value submit
+        </button>
+        <button type="submit" formaction="/requests/forms/no-target" class="btn btn-outline-primary">
+          Missing target response
+        </button>
+        <button type="submit" formaction="/requests/forms/duplicate-target" class="btn btn-outline-primary">
+          Duplicate target response
+        </button>
+      </div>
+    </form>
+    <button
+      id="external-get"
+      type="submit"
+      form="get-form"
+      formaction="https://example.com/submit"
+      het-target="main"
+      class="btn btn-outline-danger mb-4"
+    >
+      External submit
+    </button>
+    <button
+      id="child-target-submit"
+      type="submit"
+      form="get-form"
+      formaction="/requests/forms/child-target"
+      het-target="child"
+      class="btn btn-outline-secondary mb-4"
+    >
+      Submit to child pane
+    </button>
+    <form id="post-form" method="post" action="/requests/forms/post-form" het-target="main">
+      <div class="mb-2">
+        <input type="text" name="some-field" value="some field value" class="form-control" />
+      </div>
+      <button type="submit" class="btn btn-primary">Plain submit</button>
+    </form>
+    <form
+      id="multipart-form"
+      method="post"
+      action="/requests/forms/enctype-multipart"
+      enctype="multipart/form-data"
+      het-target="main"
+      class="mt-4"
+    >
+      <div class="mb-2">
+        <input type="text" name="some-field" value="multipart value" class="form-control" />
+      </div>
+      <button type="submit" class="btn btn-outline-primary">Multipart submit</button>
+    </form>
+    <form
+      id="multipart-override-form"
+      method="post"
+      action="/requests/forms/enctype-override"
+      enctype="multipart/form-data"
+      het-target="main"
+      class="mt-4"
+    >
+      <div class="mb-2">
+        <input type="text" name="some-field" value="override value" class="form-control" />
+      </div>
+      <button
+        type="submit"
+        formenctype="application/x-www-form-urlencoded"
+        class="btn btn-outline-primary"
+      >
+        Override to urlencoded
+      </button>
+    </form>
+    <form id="submitter-enctype-form" method="post" action="/requests/forms/enctype-submitter-multipart" het-target="main" class="mt-4">
+      <div class="mb-2">
+        <input type="text" name="some-field" value="submitter enctype value" class="form-control" />
+      </div>
+      <button type="submit" formenctype="multipart/form-data" class="btn btn-outline-primary">
+        Submitter multipart
+      </button>
+    </form>
+    <form id="no-target-form" method="get" action="/requests/forms/get-form" class="mt-4">
+      <div class="mb-2">
+        <input type="text" name="some-field" value="no target value" class="form-control" />
+      </div>
+      <button type="submit" class="btn btn-outline-secondary">No target submit</button>
+    </form>
+    <form id="default-form" het-target="main" action="/requests/forms/default-form" class="mt-4">
+      <div class="mb-2">
+        <input type="text" name="some-field" value="default value" class="form-control" />
+      </div>
+      <button type="submit" class="btn btn-outline-secondary">Default submit</button>
+    </form>
+    <form id="default-action-form" het-target="main" class="mt-4">
+      <div class="mb-2">
+        <input type="text" name="default-action" value="default action value" class="form-control" />
+      </div>
+      <button type="submit" class="btn btn-outline-secondary">Default action submit</button>
+    </form>
+  </div>
+</section>
+<section het-pane="child" class="card shadow-sm border-0 mt-3">
+  <div class="card-body">
+    <p>Original child content.</p>
+  </div>
+</section>
