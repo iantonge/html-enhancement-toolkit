@@ -2,6 +2,7 @@ import { Router } from 'express';
 
 import disableRoutes from './disables-in-flight/routes.js';
 import progressiveEnhancementCoreRoutes from './progressive-enhancement-core/routes.js';
+import requestCoordinationRoutes from './request-coordination/routes.js';
 
 const router = Router();
 
@@ -12,6 +13,7 @@ router.get('/', (request, response) => {
 });
 
 router.use('/progressive-enhancement-core', progressiveEnhancementCoreRoutes);
+router.use('/request-coordination', requestCoordinationRoutes);
 router.use('/disables-in-flight', disableRoutes);
 
 export default router;

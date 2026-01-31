@@ -1,22 +1,32 @@
+const NAV_DEBOUNCE_TIME = 500;
+const recentClicks = new Set();
 const parser = new DOMParser();
+const inFlightRequests = new Map();
 let onError = (error) => {
   throw error;
 };
 let requestCount = 0;
-const inFlightLinks = new Map();
 
 const clickPipeline = async (event) => {
   let ctx;
   try {
     ctx = getClickContext(event);
     if (!ctx) return;
-    if (inFlightLinks.get(ctx.targetEl)) return;
-    inFlightLinks.set(ctx.targetEl, true);
-    await fetchAndSwap(ctx.request, ctx.targetName, ctx.targetEl);
+    const requestCoordination = getRequestCoordination(ctx.targetEl);
+    if (requestCoordination.abortThis) return;
+    requestCoordination.toAbort.forEach((controller) => controller.abort());
+    inFlightRequests.set(ctx.targetEl, ctx.abortController);
+    try {
+      await fetchAndSwap(ctx.request, ctx.targetName, ctx.targetEl);
+    } catch (error) {
+      if (error.name !== 'AbortError') throw error;
+    }
   } catch (error) {
     onError(error);
   } finally {
-    if (ctx?.targetEl) inFlightLinks.delete(ctx.targetEl);
+    if (ctx?.targetEl) {
+      inFlightRequests.delete(ctx.targetEl);
+    }
   }
 };
 
@@ -24,11 +34,18 @@ const submitPipeline = async (event) => {
   try {
     const ctx = getSubmitContext(event);
     if (!ctx) return;
+    const requestCoordination = getRequestCoordination(ctx.targetEl);
+    if (requestCoordination.abortThis) return;
+    requestCoordination.toAbort.forEach((controller) => controller.abort());
     const requestId = getRequestId();
     updateForm(ctx.form, requestId, disableElement);
+    inFlightRequests.set(ctx.targetEl, ctx.abortController);
     try {
       await fetchAndSwap(ctx.request, ctx.targetName, ctx.targetEl);
+    } catch (error) {
+      if (error.name !== 'AbortError') throw error;
     } finally {
+      inFlightRequests.delete(ctx.targetEl);
       updateForm(ctx.form, requestId, enableElement);
     }
   } catch (error) {
@@ -67,6 +84,9 @@ const getClickContext = (event) => {
   const link = event.target.closest('a[het-target]');
   if (!link) return;
   event.preventDefault();
+  if (recentClicks.has(link)) return;
+  recentClicks.add(link);
+  setTimeout(() => recentClicks.delete(link), NAV_DEBOUNCE_TIME);
   if (new URL(link.href).origin !== window.location.origin)
     throw new Error('HET error: Cannot progressively enhance external links');
   if (link.hasAttribute('target'))
@@ -75,8 +95,9 @@ const getClickContext = (event) => {
     );
   const targetName = link.getAttribute('het-target');
   const targetEl = getTarget(targetName);
-  const request = new Request(link.href);
-  return { request, targetName, targetEl };
+  const abortController = new AbortController();
+  const request = new Request(link.href, { signal: abortController.signal });
+  return { request, targetName, targetEl, abortController };
 };
 
 const getRequestId = () => {
@@ -109,26 +130,28 @@ const getSubmitContext = (event) => {
       'HET error: Cannot progressively enhance cross-origin form submissions',
     );
   const formData = new FormData(event.target, event.submitter);
+  const abortController = new AbortController();
   const request =
     method === 'GET'
-      ? buildGetRequest(action, formData)
-      : buildPostRequest(action, method, formData, enctype);
+      ? buildGetRequest(action, formData, abortController)
+      : buildPostRequest(action, method, formData, enctype, abortController);
   const targetEl = getTarget(targetName);
-  return { request, targetName, targetEl, form: event.target };
+  return { request, targetName, targetEl, form: event.target, abortController };
 };
 
-const buildGetRequest = (action, formData) => {
+const buildGetRequest = (action, formData, abortController) => {
   const url = new URL(action, window.location.origin);
   const params = new URLSearchParams(formData);
   if (params.size) url.search = `?${params.toString()}`;
-  return new Request(url.href, { method: 'GET' });
+  return new Request(url.href, { method: 'GET', signal: abortController.signal });
 };
 
-const buildPostRequest = (action, method, formData, enctype) => {
+const buildPostRequest = (action, method, formData, enctype, abortController) => {
   if (enctype === 'multipart/form-data') {
     return new Request(action, {
       method,
       body: formData,
+      signal: abortController.signal,
     });
   }
   if (enctype === 'text/plain') {
@@ -141,6 +164,7 @@ const buildPostRequest = (action, method, formData, enctype) => {
         'Content-Type': 'text/plain;charset=UTF-8',
       },
       body: textBody,
+      signal: abortController.signal,
     });
   }
   const params = new URLSearchParams(formData);
@@ -150,7 +174,21 @@ const buildPostRequest = (action, method, formData, enctype) => {
       'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
     },
     body: params,
+    signal: abortController.signal,
   });
+};
+
+const getRequestCoordination = (targetEl) => {
+  const toAbort = [];
+  for (const [otherTarget, controller] of inFlightRequests.entries()) {
+    if (controller.signal.aborted) continue;
+    if (targetEl === otherTarget || targetEl.contains(otherTarget)) {
+      toAbort.push(controller);
+    } else if (otherTarget.contains(targetEl)) {
+      return { abortThis: true };
+    }
+  }
+  return { toAbort };
 };
 
 const updateForm = (form, requestId, func) => {

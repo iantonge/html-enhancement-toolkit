@@ -80,6 +80,8 @@ HET can progressively enhance links by replacing the contents of a target **pane
 - HET replaces the pane element itself with the server response pane.
 - If you click inside nested elements (spans, icons), HET still finds the
   nearest ancestor `<a>` with `het-target`.
+- If a pane request is in flight, a new request to the same pane cancels the earlier one.
+- If a parent pane request is in flight, requests targeting panes inside it are ignored.
 
 ## Form enhancement
 
@@ -101,6 +103,8 @@ Forms can be progressively enhanced using the same pane targeting. Put `het-targ
   - Missing `method` defaults to `GET`, missing `action` defaults to the current URL.
 - `het-target` on the submit button overrides the form's `het-target`.
 - While a request is in flight, HET disables the form controls (including controls associated via the `form` attribute) to prevent double submission.
+- If a pane request is in flight, a new request to the same pane cancels the earlier one.
+- If a parent pane request is in flight, requests targeting panes inside it are ignored.
 - Only same-origin form submissions are enhanced.
 - The response must include exactly one matching pane (same rules as links).
 

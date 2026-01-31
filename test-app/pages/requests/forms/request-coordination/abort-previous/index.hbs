@@ -1,0 +1,18 @@
+<section het-pane="main" class="card shadow-sm border-0">
+  <div class="card-body">
+    <h1 class="h4 mb-3">{{title}}</h1>
+    <p id="original-content" class="text-muted">Original page content.</p>
+    <form id="first-form" method="get" action="/requests/forms/request-coordination/responses/first" het-target="main">
+      <div class="mb-2">
+        <input id="first-field" type="text" name="some-field" value="first" class="form-control" />
+      </div>
+      <button id="first-submit" type="submit" class="btn btn-outline-secondary">First submit</button>
+    </form>
+    <form id="second-form" method="get" action="/requests/forms/request-coordination/responses/second" het-target="main" class="mt-3">
+      <div class="mb-2">
+        <input id="second-field" type="text" name="some-field" value="second" class="form-control" />
+      </div>
+      <button id="second-submit" type="submit" class="btn btn-outline-secondary">Second submit</button>
+    </form>
+  </div>
+</section>

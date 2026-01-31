@@ -1,0 +1,23 @@
+<section het-pane="main" class="card shadow-sm border-0">
+  <div class="card-body">
+    <h1 class="h4 mb-3">{{title}}</h1>
+    <p id="original-content" class="text-muted">Original page content.</p>
+    <form id="main-form" method="get" action="/requests/forms/request-coordination/responses/main" het-target="main">
+      <div class="mb-2">
+        <input id="main-field" type="text" name="some-field" value="main" class="form-control" />
+      </div>
+      <button id="main-submit" type="submit" class="btn btn-outline-secondary">Main submit</button>
+    </form>
+    <section het-pane="child" class="card shadow-sm border-0 mt-3">
+      <div class="card-body">
+        <p id="child-content">Original child content.</p>
+        <form id="child-form" method="get" action="/requests/forms/request-coordination/responses/child" het-target="child">
+          <div class="mb-2">
+            <input id="child-field" type="text" name="child-field" value="child" class="form-control" />
+          </div>
+          <button id="child-submit" type="submit" class="btn btn-outline-secondary">Child submit</button>
+        </form>
+      </div>
+    </section>
+  </div>
+</section>
