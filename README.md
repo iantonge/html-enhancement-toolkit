@@ -100,6 +100,7 @@ Forms can be progressively enhanced using the same pane targeting. Put `het-targ
   - Submitter name/value pairs are included in the request.
   - Missing `method` defaults to `GET`, missing `action` defaults to the current URL.
 - `het-target` on the submit button overrides the form's `het-target`.
+- While a request is in flight, HET disables the form controls (including controls associated via the `form` attribute) to prevent double submission.
 - Only same-origin form submissions are enhanced.
 - The response must include exactly one matching pane (same rules as links).
 

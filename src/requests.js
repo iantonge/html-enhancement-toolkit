@@ -2,6 +2,7 @@ const parser = new DOMParser();
 let onError = (error) => {
   throw error;
 };
+let requestCount = 0;
 
 const clickPipeline = async (event) => {
   try {
@@ -17,7 +18,13 @@ const submitPipeline = async (event) => {
   try {
     const ctx = getSubmitContext(event);
     if (!ctx) return;
-    await fetchAndSwap(ctx.request, ctx.targetName, ctx.targetEl);
+    const requestId = getRequestId();
+    updateForm(ctx.form, requestId, disableElement);
+    try {
+      await fetchAndSwap(ctx.request, ctx.targetName, ctx.targetEl);
+    } finally {
+      updateForm(ctx.form, requestId, enableElement);
+    }
   } catch (error) {
     onError(error);
   }
@@ -66,6 +73,11 @@ const getClickContext = (event) => {
   return { request, targetName, targetEl };
 };
 
+const getRequestId = () => {
+  requestCount += 1;
+  return requestCount;
+};
+
 const getSubmitContext = (event) => {
   const targetName =
     event.submitter?.getAttribute("het-target") ||
@@ -96,7 +108,7 @@ const getSubmitContext = (event) => {
       ? buildGetRequest(action, formData)
       : buildPostRequest(action, method, formData, enctype);
   const targetEl = getTarget(targetName);
-  return { request, targetName, targetEl };
+  return { request, targetName, targetEl, form: event.target };
 };
 
 const buildGetRequest = (action, formData) => {
@@ -133,6 +145,33 @@ const buildPostRequest = (action, method, formData, enctype) => {
     },
     body: params,
   });
+};
+
+const updateForm = (form, requestId, func) => {
+  updateInteractiveElements(form, requestId, func);
+  if (form.id) {
+    document
+      .querySelectorAll(`[form="${form.id}"]`)
+      .forEach((el) => func(el, requestId));
+  }
+};
+
+const updateInteractiveElements = (container, requestId, func) => {
+  container
+    .querySelectorAll('input, button, select, textarea')
+    .forEach((el) => func(el, requestId));
+};
+
+const disableElement = (el, requestId) => {
+  if (el.disabled) return;
+  el.disabled = true;
+  el.setAttribute('data-het-disabled', requestId);
+};
+
+const enableElement = (el, requestId) => {
+  if (el.dataset.hetDisabled !== String(requestId)) return;
+  el.disabled = false;
+  el.removeAttribute('data-het-disabled');
 };
 
 const getTarget = (targetName) => {
