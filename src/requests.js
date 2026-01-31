@@ -3,14 +3,20 @@ let onError = (error) => {
   throw error;
 };
 let requestCount = 0;
+const inFlightLinks = new Map();
 
 const clickPipeline = async (event) => {
+  let ctx;
   try {
-    const ctx = getClickContext(event);
+    ctx = getClickContext(event);
     if (!ctx) return;
+    if (inFlightLinks.get(ctx.targetEl)) return;
+    inFlightLinks.set(ctx.targetEl, true);
     await fetchAndSwap(ctx.request, ctx.targetName, ctx.targetEl);
   } catch (error) {
     onError(error);
+  } finally {
+    if (ctx?.targetEl) inFlightLinks.delete(ctx.targetEl);
   }
 };
 
