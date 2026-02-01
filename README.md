@@ -122,6 +122,7 @@ When HET performs the first navigation in a session it replaces the initial hist
   nearest ancestor `<a>` with `het-target`.
 - If a pane request is in flight, a new request to the same pane cancels the earlier one.
 - If a parent pane request is in flight, requests targeting panes inside it are ignored.
+- After swapping content, HET honors the first `[autofocus]` in the newly inserted content (target replacements first, then `het-also` replacements) and removes the attribute so it doesn’t trigger again.
 
 ## Form enhancement
 

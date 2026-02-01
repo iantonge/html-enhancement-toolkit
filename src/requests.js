@@ -104,11 +104,16 @@ const fetchAndSwap = async (request, target, select, also) => {
   const responseTarget = candidates[0];
   const importedNode = document.importNode(responseTarget, true);
   const responseDoc = parsedDocument;
+  const insertedElements = [];
   if (!select || select.length === 0) {
     if (also && also.length) {
-      applyAlsoReplacements(also, target.el, responseTarget, responseDoc);
+      insertedElements.push(
+        ...applyAlsoReplacements(also, target.el, responseTarget, responseDoc),
+      );
     }
     target.el.replaceWith(importedNode);
+    insertedElements.push(importedNode);
+    focusFirstAutofocus(insertedElements);
     return response.url;
   }
   validateSelectedIds(select, target.el, importedNode);
@@ -117,10 +122,14 @@ const fetchAndSwap = async (request, target, select, also) => {
     const replacement = getDescendantById(importedNode, id);
     const importedReplacement = document.importNode(replacement, true);
     currentEl.replaceWith(importedReplacement);
+    insertedElements.push(importedReplacement);
   }
   if (also && also.length) {
-    applyAlsoReplacements(also, target.el, responseTarget, responseDoc);
+    insertedElements.push(
+      ...applyAlsoReplacements(also, target.el, responseTarget, responseDoc),
+    );
   }
+  focusFirstAutofocus(insertedElements);
   return response.url;
 };
 
@@ -287,6 +296,7 @@ const getAlsoIds = (raw) => {
 };
 
 const applyAlsoReplacements = (ids, targetEl, responseTarget, responseDoc) => {
+  const replacements = [];
   ids.forEach((id) => {
     const currentEl = getDescendantById(document, id);
     if (!currentEl)
@@ -309,7 +319,9 @@ const applyAlsoReplacements = (ids, targetEl, responseTarget, responseDoc) => {
     }
     const importedReplacement = document.importNode(replacement, true);
     currentEl.replaceWith(importedReplacement);
+    replacements.push(importedReplacement);
   });
+  return replacements;
 };
 
 const getRequestCoordination = (targetEl) => {
@@ -350,6 +362,18 @@ const enableElement = (el, requestId) => {
   if (el.dataset.hetDisabled !== String(requestId)) return;
   el.disabled = false;
   el.removeAttribute('data-het-disabled');
+};
+
+const focusFirstAutofocus = (elements) => {
+  for (const element of elements) {
+    if (!element) continue;
+    const autofocusEl =
+      element.matches?.('[autofocus]') ? element : element.querySelector?.('[autofocus]');
+    if (!autofocusEl) continue;
+    autofocusEl.focus();
+    autofocusEl.removeAttribute('autofocus');
+    break;
+  }
 };
 
 const updateHistory = (target, responseUrl, select, also) => {
