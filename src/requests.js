@@ -12,26 +12,26 @@ const clickPipeline = async (event) => {
   try {
     ctx = getClickContext(event);
     if (!ctx) return;
-    const requestCoordination = getRequestCoordination(ctx.targetEl);
+    const requestCoordination = getRequestCoordination(ctx.target.el);
     if (requestCoordination.abortThis) return;
     requestCoordination.toAbort.forEach((controller) => controller.abort());
-    inFlightRequests.set(ctx.targetEl, ctx.abortController);
+    inFlightRequests.set(ctx.target.el, ctx.abortController);
     try {
-      await fetchAndSwap(
+      const responseUrl = await fetchAndSwap(
         ctx.request,
-        ctx.targetName,
-        ctx.targetEl,
+        ctx.target,
         ctx.select,
         ctx.also,
       );
+      updateHistory(ctx.target, responseUrl);
     } catch (error) {
       if (error.name !== 'AbortError') throw error;
     }
   } catch (error) {
     onError(error);
   } finally {
-    if (ctx?.targetEl) {
-      inFlightRequests.delete(ctx.targetEl);
+    if (ctx?.target?.el) {
+      inFlightRequests.delete(ctx.target.el);
     }
   }
 };
@@ -40,24 +40,24 @@ const submitPipeline = async (event) => {
   try {
     const ctx = getSubmitContext(event);
     if (!ctx) return;
-    const requestCoordination = getRequestCoordination(ctx.targetEl);
+    const requestCoordination = getRequestCoordination(ctx.target.el);
     if (requestCoordination.abortThis) return;
     requestCoordination.toAbort.forEach((controller) => controller.abort());
     const requestId = getRequestId();
     updateForm(ctx.form, requestId, disableElement);
-    inFlightRequests.set(ctx.targetEl, ctx.abortController);
+    inFlightRequests.set(ctx.target.el, ctx.abortController);
     try {
-      await fetchAndSwap(
+      const responseUrl = await fetchAndSwap(
         ctx.request,
-        ctx.targetName,
-        ctx.targetEl,
+        ctx.target,
         ctx.select,
         ctx.also,
       );
+      updateHistory(ctx.target, responseUrl);
     } catch (error) {
       if (error.name !== 'AbortError') throw error;
     } finally {
-      inFlightRequests.delete(ctx.targetEl);
+      inFlightRequests.delete(ctx.target.el);
       updateForm(ctx.form, requestId, enableElement);
     }
   } catch (error) {
@@ -65,41 +65,42 @@ const submitPipeline = async (event) => {
   }
 };
 
-const fetchAndSwap = async (request, targetName, targetEl, select, also) => {
+const fetchAndSwap = async (request, target, select, also) => {
   const response = await fetch(request);
   const responseHtml = await response.text();
   const parsedDocument = parser.parseFromString(responseHtml, 'text/html');
   const candidates = parsedDocument.querySelectorAll(
-    `[het-pane="${targetName}"]`,
+    `[${target.type}="${target.name}"]`,
   );
   if (candidates.length === 0)
     throw new Error(
-      `HET error: No pane named ${targetName} found in server response`,
+      `HET error: No pane named ${target.name} found in server response`,
     );
   if (candidates.length > 1)
     throw new Error(
-      `HET error: Multiple panes named ${targetName} found in server response`,
+      `HET error: Multiple panes named ${target.name} found in server response`,
     );
   const responseTarget = candidates[0];
   const importedNode = document.importNode(responseTarget, true);
   const responseDoc = parsedDocument;
   if (!select || select.length === 0) {
     if (also && also.length) {
-      applyAlsoReplacements(also, targetEl, responseTarget, responseDoc);
+      applyAlsoReplacements(also, target.el, responseTarget, responseDoc);
     }
-    targetEl.replaceWith(importedNode);
-    return;
+    target.el.replaceWith(importedNode);
+    return response.url;
   }
-  validateSelectedIds(select, targetEl, importedNode);
+  validateSelectedIds(select, target.el, importedNode);
   for (const id of select) {
-    const currentEl = getDescendantById(targetEl, id);
+    const currentEl = getDescendantById(target.el, id);
     const replacement = getDescendantById(importedNode, id);
     const importedReplacement = document.importNode(replacement, true);
     currentEl.replaceWith(importedReplacement);
   }
   if (also && also.length) {
-    applyAlsoReplacements(also, targetEl, responseTarget, responseDoc);
+    applyAlsoReplacements(also, target.el, responseTarget, responseDoc);
   }
+  return response.url;
 };
 
 const getClickContext = (event) => {
@@ -126,10 +127,10 @@ const getClickContext = (event) => {
   const targetName = link.getAttribute('het-target');
   const select = getSelectIds(link.getAttribute('het-select'));
   const also = getAlsoIds(link.getAttribute('het-also'));
-  const targetEl = getTarget(targetName);
+  const target = getTarget(targetName);
   const abortController = new AbortController();
   const request = new Request(link.href, { signal: abortController.signal });
-  return { request, targetName, targetEl, abortController, select, also };
+  return { request, target, abortController, select, also };
 };
 
 const getRequestId = () => {
@@ -175,11 +176,10 @@ const getSubmitContext = (event) => {
     method === 'GET'
       ? buildGetRequest(action, formData, abortController)
       : buildPostRequest(action, method, formData, enctype, abortController);
-  const targetEl = getTarget(targetName);
+  const target = getTarget(targetName);
   return {
     request,
-    targetName,
-    targetEl,
+    target,
     form: event.target,
     abortController,
     select,
@@ -331,15 +331,24 @@ const enableElement = (el, requestId) => {
   el.removeAttribute('data-het-disabled');
 };
 
+const updateHistory = (target, responseUrl) => {
+  if (target.type !== 'het-nav-pane' || !responseUrl) return;
+  history.pushState({ paneName: target.name, url: responseUrl }, '', responseUrl);
+};
+
 const getTarget = (targetName) => {
-  const candidates = document.querySelectorAll(`[het-pane="${targetName}"]`);
+  const candidates = document.querySelectorAll(
+    `[het-pane="${targetName}"],[het-nav-pane="${targetName}"]`,
+  );
   if (candidates.length === 0)
     throw new Error(`HET error: No pane named ${targetName} found in current document`);
   if (candidates.length > 1)
     throw new Error(
       `HET error: Multiple panes named ${targetName} found in current document`,
     );
-  return candidates[0];
+  const el = candidates[0];
+  const type = el.hasAttribute('het-pane') ? 'het-pane' : 'het-nav-pane';
+  return { el, name: targetName, type };
 };
 
 export function init(config) {
