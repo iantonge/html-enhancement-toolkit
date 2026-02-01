@@ -2,6 +2,7 @@ const NAV_DEBOUNCE_TIME = 500;
 const recentClicks = new Set();
 const parser = new DOMParser();
 const inFlightRequests = new Map();
+let historyStateReplaced = false;
 let onError = (error) => {
   throw error;
 };
@@ -23,7 +24,7 @@ const clickPipeline = async (event) => {
         ctx.select,
         ctx.also,
       );
-      updateHistory(ctx.target, responseUrl);
+      updateHistory(ctx.target, responseUrl, ctx.select, ctx.also);
     } catch (error) {
       if (error.name !== 'AbortError') throw error;
     }
@@ -53,7 +54,7 @@ const submitPipeline = async (event) => {
         ctx.select,
         ctx.also,
       );
-      updateHistory(ctx.target, responseUrl);
+      updateHistory(ctx.target, responseUrl, ctx.select, ctx.also);
     } catch (error) {
       if (error.name !== 'AbortError') throw error;
     } finally {
@@ -62,6 +63,26 @@ const submitPipeline = async (event) => {
     }
   } catch (error) {
     onError(error);
+  }
+};
+
+const popstatePipeline = async (event) => {
+  let ctx;
+  try {
+    ctx = getPopStateContext(event);
+    if (!ctx) return;
+    inFlightRequests.set(ctx.target.el, ctx.abortController);
+    try {
+      await fetchAndSwap(ctx.request, ctx.target, ctx.select, ctx.also);
+    } catch (error) {
+      if (error.name !== 'AbortError') throw error;
+    }
+  } catch (error) {
+    onError(error);
+  } finally {
+    if (ctx?.target?.el) {
+      inFlightRequests.delete(ctx.target.el);
+    }
   }
 };
 
@@ -331,9 +352,34 @@ const enableElement = (el, requestId) => {
   el.removeAttribute('data-het-disabled');
 };
 
-const updateHistory = (target, responseUrl) => {
+const updateHistory = (target, responseUrl, select, also) => {
   if (target.type !== 'het-nav-pane' || !responseUrl) return;
-  history.pushState({ paneName: target.name, url: responseUrl }, '', responseUrl);
+  const state = {
+    paneName: target.name,
+    url: responseUrl,
+    select,
+    also,
+  };
+  if (!historyStateReplaced) {
+    history.replaceState(
+      { ...state, url: window.location.href },
+      '',
+      window.location.href,
+    );
+    historyStateReplaced = true;
+  }
+  history.pushState(state, '', responseUrl);
+};
+
+const getPopStateContext = (event) => {
+  if (!event.state) return;
+  inFlightRequests.forEach((controller) => controller.abort());
+  inFlightRequests.clear();
+  const { paneName, url, select, also } = event.state;
+  const target = getTarget(paneName);
+  const abortController = new AbortController();
+  const request = new Request(url, { signal: abortController.signal });
+  return { request, target, abortController, select, also };
 };
 
 const getTarget = (targetName) => {
@@ -355,9 +401,11 @@ export function init(config) {
   onError = config?.onError ?? onError;
   document.addEventListener('click', clickPipeline);
   document.addEventListener('submit', submitPipeline);
+  window.addEventListener('popstate', popstatePipeline);
 }
 
 export function destroy() {
   document.removeEventListener('click', clickPipeline);
   document.removeEventListener('submit', submitPipeline);
+  window.removeEventListener('popstate', popstatePipeline);
 }

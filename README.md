@@ -97,6 +97,18 @@ Use `het-also` to replace elements outside the target pane as part of the same r
 - The response HTML must also contain exactly one pane with the same name.
 - If the pane is missing or duplicated in either place, HET throws an error.
 
+### Navigation panes (history)
+
+Use `het-nav-pane` when you want HET to update browser history for a pane. It behaves like `het-pane`, but the response URL is pushed to history when the pane is replaced.
+
+```html
+<main het-nav-pane="main">
+  <a href="/next" het-target="main">Next page</a>
+</main>
+```
+
+When HET performs the first navigation in a session it replaces the initial history state so back/forward can restore the original pane. On `popstate`, HET cancels any in-flight requests, re-fetches the URL stored in the history state, and replaces the recorded pane (including any `het-select`/`het-also` rules saved in that state).
+
 ### When HET will not intercept
 
 - Links to another origin are not enhanced.
