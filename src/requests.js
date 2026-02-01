@@ -17,7 +17,7 @@ const clickPipeline = async (event) => {
     requestCoordination.toAbort.forEach((controller) => controller.abort());
     inFlightRequests.set(ctx.targetEl, ctx.abortController);
     try {
-      await fetchAndSwap(ctx.request, ctx.targetName, ctx.targetEl);
+      await fetchAndSwap(ctx.request, ctx.targetName, ctx.targetEl, ctx.select);
     } catch (error) {
       if (error.name !== 'AbortError') throw error;
     }
@@ -41,7 +41,7 @@ const submitPipeline = async (event) => {
     updateForm(ctx.form, requestId, disableElement);
     inFlightRequests.set(ctx.targetEl, ctx.abortController);
     try {
-      await fetchAndSwap(ctx.request, ctx.targetName, ctx.targetEl);
+      await fetchAndSwap(ctx.request, ctx.targetName, ctx.targetEl, ctx.select);
     } catch (error) {
       if (error.name !== 'AbortError') throw error;
     } finally {
@@ -53,7 +53,7 @@ const submitPipeline = async (event) => {
   }
 };
 
-const fetchAndSwap = async (request, targetName, targetEl) => {
+const fetchAndSwap = async (request, targetName, targetEl, select) => {
   const response = await fetch(request);
   const responseHtml = await response.text();
   const parsedDocument = parser.parseFromString(responseHtml, 'text/html');
@@ -69,7 +69,17 @@ const fetchAndSwap = async (request, targetName, targetEl) => {
       `HET error: Multiple panes named ${targetName} found in server response`,
     );
   const importedNode = document.importNode(candidates[0], true);
-  targetEl.replaceWith(importedNode);
+  if (!select || select.length === 0) {
+    targetEl.replaceWith(importedNode);
+    return;
+  }
+  validateSelectedIds(select, targetEl, importedNode);
+  for (const id of select) {
+    const currentEl = getDescendantById(targetEl, id);
+    const replacement = getDescendantById(importedNode, id);
+    const importedReplacement = document.importNode(replacement, true);
+    currentEl.replaceWith(importedReplacement);
+  }
 };
 
 const getClickContext = (event) => {
@@ -94,10 +104,11 @@ const getClickContext = (event) => {
       'HET error: Cannot progressively enhance links with target attribute',
     );
   const targetName = link.getAttribute('het-target');
+  const select = getSelectIds(link.getAttribute('het-select'));
   const targetEl = getTarget(targetName);
   const abortController = new AbortController();
   const request = new Request(link.href, { signal: abortController.signal });
-  return { request, targetName, targetEl, abortController };
+  return { request, targetName, targetEl, abortController, select };
 };
 
 const getRequestId = () => {
@@ -111,6 +122,10 @@ const getSubmitContext = (event) => {
     event.target.getAttribute("het-target");
   if (!targetName) return;
   event.preventDefault();
+  const select = getSelectIds(
+    event.submitter?.getAttribute('het-select') ||
+      event.target.getAttribute('het-select'),
+  );
   const method = (
     event.submitter?.getAttribute('formmethod') ||
     event.target.getAttribute('method') ||
@@ -136,7 +151,14 @@ const getSubmitContext = (event) => {
       ? buildGetRequest(action, formData, abortController)
       : buildPostRequest(action, method, formData, enctype, abortController);
   const targetEl = getTarget(targetName);
-  return { request, targetName, targetEl, form: event.target, abortController };
+  return {
+    request,
+    targetName,
+    targetEl,
+    form: event.target,
+    abortController,
+    select,
+  };
 };
 
 const buildGetRequest = (action, formData, abortController) => {
@@ -175,6 +197,37 @@ const buildPostRequest = (action, method, formData, enctype, abortController) =>
     },
     body: params,
     signal: abortController.signal,
+  });
+};
+
+const getSelectIds = (raw) => {
+  if (!raw) return;
+  const ids = raw.split(/\s+/).filter(Boolean);
+  if (ids.length === 0)
+    throw new Error('HET error: het-select must list at least one id');
+  return ids;
+};
+
+const getDescendantById = (root, id) => {
+  const escapedId = CSS?.escape
+    ? CSS.escape(id)
+    : id.replace(/"/g, '\\"').replace(/'/g, "\\'");
+  const selector = `[id="${escapedId}"]`;
+  return root.querySelector(selector);
+};
+
+const validateSelectedIds = (ids, currentContent, newContent) => {
+  ids.forEach((id) => {
+    const currentEl = getDescendantById(currentContent, id);
+    if (!currentEl)
+      throw new Error(
+        `HET error: Element with id ${id} not found in current target`,
+      );
+    const newEl = getDescendantById(newContent, id);
+    if (!newEl)
+      throw new Error(
+        `HET error: Element with id ${id} not found in server response`,
+      );
   });
 };
 

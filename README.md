@@ -63,6 +63,20 @@ HET can progressively enhance links by replacing the contents of a target **pane
 </main>
 ```
 
+### Partial updates with het-select
+
+If you only want to replace specific elements inside the target pane, add `het-select` with a space-separated list of ids. HET will replace those ids inside the target pane and leave the rest untouched.
+
+```html
+<main het-pane="main">
+  <p id="summary">Old summary</p>
+  <p id="detail">Old detail</p>
+  <a href="/next" het-target="main" het-select="summary">Update summary</a>
+</main>
+```
+
+`het-select` throws if any listed id is missing in the current target or in the server response.
+
 ### Pane requirements
 
 - The current document must contain exactly one pane with the target name.
@@ -93,6 +107,10 @@ Forms can be progressively enhanced using the same pane targeting. Put `het-targ
   <button type="submit">Search</button>
 </form>
 ```
+
+### het-select on forms
+
+You can apply `het-select` to a form or submit button to replace only specific ids inside the target pane. The same validation rules apply as links.
 
 ### Form rules and behavior
 

@@ -1,6 +1,7 @@
 import { Router } from 'express';
 
 import disableRoutes from './disables-in-flight/routes.js';
+import hetSelectRoutes from './het-select/routes.js';
 import progressiveEnhancementCoreRoutes from './progressive-enhancement-core/routes.js';
 import requestCoordinationRoutes from './request-coordination/routes.js';
 
@@ -13,6 +14,7 @@ router.get('/', (request, response) => {
 });
 
 router.use('/progressive-enhancement-core', progressiveEnhancementCoreRoutes);
+router.use('/het-select', hetSelectRoutes);
 router.use('/request-coordination', requestCoordinationRoutes);
 router.use('/disables-in-flight', disableRoutes);
 
