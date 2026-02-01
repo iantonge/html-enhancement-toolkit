@@ -77,6 +77,20 @@ If you only want to replace specific elements inside the target pane, add `het-s
 
 `het-select` throws if any listed id is missing in the current target or in the server response.
 
+### Additional replacements with het-also
+
+Use `het-also` to replace elements outside the target pane as part of the same response. Provide a space-separated list of ids that exist outside the target in both the current document and the server response.
+
+```html
+<main het-pane="main">
+  <p id="main-content">Main</p>
+  <a href="/next" het-target="main" het-also="sidebar">Update main + sidebar</a>
+</main>
+<aside id="sidebar">Sidebar</aside>
+```
+
+`het-also` throws if any listed id is missing in the current document or server response, or if an id refers to an element inside the target.
+
 ### Pane requirements
 
 - The current document must contain exactly one pane with the target name.
@@ -111,6 +125,10 @@ Forms can be progressively enhanced using the same pane targeting. Put `het-targ
 ### het-select on forms
 
 You can apply `het-select` to a form or submit button to replace only specific ids inside the target pane. The same validation rules apply as links.
+
+### het-also on forms
+
+You can also apply `het-also` to replace elements outside the target pane when a form submission is enhanced.
 
 ### Form rules and behavior
 

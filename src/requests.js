@@ -17,7 +17,13 @@ const clickPipeline = async (event) => {
     requestCoordination.toAbort.forEach((controller) => controller.abort());
     inFlightRequests.set(ctx.targetEl, ctx.abortController);
     try {
-      await fetchAndSwap(ctx.request, ctx.targetName, ctx.targetEl, ctx.select);
+      await fetchAndSwap(
+        ctx.request,
+        ctx.targetName,
+        ctx.targetEl,
+        ctx.select,
+        ctx.also,
+      );
     } catch (error) {
       if (error.name !== 'AbortError') throw error;
     }
@@ -41,7 +47,13 @@ const submitPipeline = async (event) => {
     updateForm(ctx.form, requestId, disableElement);
     inFlightRequests.set(ctx.targetEl, ctx.abortController);
     try {
-      await fetchAndSwap(ctx.request, ctx.targetName, ctx.targetEl, ctx.select);
+      await fetchAndSwap(
+        ctx.request,
+        ctx.targetName,
+        ctx.targetEl,
+        ctx.select,
+        ctx.also,
+      );
     } catch (error) {
       if (error.name !== 'AbortError') throw error;
     } finally {
@@ -53,7 +65,7 @@ const submitPipeline = async (event) => {
   }
 };
 
-const fetchAndSwap = async (request, targetName, targetEl, select) => {
+const fetchAndSwap = async (request, targetName, targetEl, select, also) => {
   const response = await fetch(request);
   const responseHtml = await response.text();
   const parsedDocument = parser.parseFromString(responseHtml, 'text/html');
@@ -68,8 +80,13 @@ const fetchAndSwap = async (request, targetName, targetEl, select) => {
     throw new Error(
       `HET error: Multiple panes named ${targetName} found in server response`,
     );
-  const importedNode = document.importNode(candidates[0], true);
+  const responseTarget = candidates[0];
+  const importedNode = document.importNode(responseTarget, true);
+  const responseDoc = parsedDocument;
   if (!select || select.length === 0) {
+    if (also && also.length) {
+      applyAlsoReplacements(also, targetEl, responseTarget, responseDoc);
+    }
     targetEl.replaceWith(importedNode);
     return;
   }
@@ -79,6 +96,9 @@ const fetchAndSwap = async (request, targetName, targetEl, select) => {
     const replacement = getDescendantById(importedNode, id);
     const importedReplacement = document.importNode(replacement, true);
     currentEl.replaceWith(importedReplacement);
+  }
+  if (also && also.length) {
+    applyAlsoReplacements(also, targetEl, responseTarget, responseDoc);
   }
 };
 
@@ -105,10 +125,11 @@ const getClickContext = (event) => {
     );
   const targetName = link.getAttribute('het-target');
   const select = getSelectIds(link.getAttribute('het-select'));
+  const also = getAlsoIds(link.getAttribute('het-also'));
   const targetEl = getTarget(targetName);
   const abortController = new AbortController();
   const request = new Request(link.href, { signal: abortController.signal });
-  return { request, targetName, targetEl, abortController, select };
+  return { request, targetName, targetEl, abortController, select, also };
 };
 
 const getRequestId = () => {
@@ -125,6 +146,10 @@ const getSubmitContext = (event) => {
   const select = getSelectIds(
     event.submitter?.getAttribute('het-select') ||
       event.target.getAttribute('het-select'),
+  );
+  const also = getAlsoIds(
+    event.submitter?.getAttribute('het-also') ||
+      event.target.getAttribute('het-also'),
   );
   const method = (
     event.submitter?.getAttribute('formmethod') ||
@@ -158,6 +183,7 @@ const getSubmitContext = (event) => {
     form: event.target,
     abortController,
     select,
+    also,
   };
 };
 
@@ -228,6 +254,40 @@ const validateSelectedIds = (ids, currentContent, newContent) => {
       throw new Error(
         `HET error: Element with id ${id} not found in server response`,
       );
+  });
+};
+
+const getAlsoIds = (raw) => {
+  if (!raw) return;
+  const ids = raw.split(/\s+/).filter(Boolean);
+  if (ids.length === 0)
+    throw new Error('HET error: het-also must list at least one id');
+  return ids;
+};
+
+const applyAlsoReplacements = (ids, targetEl, responseTarget, responseDoc) => {
+  ids.forEach((id) => {
+    const currentEl = getDescendantById(document, id);
+    if (!currentEl)
+      throw new Error(
+        `HET error: Element with id ${id} not found in current document`,
+      );
+    if (targetEl.contains(currentEl))
+      throw new Error(
+        `HET error: het-also id ${id} must refer to an element outside the target`,
+      );
+    const replacement = getDescendantById(responseDoc, id);
+    if (!replacement)
+      throw new Error(
+        `HET error: Element with id ${id} not found in server response`,
+      );
+    if (responseTarget.contains(replacement)) {
+      throw new Error(
+        `HET error: het-also id ${id} must refer to an element outside the target in server response`,
+      );
+    }
+    const importedReplacement = document.importNode(replacement, true);
+    currentEl.replaceWith(importedReplacement);
   });
 };
 
