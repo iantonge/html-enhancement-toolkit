@@ -1,5 +1,6 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import crypto from 'node:crypto';
 import express from 'express';
 import helmet from 'helmet';
 import multer from 'multer';
@@ -17,6 +18,10 @@ const upload = multer();
 
 app.use(express.urlencoded({ extended: true }));
 app.use(upload.none());
+app.use((request, response, next) => {
+  response.locals.cspNonce = crypto.randomBytes(16).toString('base64');
+  next();
+});
 
 app.use(
   helmet({
@@ -30,7 +35,10 @@ app.use(
         'frame-ancestors': ["'none'"],
         'img-src': ["'self'", 'data:'],
         'object-src': ["'none'"],
-        'script-src': ["'self'"],
+        'script-src': [
+          "'self'",
+          (request, response) => `'nonce-${response.locals.cspNonce}'`,
+        ],
         'style-src': ["'self'"],
       },
     },

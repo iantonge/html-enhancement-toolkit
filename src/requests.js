@@ -6,16 +6,19 @@ let historyStateReplaced = false;
 let onError = (error) => {
   throw error;
 };
+let busyClass = 'het-busy';
 let requestCount = 0;
 
 const clickPipeline = async (event) => {
   let ctx;
+  const requestId = getRequestId();
   try {
     ctx = getClickContext(event);
     if (!ctx) return;
     const requestCoordination = getRequestCoordination(ctx.target.el);
     if (requestCoordination.abortThis) return;
     requestCoordination.toAbort.forEach((controller) => controller.abort());
+    startUiFeedback(ctx.target.el, requestId);
     inFlightRequests.set(ctx.target.el, ctx.abortController);
     try {
       const responseUrl = await fetchAndSwap(
@@ -33,6 +36,7 @@ const clickPipeline = async (event) => {
   } finally {
     if (ctx?.target?.el) {
       inFlightRequests.delete(ctx.target.el);
+      endUiFeedback(ctx.target.el, requestId);
     }
   }
 };
@@ -45,6 +49,7 @@ const submitPipeline = async (event) => {
     if (requestCoordination.abortThis) return;
     requestCoordination.toAbort.forEach((controller) => controller.abort());
     const requestId = getRequestId();
+    startUiFeedback(ctx.target.el, requestId);
     updateForm(ctx.form, requestId, disableElement);
     inFlightRequests.set(ctx.target.el, ctx.abortController);
     try {
@@ -60,6 +65,7 @@ const submitPipeline = async (event) => {
     } finally {
       inFlightRequests.delete(ctx.target.el);
       updateForm(ctx.form, requestId, enableElement);
+      endUiFeedback(ctx.target.el, requestId);
     }
   } catch (error) {
     onError(error);
@@ -68,9 +74,11 @@ const submitPipeline = async (event) => {
 
 const popstatePipeline = async (event) => {
   let ctx;
+  const requestId = getRequestId();
   try {
     ctx = getPopStateContext(event);
     if (!ctx) return;
+    startUiFeedback(ctx.target.el, requestId);
     inFlightRequests.set(ctx.target.el, ctx.abortController);
     try {
       await fetchAndSwap(ctx.request, ctx.target, ctx.select, ctx.also);
@@ -82,6 +90,7 @@ const popstatePipeline = async (event) => {
   } finally {
     if (ctx?.target?.el) {
       inFlightRequests.delete(ctx.target.el);
+      endUiFeedback(ctx.target.el, requestId);
     }
   }
 };
@@ -364,6 +373,21 @@ const enableElement = (el, requestId) => {
   el.removeAttribute('data-het-disabled');
 };
 
+const startUiFeedback = (targetEl, requestId) => {
+  updateInteractiveElements(targetEl, requestId, disableElement);
+  targetEl.setAttribute('data-het-busy', requestId);
+  targetEl.setAttribute('aria-busy', 'true');
+  targetEl.classList.add(busyClass);
+};
+
+const endUiFeedback = (targetEl, requestId) => {
+  if (targetEl.dataset.hetBusy !== String(requestId)) return;
+  updateInteractiveElements(targetEl, requestId, enableElement);
+  targetEl.removeAttribute('data-het-busy');
+  targetEl.removeAttribute('aria-busy');
+  targetEl.classList.remove(busyClass);
+};
+
 const focusFirstAutofocus = (elements) => {
   for (const element of elements) {
     if (!element) continue;
@@ -423,6 +447,7 @@ const getTarget = (targetName) => {
 
 export function init(config) {
   onError = config?.onError ?? onError;
+  busyClass = config?.busyClass ?? busyClass;
   document.addEventListener('click', clickPipeline);
   document.addEventListener('submit', submitPipeline);
   window.addEventListener('popstate', popstatePipeline);

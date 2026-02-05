@@ -53,19 +53,49 @@ window.HET.init({
 });
 ```
 
-## Link enhancement
+### `busyClass`
 
-HET can progressively enhance links by replacing the contents of a target **pane** with HTML fetched from the linked page. A pane is any element marked with `het-pane="<name>"`. Links opt into enhancement by pointing at a pane with `het-target="<name>"`.
+Override the CSS class HET applies to a busy target pane while a request is in flight. Default: `"het-busy"`.
+
+```js
+window.HET.init({
+  busyClass: 'is-loading',
+});
+```
+
+## Request enhancement
+
+HET progressively enhances both links and forms by replacing a named target pane from server-rendered HTML responses.
+
+### Targeting a pane with `het-target`
+
+Use `het-target="<name>"` on links and forms (or submit buttons) to target a pane.
 
 ```html
 <main het-pane="main">
   <a href="/next" het-target="main">Next page</a>
 </main>
+
+<form method="get" action="/search" het-target="main">
+  <input name="q" />
+  <button type="submit">Search</button>
+</form>
 ```
 
-### Partial updates with het-select
+Form-specific behavior:
+- `het-target` on the clicked submit button overrides `het-target` on the form.
+- HET respects native form defaults and submitter overrides (`formaction`, `formmethod`, `formenctype`, default `method`/`action`, and submitter name/value pairs).
+- Only same-origin form submissions are enhanced.
 
-If you only want to replace specific elements inside the target pane, add `het-select` with a space-separated list of ids. HET will replace those ids inside the target pane and leave the rest untouched.
+Link-specific behavior:
+- Links to another origin are not enhanced.
+- Links with a `target` attribute are not enhanced.
+- Modifier clicks (Ctrl, Cmd, Shift, or middle click) are not enhanced.
+- Clicks on nested elements inside a link still resolve to the nearest ancestor `<a het-target="...">`.
+
+### Partial updates with `het-select`
+
+Use `het-select` to replace only specific ids inside the target pane.
 
 ```html
 <main het-pane="main">
@@ -73,13 +103,22 @@ If you only want to replace specific elements inside the target pane, add `het-s
   <p id="detail">Old detail</p>
   <a href="/next" het-target="main" het-select="summary">Update summary</a>
 </main>
+
+<form method="get" action="/search" het-target="main" het-select="summary detail">
+  <input name="q" />
+  <button type="submit">Search</button>
+</form>
 ```
 
 `het-select` throws if any listed id is missing in the current target or in the server response.
 
-### Additional replacements with het-also
+Without `het-select`, HET replaces the entire target pane element with the matching pane from the response.
 
-Use `het-also` to replace elements outside the target pane as part of the same response. Provide a space-separated list of ids that exist outside the target in both the current document and the server response.
+After swapping content, HET honors the first `[autofocus]` in newly inserted content (target replacements first, then `het-also` replacements) and removes the attribute so it does not trigger again.
+
+### Additional replacements with `het-also`
+
+Use `het-also` to replace elements outside the target pane in the same response.
 
 ```html
 <main het-pane="main">
@@ -87,6 +126,10 @@ Use `het-also` to replace elements outside the target pane as part of the same r
   <a href="/next" het-target="main" het-also="sidebar">Update main + sidebar</a>
 </main>
 <aside id="sidebar">Sidebar</aside>
+
+<form method="post" action="/update" het-target="main" het-also="sidebar flash">
+  <button type="submit">Submit</button>
+</form>
 ```
 
 `het-also` throws if any listed id is missing in the current document or server response, or if an id refers to an element inside the target.
@@ -97,65 +140,45 @@ Use `het-also` to replace elements outside the target pane as part of the same r
 - The response HTML must also contain exactly one pane with the same name.
 - If the pane is missing or duplicated in either place, HET throws an error.
 
-### Navigation panes (history)
+### Navigation panes (`het-nav-pane`)
 
-Use `het-nav-pane` when you want HET to update browser history for a pane. It behaves like `het-pane`, but the response URL is pushed to history when the pane is replaced.
+Use `het-nav-pane` when pane replacement should also update browser history.
 
 ```html
 <main het-nav-pane="main">
   <a href="/next" het-target="main">Next page</a>
 </main>
+
+<main het-nav-pane="main">
+  <form method="get" action="/search" het-target="main">
+    <input name="q" />
+    <button type="submit">Search</button>
+  </form>
+</main>
 ```
 
-When HET performs the first navigation in a session it replaces the initial history state so back/forward can restore the original pane. On `popstate`, HET cancels any in-flight requests, re-fetches the URL stored in the history state, and replaces the recorded pane (including any `het-select`/`het-also` rules saved in that state).
+When HET performs the first navigation in a session, it replaces the initial history state. On `popstate`, HET cancels in-flight requests, re-fetches the URL from history state, and re-applies the saved pane/select/also settings.
 
-### When HET will not intercept
+### UI feedback while requests are in flight
 
-- Links to another origin are not enhanced.
-- Links with a `target` attribute are not enhanced.
-- Modifier clicks (Ctrl, Cmd, Shift, or middle click) are not enhanced.
+When an enhanced request starts, HET marks the target pane as busy and disables interactive controls inside that pane:
 
-### Things to keep in mind
+- Sets `data-het-busy="<requestId>"` on the target pane.
+- Sets `aria-busy="true"` on the target pane.
+- Adds a busy CSS class (default: `het-busy`, configurable via `busyClass`).
+- Disables `input`, `button`, `select`, and `textarea` elements inside the target pane.
 
-- HET replaces the pane element itself with the server response pane.
-- If you click inside nested elements (spans, icons), HET still finds the
-  nearest ancestor `<a>` with `het-target`.
+When the request finishes (or is aborted), HET removes the busy markers and only re-enables controls that HET disabled for that specific request.
+
+Form-specific addition:
+- HET also disables/enables controls associated to the form via the `form` attribute.
+
+### Request coordination
+
+HET coordinates in-flight requests by target pane so overlapping updates do not race and leave the UI in an inconsistent state.
+
 - If a pane request is in flight, a new request to the same pane cancels the earlier one.
 - If a parent pane request is in flight, requests targeting panes inside it are ignored.
-- After swapping content, HET honors the first `[autofocus]` in the newly inserted content (target replacements first, then `het-also` replacements) and removes the attribute so it doesn’t trigger again.
-
-## Form enhancement
-
-Forms can be progressively enhanced using the same pane targeting. Put `het-target` on the form or on an individual submit button.
-
-```html
-<form method="get" action="/search" het-target="main">
-  <input name="q" />
-  <button type="submit">Search</button>
-</form>
-```
-
-### het-select on forms
-
-You can apply `het-select` to a form or submit button to replace only specific ids inside the target pane. The same validation rules apply as links.
-
-### het-also on forms
-
-You can also apply `het-also` to replace elements outside the target pane when a form submission is enhanced.
-
-### Form rules and behavior
-
-- HET respects default browser form behavior, including:
-  - `formaction` and `formmethod` on the clicked submit button, falling back to the form attributes.
-  - `formenctype` on the clicked submit button, falling back to the form `enctype`, with the same defaults as a native form submission.
-  - Submitter name/value pairs are included in the request.
-  - Missing `method` defaults to `GET`, missing `action` defaults to the current URL.
-- `het-target` on the submit button overrides the form's `het-target`.
-- While a request is in flight, HET disables the form controls (including controls associated via the `form` attribute) to prevent double submission.
-- If a pane request is in flight, a new request to the same pane cancels the earlier one.
-- If a parent pane request is in flight, requests targeting panes inside it are ignored.
-- Only same-origin form submissions are enhanced.
-- The response must include exactly one matching pane (same rules as links).
 
 ## Developing HET
 
