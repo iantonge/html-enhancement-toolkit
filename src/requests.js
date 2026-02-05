@@ -35,10 +35,10 @@ const clickPipeline = async (event) => {
         ctx.select,
         ctx.also,
       );
-      if (ctx.target.type === 'het-nav-pane') {
+      if (response.finalTarget.type === 'het-nav-pane') {
         updateHead(response.newHead);
       }
-      updateHistory(ctx.target, response.url, ctx.select, ctx.also);
+      updateHistory(response.finalTarget, response.url, ctx.select, ctx.also);
     } catch (error) {
       if (error.name !== 'AbortError') throw error;
     }
@@ -70,10 +70,10 @@ const submitPipeline = async (event) => {
         ctx.select,
         ctx.also,
       );
-      if (ctx.target.type === 'het-nav-pane') {
+      if (response.finalTarget.type === 'het-nav-pane') {
         updateHead(response.newHead);
       }
-      updateHistory(ctx.target, response.url, ctx.select, ctx.also);
+      updateHistory(response.finalTarget, response.url, ctx.select, ctx.also);
     } catch (error) {
       if (error.name !== 'AbortError') throw error;
     } finally {
@@ -96,7 +96,7 @@ const popstatePipeline = async (event) => {
     inFlightRequests.set(ctx.target.el, ctx.abortController);
     try {
       const response = await fetchAndSwap(ctx.request, ctx.target, ctx.select, ctx.also);
-      if (ctx.target.type === 'het-nav-pane') {
+      if (response.finalTarget.type === 'het-nav-pane') {
         updateHead(response.newHead);
       }
     } catch (error) {
@@ -115,18 +115,20 @@ const popstatePipeline = async (event) => {
 const fetchAndSwap = async (request, target, select, also) => {
   request.headers.set('X-HET-Target', target.name);
   const response = await fetch(request);
+  const targetOverride = response.headers.get('X-HET-Target-Override');
+  const finalTarget = targetOverride ? getTarget(targetOverride) : target;
   const responseHtml = await response.text();
   const parsedDocument = parser.parseFromString(responseHtml, 'text/html');
   const candidates = parsedDocument.querySelectorAll(
-    `[${target.type}="${target.name}"]`,
+    `[${finalTarget.type}="${finalTarget.name}"]`,
   );
   if (candidates.length === 0)
     throw new Error(
-      `HET error: No pane named ${target.name} found in server response`,
+      `HET error: No pane named ${finalTarget.name} found in server response`,
     );
   if (candidates.length > 1)
     throw new Error(
-      `HET error: Multiple panes named ${target.name} found in server response`,
+      `HET error: Multiple panes named ${finalTarget.name} found in server response`,
     );
   const responseTarget = candidates[0];
   const importedNode = document.importNode(responseTarget, true);
@@ -135,17 +137,17 @@ const fetchAndSwap = async (request, target, select, also) => {
   if (!select || select.length === 0) {
     if (also && also.length) {
       insertedElements.push(
-        ...applyAlsoReplacements(also, target.el, responseTarget, responseDoc),
+        ...applyAlsoReplacements(also, finalTarget.el, responseTarget, responseDoc),
       );
     }
-    target.el.replaceWith(importedNode);
+    finalTarget.el.replaceWith(importedNode);
     insertedElements.push(importedNode);
     focusFirstAutofocus(insertedElements);
-    return { url: response.url, newHead: parsedDocument.head };
+    return { url: response.url, newHead: parsedDocument.head, finalTarget };
   }
-  validateSelectedIds(select, target.el, importedNode);
+  validateSelectedIds(select, finalTarget.el, importedNode);
   for (const id of select) {
-    const currentEl = getDescendantById(target.el, id);
+    const currentEl = getDescendantById(finalTarget.el, id);
     const replacement = getDescendantById(importedNode, id);
     const importedReplacement = document.importNode(replacement, true);
     currentEl.replaceWith(importedReplacement);
@@ -153,11 +155,11 @@ const fetchAndSwap = async (request, target, select, also) => {
   }
   if (also && also.length) {
     insertedElements.push(
-      ...applyAlsoReplacements(also, target.el, responseTarget, responseDoc),
+      ...applyAlsoReplacements(also, finalTarget.el, responseTarget, responseDoc),
     );
   }
   focusFirstAutofocus(insertedElements);
-  return { url: response.url, newHead: parsedDocument.head };
+  return { url: response.url, newHead: parsedDocument.head, finalTarget };
 };
 
 const getClickContext = (event) => {

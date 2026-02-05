@@ -118,6 +118,8 @@ Link-specific behavior:
 
 For both links and forms, enhanced requests include an `X-HET-Target` header containing the resolved target pane name.
 
+Servers can respond with `X-HET-Target-Override` to replace a different pane than originally targeted. The override pane must exist in the current document and response.
+
 ### Partial updates with `het-select`
 
 Use `het-select` to replace only specific ids inside the target pane.
