@@ -19,7 +19,9 @@ const upload = multer();
 app.use(express.urlencoded({ extended: true }));
 app.use(upload.none());
 app.use((request, response, next) => {
-  response.locals.cspNonce = crypto.randomBytes(16).toString('base64');
+  const requestNonce = request.get('X-HET-Nonce');
+  response.locals.cspNonce =
+    requestNonce || crypto.randomBytes(16).toString('base64');
   next();
 });
 
@@ -39,7 +41,10 @@ app.use(
           "'self'",
           (request, response) => `'nonce-${response.locals.cspNonce}'`,
         ],
-        'style-src': ["'self'"],
+        'style-src': [
+          "'self'",
+          (request, response) => `'nonce-${response.locals.cspNonce}'`,
+        ],
       },
     },
   })

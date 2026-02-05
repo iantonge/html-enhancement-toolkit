@@ -86,6 +86,27 @@ window.HET.init({
 });
 ```
 
+### `nonce`
+
+Adds a nonce value to enhanced fetch requests using the configured nonce header name. This is mainly useful for nonce-protected inline `<style>` blocks in swapped HTML. Inline `<script>` tags in swapped content are inert and are not executed automatically.
+
+```js
+window.HET.init({
+  nonce: 'server-generated-nonce',
+});
+```
+
+### `nonceHeader`
+
+Overrides the request header name used for `nonce`. Default: `"X-HET-Nonce"`.
+
+```js
+window.HET.init({
+  nonce: 'server-generated-nonce',
+  nonceHeader: 'X-CSP-Nonce',
+});
+```
+
 ## Request enhancement
 
 HET progressively enhances both links and forms by replacing a named target pane from server-rendered HTML responses.

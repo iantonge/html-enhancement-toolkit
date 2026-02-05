@@ -7,6 +7,8 @@ let onError = (error) => {
   throw error;
 };
 let busyClass = 'het-busy';
+let nonceHeader = 'X-HET-Nonce';
+let nonce;
 let headContentSelectors = [
   'title',
   'meta[name]',
@@ -113,6 +115,9 @@ const popstatePipeline = async (event) => {
 };
 
 const fetchAndSwap = async (request, target, select, also) => {
+  if (nonce) {
+    request.headers.set(nonceHeader, nonce);
+  }
   request.headers.set('X-HET-Target', target.name);
   const response = await fetch(request);
   const targetOverride = response.headers.get('X-HET-Target-Override');
@@ -494,6 +499,8 @@ const getTarget = (targetName) => {
 export function init(config) {
   onError = config?.onError ?? onError;
   busyClass = config?.busyClass ?? busyClass;
+  nonceHeader = config?.nonceHeader ?? nonceHeader;
+  nonce = config?.nonce ?? nonce;
   headContentSelectors = config?.headContentSelectors ?? headContentSelectors;
   document.addEventListener('click', clickPipeline);
   document.addEventListener('submit', submitPipeline);
