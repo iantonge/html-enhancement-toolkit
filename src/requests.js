@@ -113,6 +113,7 @@ const popstatePipeline = async (event) => {
 };
 
 const fetchAndSwap = async (request, target, select, also) => {
+  request.headers.set('X-HET-Target', target.name);
   const response = await fetch(request);
   const responseHtml = await response.text();
   const parsedDocument = parser.parseFromString(responseHtml, 'text/html');

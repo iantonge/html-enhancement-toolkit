@@ -116,6 +116,8 @@ Link-specific behavior:
 - Modifier clicks (Ctrl, Cmd, Shift, or middle click) are not enhanced.
 - Clicks on nested elements inside a link still resolve to the nearest ancestor `<a het-target="...">`.
 
+For both links and forms, enhanced requests include an `X-HET-Target` header containing the resolved target pane name.
+
 ### Partial updates with `het-select`
 
 Use `het-select` to replace only specific ids inside the target pane.
