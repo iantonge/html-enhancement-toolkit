@@ -9,6 +9,7 @@ let onError = (error) => {
 let busyClass = 'het-busy';
 let nonceHeader = 'X-HET-Nonce';
 let nonce;
+let trustedTypesPolicy;
 let headContentSelectors = [
   'title',
   'meta[name]',
@@ -139,7 +140,9 @@ const fetchAndSwap = async (request, target, select, also) => {
         ? getAlsoIds(alsoOverride)
         : also;
   const responseHtml = await response.text();
-  const parsedDocument = parser.parseFromString(responseHtml, 'text/html');
+  const htmlForParse = trustedTypesPolicy?.createHTML(responseHtml) ?? responseHtml;
+  console.log(htmlForParse);
+  const parsedDocument = parser.parseFromString(htmlForParse, 'text/html');
   const candidates = parsedDocument.querySelectorAll(
     `[${finalTarget.type}="${finalTarget.name}"]`,
   );
@@ -501,6 +504,7 @@ export function init(config) {
   busyClass = config?.busyClass ?? busyClass;
   nonceHeader = config?.nonceHeader ?? nonceHeader;
   nonce = config?.nonce ?? nonce;
+  trustedTypesPolicy = config?.trustedTypesPolicy ?? trustedTypesPolicy;
   headContentSelectors = config?.headContentSelectors ?? headContentSelectors;
   document.addEventListener('click', clickPipeline);
   document.addEventListener('submit', submitPipeline);

@@ -16,6 +16,12 @@
     <main id="main" class="container-fluid py-4">
       {{{body}}}
     </main>
+    <script
+      nonce="{{{cspNonce}}}"
+      src="/js/trusted-types/trustedtypes.build.js"
+      data-csp="trusted-types het dompurify; require-trusted-types-for 'script'">
+    </script>
+    <script nonce="{{{cspNonce}}}" src="/js/dompurify/purify.min.js" defer></script>
     <script nonce="{{{cspNonce}}}" src="/js/het/het.iife.js" defer></script>
     <script nonce="{{{cspNonce}}}" src="/assets/init.js" defer></script>
   </body>

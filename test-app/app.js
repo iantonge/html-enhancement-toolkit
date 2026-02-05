@@ -45,13 +45,17 @@ app.use(
           "'self'",
           (request, response) => `'nonce-${response.locals.cspNonce}'`,
         ],
+        'trusted-types': ['dompurify', 'het'],
+        'require-trusted-types-for': ["'script'"],
       },
     },
   })
 );
 
 app.use('/css', express.static(path.join(__dirname, '../node_modules/bootstrap/dist/css')));
+app.use('/js/dompurify', express.static(path.join(__dirname, '../node_modules/dompurify/dist')));
 app.use('/js/het', express.static(path.join(__dirname, '../dist')));
+app.use('/js/trusted-types', express.static(path.join(__dirname, '../node_modules/trusted-types/dist/es6')));
 app.use('/assets', express.static(path.join(__dirname, 'assets')));
 
 app.use('/', pageRoutes);

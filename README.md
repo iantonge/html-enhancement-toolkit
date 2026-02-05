@@ -107,6 +107,59 @@ window.HET.init({
 });
 ```
 
+### `trustedTypesPolicy`
+
+Optional Trusted Types policy object used to transform response HTML before parsing. If provided, HET calls `trustedTypesPolicy.createHTML(responseHtml)`.
+
+DOMPurify is a suitable sanitizer for this. If you use head updates, configure it to keep the document structure and allow head elements/attributes.
+
+```js
+import DOMPurify from 'dompurify';
+
+const trustedTypesPolicy = trustedTypes.createPolicy('het', {
+  createHTML: (html) =>
+    DOMPurify.sanitize(html, {
+      RETURN_TRUSTED_TYPE: false,
+      WHOLE_DOCUMENT: true,
+      ADD_TAGS: ['html', 'head', 'body', 'meta', 'title', 'link', 'style', 'script'],
+      ADD_ATTR: [
+        'het-pane',
+        'het-nav-pane',
+        'het-target',
+        'het-select',
+        'het-also',
+        'name',
+        'content',
+        'property',
+        'rel',
+        'href',
+        'type',
+        'charset',
+        'http-equiv',
+        'nonce',
+        'autofocus',
+      ],
+    }),
+});
+
+window.HET.init({
+  trustedTypesPolicy,
+});
+```
+
+Security guidance: keep the DOMPurify allowlist as narrow as possible. Only enable
+`WHOLE_DOCUMENT` and head-related tags/attributes if you rely on head updates,
+and avoid allowing `<script>` unless you also keep swapped scripts inert via CSP
+(recommended). If you want stricter control, consider separate policies for head
+and body swaps.
+
+Note: Firefox does not yet support Trusted Types natively. A polyfill is available
+from:
+
+```text
+https://github.com/w3c/trusted-types
+```
+
 ## Request enhancement
 
 HET progressively enhances both links and forms by replacing a named target pane from server-rendered HTML responses.
