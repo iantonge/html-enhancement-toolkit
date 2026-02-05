@@ -120,6 +120,10 @@ For both links and forms, enhanced requests include an `X-HET-Target` header con
 
 Servers can respond with `X-HET-Target-Override` to replace a different pane than originally targeted. The override pane must exist in the current document and response.
 
+Servers can respond with `X-HET-Select-Override` to override the selected ids used for partial updates. Use a space-separated list of ids; an empty value clears `het-select` and performs a full pane replacement.
+
+When using `X-HET-Target-Override`, it is usually safer to also clear selection (`X-HET-Select-Override: ""`) unless the selected ids are guaranteed to exist in the overridden target pane.
+
 ### Partial updates with `het-select`
 
 Use `het-select` to replace only specific ids inside the target pane.

@@ -117,6 +117,14 @@ const fetchAndSwap = async (request, target, select, also) => {
   const response = await fetch(request);
   const targetOverride = response.headers.get('X-HET-Target-Override');
   const finalTarget = targetOverride ? getTarget(targetOverride) : target;
+  const selectHeaderProvided = response.headers.has('X-HET-Select-Override');
+  const selectOverride = response.headers.get('X-HET-Select-Override');
+  const finalSelect =
+    selectHeaderProvided && (selectOverride ?? '').trim() === ''
+      ? undefined
+      : selectHeaderProvided
+        ? getSelectIds(selectOverride)
+        : select;
   const responseHtml = await response.text();
   const parsedDocument = parser.parseFromString(responseHtml, 'text/html');
   const candidates = parsedDocument.querySelectorAll(
@@ -134,7 +142,7 @@ const fetchAndSwap = async (request, target, select, also) => {
   const importedNode = document.importNode(responseTarget, true);
   const responseDoc = parsedDocument;
   const insertedElements = [];
-  if (!select || select.length === 0) {
+  if (!finalSelect || finalSelect.length === 0) {
     if (also && also.length) {
       insertedElements.push(
         ...applyAlsoReplacements(also, finalTarget.el, responseTarget, responseDoc),
@@ -145,8 +153,8 @@ const fetchAndSwap = async (request, target, select, also) => {
     focusFirstAutofocus(insertedElements);
     return { url: response.url, newHead: parsedDocument.head, finalTarget };
   }
-  validateSelectedIds(select, finalTarget.el, importedNode);
-  for (const id of select) {
+  validateSelectedIds(finalSelect, finalTarget.el, importedNode);
+  for (const id of finalSelect) {
     const currentEl = getDescendantById(finalTarget.el, id);
     const replacement = getDescendantById(importedNode, id);
     const importedReplacement = document.importNode(replacement, true);

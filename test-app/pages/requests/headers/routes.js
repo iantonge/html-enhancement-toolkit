@@ -66,4 +66,54 @@ router.get('/het-target-override/responses/form', (request, response) => {
     });
 });
 
+router.get('/het-select-override', (request, response) => {
+  response.render('requests/headers/het-select-override/index', {
+    title: 'X-HET-Select-Override tests',
+  });
+});
+
+router.get('/het-select-override/link', (request, response) => {
+  response.render('requests/headers/het-select-override/link', {
+    title: 'X-HET-Select-Override link test',
+  });
+});
+
+router.get('/het-select-override/form', (request, response) => {
+  response.render('requests/headers/het-select-override/form', {
+    title: 'X-HET-Select-Override form test',
+  });
+});
+
+router.get('/het-select-override/responses/link', (request, response) => {
+  response
+    .set('X-HET-Select-Override', 'primary-content')
+    .render('requests/headers/het-select-override/responses/link', {
+      title: 'X-HET-Select-Override link response',
+    });
+});
+
+router.get('/het-select-override/responses/link-clear', (request, response) => {
+  response
+    .set('X-HET-Select-Override', '')
+    .render('requests/headers/het-select-override/responses/link', {
+      title: 'X-HET-Select-Override clear link response',
+    });
+});
+
+router.get('/het-select-override/responses/form', (request, response) => {
+  response
+    .set('X-HET-Select-Override', 'primary-content')
+    .render('requests/headers/het-select-override/responses/form', {
+      title: 'X-HET-Select-Override form response',
+    });
+});
+
+router.get('/het-select-override/responses/form-clear', (request, response) => {
+  response
+    .set('X-HET-Select-Override', '')
+    .render('requests/headers/het-select-override/responses/form', {
+      title: 'X-HET-Select-Override clear form response',
+    });
+});
+
 export default router;
