@@ -124,6 +124,8 @@ Servers can respond with `X-HET-Select-Override` to override the selected ids us
 
 When using `X-HET-Target-Override`, it is usually safer to also clear selection (`X-HET-Select-Override: ""`) unless the selected ids are guaranteed to exist in the overridden target pane.
 
+Servers can respond with `X-HET-Also-Override` to override `het-also` ids for out-of-target replacements. Use a space-separated list of ids; an empty value clears `het-also`.
+
 ### Partial updates with `het-select`
 
 Use `het-select` to replace only specific ids inside the target pane.

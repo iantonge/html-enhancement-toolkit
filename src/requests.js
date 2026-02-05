@@ -119,12 +119,20 @@ const fetchAndSwap = async (request, target, select, also) => {
   const finalTarget = targetOverride ? getTarget(targetOverride) : target;
   const selectHeaderProvided = response.headers.has('X-HET-Select-Override');
   const selectOverride = response.headers.get('X-HET-Select-Override');
+  const alsoHeaderProvided = response.headers.has('X-HET-Also-Override');
+  const alsoOverride = response.headers.get('X-HET-Also-Override');
   const finalSelect =
     selectHeaderProvided && (selectOverride ?? '').trim() === ''
       ? undefined
       : selectHeaderProvided
         ? getSelectIds(selectOverride)
         : select;
+  const finalAlso =
+    alsoHeaderProvided && (alsoOverride ?? '').trim() === ''
+      ? undefined
+      : alsoHeaderProvided
+        ? getAlsoIds(alsoOverride)
+        : also;
   const responseHtml = await response.text();
   const parsedDocument = parser.parseFromString(responseHtml, 'text/html');
   const candidates = parsedDocument.querySelectorAll(
@@ -143,9 +151,9 @@ const fetchAndSwap = async (request, target, select, also) => {
   const responseDoc = parsedDocument;
   const insertedElements = [];
   if (!finalSelect || finalSelect.length === 0) {
-    if (also && also.length) {
+    if (finalAlso && finalAlso.length) {
       insertedElements.push(
-        ...applyAlsoReplacements(also, finalTarget.el, responseTarget, responseDoc),
+        ...applyAlsoReplacements(finalAlso, finalTarget.el, responseTarget, responseDoc),
       );
     }
     finalTarget.el.replaceWith(importedNode);
@@ -161,9 +169,9 @@ const fetchAndSwap = async (request, target, select, also) => {
     currentEl.replaceWith(importedReplacement);
     insertedElements.push(importedReplacement);
   }
-  if (also && also.length) {
+  if (finalAlso && finalAlso.length) {
     insertedElements.push(
-      ...applyAlsoReplacements(also, finalTarget.el, responseTarget, responseDoc),
+      ...applyAlsoReplacements(finalAlso, finalTarget.el, responseTarget, responseDoc),
     );
   }
   focusFirstAutofocus(insertedElements);
