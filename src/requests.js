@@ -7,6 +7,14 @@ let onError = (error) => {
   throw error;
 };
 let busyClass = 'het-busy';
+let headContentSelectors = [
+  'title',
+  'meta[name]',
+  'meta[property]',
+  'link[rel="canonical"]',
+  'link[rel="alternate"]',
+  'script[type="application/ld+json"]',
+];
 let requestCount = 0;
 
 const clickPipeline = async (event) => {
@@ -21,13 +29,16 @@ const clickPipeline = async (event) => {
     startUiFeedback(ctx.target.el, requestId);
     inFlightRequests.set(ctx.target.el, ctx.abortController);
     try {
-      const responseUrl = await fetchAndSwap(
+      const response = await fetchAndSwap(
         ctx.request,
         ctx.target,
         ctx.select,
         ctx.also,
       );
-      updateHistory(ctx.target, responseUrl, ctx.select, ctx.also);
+      if (ctx.target.type === 'het-nav-pane') {
+        updateHead(response.newHead);
+      }
+      updateHistory(ctx.target, response.url, ctx.select, ctx.also);
     } catch (error) {
       if (error.name !== 'AbortError') throw error;
     }
@@ -53,13 +64,16 @@ const submitPipeline = async (event) => {
     updateForm(ctx.form, requestId, disableElement);
     inFlightRequests.set(ctx.target.el, ctx.abortController);
     try {
-      const responseUrl = await fetchAndSwap(
+      const response = await fetchAndSwap(
         ctx.request,
         ctx.target,
         ctx.select,
         ctx.also,
       );
-      updateHistory(ctx.target, responseUrl, ctx.select, ctx.also);
+      if (ctx.target.type === 'het-nav-pane') {
+        updateHead(response.newHead);
+      }
+      updateHistory(ctx.target, response.url, ctx.select, ctx.also);
     } catch (error) {
       if (error.name !== 'AbortError') throw error;
     } finally {
@@ -81,7 +95,10 @@ const popstatePipeline = async (event) => {
     startUiFeedback(ctx.target.el, requestId);
     inFlightRequests.set(ctx.target.el, ctx.abortController);
     try {
-      await fetchAndSwap(ctx.request, ctx.target, ctx.select, ctx.also);
+      const response = await fetchAndSwap(ctx.request, ctx.target, ctx.select, ctx.also);
+      if (ctx.target.type === 'het-nav-pane') {
+        updateHead(response.newHead);
+      }
     } catch (error) {
       if (error.name !== 'AbortError') throw error;
     }
@@ -123,7 +140,7 @@ const fetchAndSwap = async (request, target, select, also) => {
     target.el.replaceWith(importedNode);
     insertedElements.push(importedNode);
     focusFirstAutofocus(insertedElements);
-    return response.url;
+    return { url: response.url, newHead: parsedDocument.head };
   }
   validateSelectedIds(select, target.el, importedNode);
   for (const id of select) {
@@ -139,7 +156,7 @@ const fetchAndSwap = async (request, target, select, also) => {
     );
   }
   focusFirstAutofocus(insertedElements);
-  return response.url;
+  return { url: response.url, newHead: parsedDocument.head };
 };
 
 const getClickContext = (event) => {
@@ -419,6 +436,16 @@ const updateHistory = (target, responseUrl, select, also) => {
   history.pushState(state, '', responseUrl);
 };
 
+const updateHead = (newHead) => {
+  if (!newHead) return;
+  headContentSelectors.forEach((selector) => {
+    document.head.querySelectorAll(selector).forEach((el) => el.remove());
+    newHead.querySelectorAll(selector).forEach((el) => {
+      document.head.appendChild(el.cloneNode(true));
+    });
+  });
+};
+
 const getPopStateContext = (event) => {
   if (!event.state) return;
   inFlightRequests.forEach((controller) => controller.abort());
@@ -448,6 +475,7 @@ const getTarget = (targetName) => {
 export function init(config) {
   onError = config?.onError ?? onError;
   busyClass = config?.busyClass ?? busyClass;
+  headContentSelectors = config?.headContentSelectors ?? headContentSelectors;
   document.addEventListener('click', clickPipeline);
   document.addEventListener('submit', submitPipeline);
   window.addEventListener('popstate', popstatePipeline);

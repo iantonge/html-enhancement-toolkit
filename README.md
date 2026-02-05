@@ -63,6 +63,29 @@ window.HET.init({
 });
 ```
 
+### `headContentSelectors`
+
+Controls which `<head>` elements HET synchronizes from responses during `het-nav-pane` navigations. Default:
+
+```js
+[
+  'title',
+  'meta[name]',
+  'meta[property]',
+  'link[rel="canonical"]',
+  'link[rel="alternate"]',
+  'script[type="application/ld+json"]',
+]
+```
+
+Example limiting updates to `<title>` only:
+
+```js
+window.HET.init({
+  headContentSelectors: ['title'],
+});
+```
+
 ## Request enhancement
 
 HET progressively enhances both links and forms by replacing a named target pane from server-rendered HTML responses.
@@ -158,6 +181,8 @@ Use `het-nav-pane` when pane replacement should also update browser history.
 ```
 
 When HET performs the first navigation in a session, it replaces the initial history state. On `popstate`, HET cancels in-flight requests, re-fetches the URL from history state, and re-applies the saved pane/select/also settings.
+
+For `het-nav-pane` navigations, HET also synchronizes key `<head>` elements from the response (including `<title>`), so browser history navigation restores both pane content and page metadata.
 
 ### UI feedback while requests are in flight
 
