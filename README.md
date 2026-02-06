@@ -160,6 +160,23 @@ from:
 https://github.com/w3c/trusted-types
 ```
 
+### `replaceContent`
+
+Optional function to customize how HET swaps a matched element with its replacement.
+This is called for the target pane, `het-select` replacements, and `het-also`
+replacements.
+
+We recommend using a DOM morphing library (such as Idiomorph) for smoother updates.
+
+```js
+window.HET.init({
+  replaceContent: (currentEl, replacementEl) => {
+    Idiomorph.morph(currentEl, replacementEl);
+    return currentEl;
+  },
+});
+```
+
 ## Request enhancement
 
 HET progressively enhances both links and forms by replacing a named target pane from server-rendered HTML responses.

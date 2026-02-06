@@ -6,6 +6,11 @@ let historyStateReplaced = false;
 let onError = (error) => {
   throw error;
 };
+let replaceContent = (elToReplace, replacementEl) => {
+  const importedNode = document.importNode(replacementEl, true);
+  elToReplace.replaceWith(importedNode);
+  return importedNode;
+};
 let busyClass = 'het-busy';
 let nonceHeader = 'X-HET-Nonce';
 let nonce;
@@ -155,7 +160,6 @@ const fetchAndSwap = async (request, target, select, also) => {
       `HET error: Multiple panes named ${finalTarget.name} found in server response`,
     );
   const responseTarget = candidates[0];
-  const importedNode = document.importNode(responseTarget, true);
   const responseDoc = parsedDocument;
   const insertedElements = [];
   if (!finalSelect || finalSelect.length === 0) {
@@ -164,18 +168,15 @@ const fetchAndSwap = async (request, target, select, also) => {
         ...applyAlsoReplacements(finalAlso, finalTarget.el, responseTarget, responseDoc),
       );
     }
-    finalTarget.el.replaceWith(importedNode);
-    insertedElements.push(importedNode);
+    insertedElements.push(replaceContent(finalTarget.el, responseTarget));
     focusFirstAutofocus(insertedElements);
     return { url: response.url, newHead: parsedDocument.head, finalTarget };
   }
-  validateSelectedIds(finalSelect, finalTarget.el, importedNode);
+  validateSelectedIds(finalSelect, finalTarget.el, responseTarget);
   for (const id of finalSelect) {
     const currentEl = getDescendantById(finalTarget.el, id);
-    const replacement = getDescendantById(importedNode, id);
-    const importedReplacement = document.importNode(replacement, true);
-    currentEl.replaceWith(importedReplacement);
-    insertedElements.push(importedReplacement);
+    const replacement = getDescendantById(responseTarget, id);
+    insertedElements.push(replaceContent(currentEl, replacement));
   }
   if (finalAlso && finalAlso.length) {
     insertedElements.push(
@@ -370,9 +371,7 @@ const applyAlsoReplacements = (ids, targetEl, responseTarget, responseDoc) => {
         `HET error: het-also id ${id} must refer to an element outside the target in server response`,
       );
     }
-    const importedReplacement = document.importNode(replacement, true);
-    currentEl.replaceWith(importedReplacement);
-    replacements.push(importedReplacement);
+    replacements.push(replaceContent(currentEl, replacement));
   });
   return replacements;
 };
@@ -501,6 +500,7 @@ const getTarget = (targetName) => {
 
 export function init(config) {
   onError = config?.onError ?? onError;
+  replaceContent = config?.replaceContent ?? replaceContent;
   busyClass = config?.busyClass ?? busyClass;
   nonceHeader = config?.nonceHeader ?? nonceHeader;
   nonce = config?.nonce ?? nonce;

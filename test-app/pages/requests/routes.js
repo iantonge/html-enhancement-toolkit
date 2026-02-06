@@ -3,6 +3,7 @@ import formRoutes from './forms/routes.js';
 import headersRoutes from './headers/routes.js';
 import historyRoutes from './history/routes.js';
 import linkRoutes from './links/routes.js';
+import replaceContentRoutes from './replace-content/routes.js';
 
 const router = Router();
 
@@ -14,5 +15,6 @@ router.use('/forms', formRoutes);
 router.use('/headers', headersRoutes);
 router.use('/history', historyRoutes);
 router.use('/links', linkRoutes);
+router.use('/replace-content', replaceContentRoutes);
 
 export default router;
