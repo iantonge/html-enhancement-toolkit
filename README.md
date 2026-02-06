@@ -306,6 +306,16 @@ HET coordinates in-flight requests by target pane so overlapping updates do not 
 - If a pane request is in flight, a new request to the same pane cancels the earlier one.
 - If a parent pane request is in flight, requests targeting panes inside it are ignored.
 
+### Lifecycle events
+
+HET dispatches lifecycle events around fetch and content loading. These are notification
+events (they are not awaited), and they bubble from the target pane.
+
+- `het:beforeFetch` with `detail.request` (cancelable)
+- `het:afterFetch` with `detail.response`
+- `het:beforeLoadContent` with `detail.newContent` (cancelable)
+- `het:afterLoadContent`
+
 ## Developing HET
 
 Project layout:

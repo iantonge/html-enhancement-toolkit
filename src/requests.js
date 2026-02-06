@@ -43,6 +43,7 @@ const clickPipeline = async (event) => {
         ctx.select,
         ctx.also,
       );
+      if (!response) return;
       if (response.finalTarget.type === 'het-nav-pane') {
         updateHead(response.newHead);
       }
@@ -78,6 +79,7 @@ const submitPipeline = async (event) => {
         ctx.select,
         ctx.also,
       );
+      if (!response) return;
       if (response.finalTarget.type === 'het-nav-pane') {
         updateHead(response.newHead);
       }
@@ -104,6 +106,7 @@ const popstatePipeline = async (event) => {
     inFlightRequests.set(ctx.target.el, ctx.abortController);
     try {
       const response = await fetchAndSwap(ctx.request, ctx.target, ctx.select, ctx.also);
+      if (!response) return;
       if (response.finalTarget.type === 'het-nav-pane') {
         updateHead(response.newHead);
       }
@@ -125,13 +128,26 @@ const fetchAndSwap = async (request, target, select, also) => {
     request.headers.set(nonceHeader, nonce);
   }
   request.headers.set('X-HET-Target', target.name);
-  const response = await fetch(request);
-  const targetOverride = response.headers.get('X-HET-Target-Override');
+  const beforeFetchEvent = new CustomEvent('het:beforeFetch', {
+    detail: { request },
+    cancelable: true,
+    bubbles: true,
+  });
+  target.el.dispatchEvent(beforeFetchEvent);
+  if (beforeFetchEvent.defaultPrevented) return;
+  const response = await fetch(beforeFetchEvent.detail.request);
+  const afterFetchEvent = new CustomEvent('het:afterFetch', {
+    detail: { response },
+    bubbles: true,
+  });
+  target.el.dispatchEvent(afterFetchEvent);
+  const finalResponse = afterFetchEvent.detail.response;
+  const targetOverride = finalResponse.headers.get('X-HET-Target-Override');
   const finalTarget = targetOverride ? getTarget(targetOverride) : target;
-  const selectHeaderProvided = response.headers.has('X-HET-Select-Override');
-  const selectOverride = response.headers.get('X-HET-Select-Override');
-  const alsoHeaderProvided = response.headers.has('X-HET-Also-Override');
-  const alsoOverride = response.headers.get('X-HET-Also-Override');
+  const selectHeaderProvided = finalResponse.headers.has('X-HET-Select-Override');
+  const selectOverride = finalResponse.headers.get('X-HET-Select-Override');
+  const alsoHeaderProvided = finalResponse.headers.has('X-HET-Also-Override');
+  const alsoOverride = finalResponse.headers.get('X-HET-Also-Override');
   const finalSelect =
     selectHeaderProvided && (selectOverride ?? '').trim() === ''
       ? undefined
@@ -144,9 +160,8 @@ const fetchAndSwap = async (request, target, select, also) => {
       : alsoHeaderProvided
         ? getAlsoIds(alsoOverride)
         : also;
-  const responseHtml = await response.text();
+  const responseHtml = await finalResponse.text();
   const htmlForParse = trustedTypesPolicy?.createHTML(responseHtml) ?? responseHtml;
-  console.log(htmlForParse);
   const parsedDocument = parser.parseFromString(htmlForParse, 'text/html');
   const candidates = parsedDocument.querySelectorAll(
     `[${finalTarget.type}="${finalTarget.name}"]`,
@@ -160,31 +175,50 @@ const fetchAndSwap = async (request, target, select, also) => {
       `HET error: Multiple panes named ${finalTarget.name} found in server response`,
     );
   const responseTarget = candidates[0];
+  const beforeLoadContentEvent = new CustomEvent('het:beforeLoadContent', {
+    detail: { newContent: responseTarget },
+    cancelable: true,
+    bubbles: true,
+  });
+  finalTarget.el.dispatchEvent(beforeLoadContentEvent);
+  if (beforeLoadContentEvent.defaultPrevented) return;
+  const newContent = beforeLoadContentEvent.detail.newContent;
   const responseDoc = parsedDocument;
   const insertedElements = [];
+  let loadedContent;
   if (!finalSelect || finalSelect.length === 0) {
     if (finalAlso && finalAlso.length) {
       insertedElements.push(
-        ...applyAlsoReplacements(finalAlso, finalTarget.el, responseTarget, responseDoc),
+        ...applyAlsoReplacements(finalAlso, finalTarget.el, newContent, responseDoc),
       );
     }
-    insertedElements.push(replaceContent(finalTarget.el, responseTarget));
+    loadedContent = replaceContent(finalTarget.el, newContent);
+    insertedElements.push(loadedContent);
     focusFirstAutofocus(insertedElements);
-    return { url: response.url, newHead: parsedDocument.head, finalTarget };
+    const afterLoadContentEvent = new CustomEvent('het:afterLoadContent', {
+      bubbles: true,
+    });
+    loadedContent.dispatchEvent(afterLoadContentEvent);
+    return { url: finalResponse.url, newHead: parsedDocument.head, finalTarget };
   }
-  validateSelectedIds(finalSelect, finalTarget.el, responseTarget);
+  validateSelectedIds(finalSelect, finalTarget.el, newContent);
   for (const id of finalSelect) {
     const currentEl = getDescendantById(finalTarget.el, id);
-    const replacement = getDescendantById(responseTarget, id);
+    const replacement = getDescendantById(newContent, id);
     insertedElements.push(replaceContent(currentEl, replacement));
   }
   if (finalAlso && finalAlso.length) {
     insertedElements.push(
-      ...applyAlsoReplacements(finalAlso, finalTarget.el, responseTarget, responseDoc),
+      ...applyAlsoReplacements(finalAlso, finalTarget.el, newContent, responseDoc),
     );
   }
   focusFirstAutofocus(insertedElements);
-  return { url: response.url, newHead: parsedDocument.head, finalTarget };
+  loadedContent = finalTarget.el;
+  const afterLoadContentEvent = new CustomEvent('het:afterLoadContent', {
+    bubbles: true,
+  });
+  loadedContent.dispatchEvent(afterLoadContentEvent);
+  return { url: finalResponse.url, newHead: parsedDocument.head, finalTarget };
 };
 
 const getClickContext = (event) => {
