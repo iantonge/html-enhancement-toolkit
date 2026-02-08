@@ -1,0 +1,18 @@
+<section class="card shadow-sm border-0">
+  <div class="card-body">
+    <h1 class="h4 mb-3">{{title}}</h1>
+    <div id="destroy-component" het-component="base-flow"></div>
+    <p id="cleanup-count" class="mb-0 text-muted">Cleanup count: 0</p>
+  </div>
+</section>
+<script nonce="{{{cspNonce}}}">
+  window.baseFlowCleanupCount = 0;
+  window.HET.registerComponent('base-flow', {
+    setup: ({ onCleanup }) => {
+      onCleanup(() => {
+        window.baseFlowCleanupCount += 1;
+        document.getElementById('cleanup-count').textContent = `Cleanup count: ${window.baseFlowCleanupCount}`;
+      });
+    },
+  });
+</script>

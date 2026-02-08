@@ -6,6 +6,7 @@
       <meta name="description" content="{{description}}" />
     {{/if}}
     <link rel='stylesheet' href='/css/bootstrap.css' />
+    <script nonce="{{{cspNonce}}}" src="/js/het/het.iife.js"></script>
   </head>
   <body class="bg-light">
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
@@ -22,7 +23,6 @@
       data-csp="trusted-types het dompurify; require-trusted-types-for 'script'">
     </script>
     <script nonce="{{{cspNonce}}}" src="/js/dompurify/purify.min.js" defer></script>
-    <script nonce="{{{cspNonce}}}" src="/js/het/het.iife.js" defer></script>
     <script nonce="{{{cspNonce}}}" src="/assets/init.js" defer></script>
   </body>
 </html>

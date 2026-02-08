@@ -177,6 +177,29 @@ window.HET.init({
 });
 ```
 
+## Components
+
+Register components before calling `init()`, then attach them with `het-component`.
+
+```html
+<div het-component="counter"></div>
+```
+
+```js
+window.HET.registerComponent('counter', {
+  setup: ({ el, onCleanup }) => {
+    el.textContent = 'Mounted';
+    onCleanup(() => {
+      // cleanup work
+    });
+  },
+});
+
+window.HET.init();
+```
+
+Call `window.HET.destroy()` to run cleanup for mounted components and remove request listeners.
+
 ## Request enhancement
 
 HET progressively enhances both links and forms by replacing a named target pane from server-rendered HTML responses.

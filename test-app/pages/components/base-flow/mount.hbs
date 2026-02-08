@@ -1,0 +1,19 @@
+<section class="card shadow-sm border-0">
+  <div class="card-body">
+    <h1 class="h4 mb-3">{{title}}</h1>
+    <div id="mount-component" het-component="base-flow" data-mode="mount"></div>
+    <p id="setup-count" class="mb-0 text-muted">Setup count: 0</p>
+  </div>
+</section>
+<script nonce="{{{cspNonce}}}">
+  window.baseFlowSetupCount = 0;
+  window.HET.registerComponent('base-flow', {
+    setup: ({ el }) => {
+      window.baseFlowSetupCount += 1;
+      if (el.dataset.mode === 'mount') {
+        el.textContent = 'Mounted';
+      }
+      document.getElementById('setup-count').textContent = `Setup count: ${window.baseFlowSetupCount}`;
+    },
+  });
+</script>
