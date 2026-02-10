@@ -1,4 +1,4 @@
-window.hetErrors = [];
+window.hetErrors = window.hetErrors || [];
 const trustedTypesPolicy = trustedTypes.createPolicy('het', {
   createHTML: (html) => DOMPurify.sanitize(html, {
     RETURN_TRUSTED_TYPE: false,

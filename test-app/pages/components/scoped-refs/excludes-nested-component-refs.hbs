@@ -1,0 +1,23 @@
+<section class="card shadow-sm border-0">
+  <div class="card-body">
+    <h1 class="h4 mb-3">{{title}}</h1>
+    <div id="parent-component" het-component="refs-parent" het-ref="parent-root">
+      <p het-ref="parent-label">Parent label</p>
+      <div het-component="refs-child">
+        <span het-ref="child-only">Child ref</span>
+      </div>
+    </div>
+    <p id="parent-refs-result" class="mb-0 text-muted">Pending</p>
+  </div>
+</section>
+<script nonce="{{{cspNonce}}}">
+  window.HET.registerComponent('refs-parent', {
+    setup: ({ refs }) => {
+      const keys = Object.keys(refs).sort().join(',');
+      document.getElementById('parent-refs-result').textContent = keys;
+    },
+  });
+  window.HET.registerComponent('refs-child', {
+    setup: () => {},
+  });
+</script>

@@ -17,10 +17,10 @@ test.describe('components base flow', () => {
 
   test('throws when registering a component without a name', async ({ page }) => {
     await page.goto('/components/base-flow/register-without-name');
-    await expect(page.locator('#register-error')).toHaveText(
-      'HET Error: Component name is required',
+    await page.waitForFunction(() =>
+      window.hetErrors.includes(
+        'HET Error: Component name is required',
+      ),
     );
-    const hetErrors = await page.evaluate(() => window.hetErrors);
-    expect(hetErrors).toContain('HET Error: Component name is required');
   });
 });

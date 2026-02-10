@@ -1,0 +1,18 @@
+<section class="card shadow-sm border-0">
+  <div class="card-body">
+    <h1 class="h4 mb-3">{{title}}</h1>
+    <div id="root-component" het-component="refs-basic" het-ref="root">
+      <p het-ref="first">First ref</p>
+      <button het-ref="action" type="button">Action</button>
+    </div>
+    <p id="refs-result" class="mb-0 text-muted">Pending</p>
+  </div>
+</section>
+<script nonce="{{{cspNonce}}}">
+  window.HET.registerComponent('refs-basic', {
+    setup: ({ refs }) => {
+      const keys = Object.keys(refs).sort().join(',');
+      document.getElementById('refs-result').textContent = keys;
+    },
+  });
+</script>

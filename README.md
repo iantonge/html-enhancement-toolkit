@@ -187,8 +187,10 @@ Register components before calling `init()`, then attach them with `het-componen
 
 ```js
 window.HET.registerComponent('counter', {
-  setup: ({ el, onCleanup }) => {
+  setup: ({ el, refs, onCleanup }) => {
     el.textContent = 'Mounted';
+    // refs are collected from [het-ref] within this component scope
+    console.log(refs);
     onCleanup(() => {
       // cleanup work
     });
@@ -199,6 +201,9 @@ window.HET.init();
 ```
 
 Call `window.HET.destroy()` to run cleanup for mounted components and remove request listeners.
+
+`refs` includes elements marked with `het-ref` on the component root and its descendants,
+but excludes elements inside nested `[het-component]` subtrees.
 
 ## Request enhancement
 

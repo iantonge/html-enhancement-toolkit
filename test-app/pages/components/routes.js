@@ -1,6 +1,7 @@
 import { Router } from 'express';
 
 import baseFlowRoutes from './base-flow/routes.js';
+import scopedRefsRoutes from './scoped-refs/routes.js';
 
 const router = Router();
 
@@ -11,5 +12,6 @@ router.get('/', (request, response) => {
 });
 
 router.use('/base-flow', baseFlowRoutes);
+router.use('/scoped-refs', scopedRefsRoutes);
 
 export default router;

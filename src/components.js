@@ -61,13 +61,19 @@ function mountComponents(root) {
 function mountComponent(rootEl, def) {
   if (rootEl.__het_instance) return;
 
+  const refs = Object.fromEntries(
+    scopedQuerySelectorAll(rootEl, '[het-ref]').map((refEl) => [
+      refEl.getAttribute('het-ref'),
+      refEl,
+    ]),
+  );
   const cleanups = [];
   const onCleanup = (fn) => {
     if (typeof fn === 'function') {
       cleanups.push(fn);
     }
   };
-  const ctx = { el: rootEl, onCleanup };
+  const ctx = { el: rootEl, refs, onCleanup };
   const methods = (def.setup && def.setup(ctx)) || {};
 
   rootEl.__het_instance = {
@@ -93,4 +99,12 @@ function getNodeDepth(node) {
     current = current.parentElement;
   }
   return depth;
+}
+
+function scopedQuerySelectorAll(root, selector) {
+  const descendants = Array.from(root.querySelectorAll(selector)).filter(
+    (el) => el.closest('[het-component]') === root,
+  );
+
+  return root.matches(selector) ? [root, ...descendants] : descendants;
 }
