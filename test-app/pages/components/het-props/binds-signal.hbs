@@ -1,0 +1,21 @@
+<section class="card shadow-sm border-0">
+  <div class="card-body">
+    <h1 class="h4 mb-3">{{title}}</h1>
+    <div het-component="het-props-binds">
+      <button id="increment-button" type="button" het-on="click=increment">Increment</button>
+      <p id="count-value" het-props="textContent=count" class="mb-0 text-muted">pending</p>
+    </div>
+  </div>
+</section>
+<script nonce="{{{cspNonce}}}">
+  window.HET.registerComponent('het-props-binds', {
+    setup: ({ signals }) => {
+      signals.count = 0;
+      return {
+        increment: () => {
+          signals.count.value += 1;
+        },
+      };
+    },
+  });
+</script>

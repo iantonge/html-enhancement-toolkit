@@ -1,3 +1,28 @@
+import { effect, signal } from '@preact/signals-core';
+
+const SIGNAL_SOURCE_TYPE = 0;
+const FUNC_SOURCE_TYPE = 1;
+
+const DIRECTIVES = [
+  {
+    name: 'het-on',
+    keyRequired: true,
+    sourceType: FUNC_SOURCE_TYPE,
+    allowMultiple: true,
+  },
+  {
+    name: 'het-props',
+    keyRequired: true,
+    sourceType: SIGNAL_SOURCE_TYPE,
+    allowMultiple: true,
+    write: (el, key, value) => {
+      el[key] = value;
+    },
+  },
+];
+
+const DIRECTIVES_SELECTOR = DIRECTIVES.map((directive) => `[${directive.name}]`).join(', ');
+
 const components = new Map();
 
 let onError = (error) => {
@@ -61,6 +86,8 @@ function mountComponents(root) {
 function mountComponent(rootEl, def) {
   if (rootEl.__het_instance) return;
 
+  const rawSignals = {};
+  const signals = createSignalsProxy(rawSignals);
   const refs = Object.fromEntries(
     scopedQuerySelectorAll(rootEl, '[het-ref]').map((refEl) => [
       refEl.getAttribute('het-ref'),
@@ -73,16 +100,96 @@ function mountComponent(rootEl, def) {
       cleanups.push(fn);
     }
   };
-  const ctx = { el: rootEl, refs, onCleanup };
+  const ctx = { el: rootEl, refs, signals, onCleanup };
   const methods = (def.setup && def.setup(ctx)) || {};
-  configureEventBindings(rootEl, methods, onCleanup);
+  const boundEls = scopedQuerySelectorAll(rootEl, DIRECTIVES_SELECTOR);
+  const bindings = getBindings(boundEls);
+
+  for (const binding of bindings) {
+    if (binding.sourceType === SIGNAL_SOURCE_TYPE) {
+      configureSignalBinding(ctx, binding);
+    } else {
+      configureEventBinding(methods, binding, onCleanup);
+    }
+  }
 
   rootEl.__het_instance = {
     methods,
+    signals,
     cleanup: () => {
       cleanups.forEach((fn) => fn());
     },
   };
+}
+
+function getBindings(boundEls) {
+  const bindings = [];
+  for (const el of boundEls) {
+    for (const directive of DIRECTIVES) {
+      if (!el.hasAttribute(directive.name)) continue;
+      bindings.push(...getParsedBindingDeclarations(directive, el));
+    }
+  }
+  return bindings;
+}
+
+function getParsedBindingDeclarations(directive, el) {
+  const rawAttr = el.getAttribute(directive.name) || '';
+  const declarations = directive.allowMultiple
+    ? rawAttr.split(/\s+/).filter(Boolean)
+    : [rawAttr];
+
+  return declarations.map((declaration) => {
+    const parts = declaration.split('=');
+    if (
+      directive.keyRequired &&
+      (parts.length !== 2 || parts.some((part) => part.length === 0))
+    ) {
+      throw new Error(`HET Error: Invalid expression '${declaration}'`);
+    }
+    const [key, source] = parts;
+    return {
+      el,
+      key,
+      source,
+      sourceType: directive.sourceType,
+      write: directive.write,
+      exp: declaration,
+    };
+  });
+}
+
+function configureEventBinding(methods, binding, onCleanup) {
+  const handler = methods?.[binding.source];
+  if (typeof handler !== 'function') {
+    throw new Error(`HET Error: Missing method "${binding.source}"`);
+  }
+  const listener = handler.bind(methods);
+  binding.el.addEventListener(binding.key, listener);
+  onCleanup(() => binding.el.removeEventListener(binding.key, listener));
+}
+
+function configureSignalBinding(ctx, binding) {
+  const signalRef = ctx.signals[binding.source];
+  if (!signalRef) {
+    throw new Error(
+      `HET Error: Attempting to bind signal ${binding.source} but it does not exist`,
+    );
+  }
+  const dispose = effect(() => {
+    try {
+      const currentSignal = ctx.signals[binding.source];
+      if (!currentSignal) {
+        throw new Error(
+          `HET Error: Attempting to bind signal ${binding.source} but it does not exist`,
+        );
+      }
+      binding.write(binding.el, binding.key, currentSignal.value);
+    } catch (error) {
+      onError(error);
+    }
+  });
+  ctx.onCleanup(dispose);
 }
 
 function isComponentRoot(node) {
@@ -110,35 +217,23 @@ function scopedQuerySelectorAll(root, selector) {
   return root.matches(selector) ? [root, ...descendants] : descendants;
 }
 
-function configureEventBindings(rootEl, methods, onCleanup) {
-  const boundEls = scopedQuerySelectorAll(rootEl, '[het-on]');
-  for (const el of boundEls) {
-    const declarations = parseHetOnDeclarations(el);
-    for (const { eventName, methodName, exp } of declarations) {
-      const handler = methods?.[methodName];
-      if (typeof handler !== 'function') {
-        throw new Error(`HET Error: Missing method "${methodName}"`);
+function createSignalsProxy(target) {
+  return new Proxy(target, {
+    set(obj, prop, value) {
+      if (
+        typeof prop === 'string' &&
+        Object.prototype.hasOwnProperty.call(obj, prop)
+      ) {
+        throw new Error(
+          `HET error: Attempting to override signal '${prop}' after initialization`,
+        );
       }
-      const listener = handler.bind(methods);
-      el.addEventListener(eventName, listener);
-      onCleanup(() => el.removeEventListener(eventName, listener));
-    }
-  }
-}
-
-function parseHetOnDeclarations(el) {
-  const raw = el.getAttribute('het-on') || '';
-  const declarations = raw.split(/\s+/).filter(Boolean);
-  return declarations.map((declaration) => {
-    const parts = declaration.split('=');
-    if (
-      parts.length !== 2 ||
-      parts[0].length === 0 ||
-      parts[1].length === 0
-    ) {
-      throw new Error(`HET Error: Invalid expression '${declaration}'`);
-    }
-    const [eventName, methodName] = parts;
-    return { eventName, methodName, exp: declaration };
+      if (value && typeof value === 'object' && 'value' in value) {
+        obj[prop] = value;
+      } else {
+        obj[prop] = signal(value);
+      }
+      return true;
+    },
   });
 }

@@ -187,10 +187,11 @@ Register components before calling `init()`, then attach them with `het-componen
 
 ```js
 window.HET.registerComponent('counter', {
-  setup: ({ el, refs, onCleanup }) => {
+  setup: ({ el, refs, signals, onCleanup }) => {
     el.textContent = 'Mounted';
     // refs are collected from [het-ref] within this component scope
     console.log(refs);
+    signals.count = 0;
     onCleanup(() => {
       // cleanup work
     });
@@ -227,6 +228,30 @@ window.HET.registerComponent('counter', {
 
 `het-on` supports multiple declarations separated by whitespace, e.g.
 `het-on="click=increment focus=handleFocus"`.
+
+### `het-props`
+
+Use `het-props` to bind signal values to element properties.
+
+```html
+<div het-component="counter">
+  <button type="button" het-on="click=increment">+</button>
+  <p het-props="textContent=count"></p>
+</div>
+```
+
+```js
+window.HET.registerComponent('counter', {
+  setup: ({ signals }) => {
+    signals.count = 0;
+    return {
+      increment: () => {
+        signals.count.value += 1;
+      },
+    };
+  },
+});
+```
 
 ## Request enhancement
 

@@ -9,6 +9,7 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.57.0",
+    "@preact/signals-core": "^1.13.0",
     "bootstrap": "^5.3.8",
     "dompurify": "^3.3.1",
     "esbuild": "^0.27.2",
