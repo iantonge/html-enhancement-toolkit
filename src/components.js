@@ -75,6 +75,7 @@ function mountComponent(rootEl, def) {
   };
   const ctx = { el: rootEl, refs, onCleanup };
   const methods = (def.setup && def.setup(ctx)) || {};
+  configureEventBindings(rootEl, methods, onCleanup);
 
   rootEl.__het_instance = {
     methods,
@@ -107,4 +108,37 @@ function scopedQuerySelectorAll(root, selector) {
   );
 
   return root.matches(selector) ? [root, ...descendants] : descendants;
+}
+
+function configureEventBindings(rootEl, methods, onCleanup) {
+  const boundEls = scopedQuerySelectorAll(rootEl, '[het-on]');
+  for (const el of boundEls) {
+    const declarations = parseHetOnDeclarations(el);
+    for (const { eventName, methodName, exp } of declarations) {
+      const handler = methods?.[methodName];
+      if (typeof handler !== 'function') {
+        throw new Error(`HET Error: Missing method "${methodName}"`);
+      }
+      const listener = handler.bind(methods);
+      el.addEventListener(eventName, listener);
+      onCleanup(() => el.removeEventListener(eventName, listener));
+    }
+  }
+}
+
+function parseHetOnDeclarations(el) {
+  const raw = el.getAttribute('het-on') || '';
+  const declarations = raw.split(/\s+/).filter(Boolean);
+  return declarations.map((declaration) => {
+    const parts = declaration.split('=');
+    if (
+      parts.length !== 2 ||
+      parts[0].length === 0 ||
+      parts[1].length === 0
+    ) {
+      throw new Error(`HET Error: Invalid expression '${declaration}'`);
+    }
+    const [eventName, methodName] = parts;
+    return { eventName, methodName, exp: declaration };
+  });
 }

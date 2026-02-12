@@ -205,6 +205,29 @@ Call `window.HET.destroy()` to run cleanup for mounted components and remove req
 `refs` includes elements marked with `het-ref` on the component root and its descendants,
 but excludes elements inside nested `[het-component]` subtrees.
 
+### `het-on`
+
+Use `het-on` to bind DOM events to methods returned from `setup`.
+
+```html
+<div het-component="counter">
+  <button type="button" het-on="click=increment">+</button>
+</div>
+```
+
+```js
+window.HET.registerComponent('counter', {
+  setup: () => ({
+    increment: () => {
+      // handle click
+    },
+  }),
+});
+```
+
+`het-on` supports multiple declarations separated by whitespace, e.g.
+`het-on="click=increment focus=handleFocus"`.
+
 ## Request enhancement
 
 HET progressively enhances both links and forms by replacing a named target pane from server-rendered HTML responses.
