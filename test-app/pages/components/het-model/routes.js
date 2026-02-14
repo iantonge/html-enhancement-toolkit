@@ -26,4 +26,16 @@ router.get('/radio', (request, response) => {
   });
 });
 
+router.get('/invalid-expression-empty', (request, response) => {
+  response.render('components/het-model/invalid-expression-empty', {
+    title: 'Invalid expression: empty',
+  });
+});
+
+router.get('/invalid-expression-extra-equals', (request, response) => {
+  response.render('components/het-model/invalid-expression-extra-equals', {
+    title: 'Invalid expression: extra equals',
+  });
+});
+
 export default router;

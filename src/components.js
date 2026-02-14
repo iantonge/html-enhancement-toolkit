@@ -1,8 +1,9 @@
-import { effect } from '@preact/signals-core';
+import { effect, signal } from '@preact/signals-core';
 
 const SIGNAL_SOURCE_TYPE = 0;
 const FUNC_SOURCE_TYPE = 1;
 const PREACT_SIGNAL_BRAND = Symbol.for('preact-signals');
+const TYPE_HINTS = ['int', 'bool', 'float'];
 
 const DIRECTIVES = [
   {
@@ -10,12 +11,19 @@ const DIRECTIVES = [
     keyRequired: true,
     sourceType: FUNC_SOURCE_TYPE,
     allowMultiple: true,
+    allowTypeHint: false,
+    allowSync: false,
   },
   {
     name: 'het-props',
     keyRequired: true,
     sourceType: SIGNAL_SOURCE_TYPE,
     allowMultiple: true,
+    allowTypeHint: true,
+    allowSync: true,
+    read: (el, key) => {
+      return el[key];
+    },
     write: (el, key, value) => {
       el[key] = value;
     },
@@ -25,6 +33,11 @@ const DIRECTIVES = [
     keyRequired: true,
     sourceType: SIGNAL_SOURCE_TYPE,
     allowMultiple: true,
+    allowTypeHint: true,
+    allowSync: true,
+    read: (el, key) => {
+      return el.getAttribute(key);
+    },
     write: (el, key, value) => {
       el.setAttribute(key, String(value));
     },
@@ -34,6 +47,11 @@ const DIRECTIVES = [
     keyRequired: true,
     sourceType: SIGNAL_SOURCE_TYPE,
     allowMultiple: true,
+    allowTypeHint: false,
+    allowSync: true,
+    read: (el, key) => {
+      return el.hasAttribute(key);
+    },
     write: (el, key, value) => {
       if (value) {
         el.setAttribute(key, '');
@@ -47,6 +65,11 @@ const DIRECTIVES = [
     keyRequired: true,
     sourceType: SIGNAL_SOURCE_TYPE,
     allowMultiple: true,
+    allowTypeHint: false,
+    allowSync: true,
+    read: (el, key) => {
+      return el.classList.contains(key);
+    },
     write: (el, key, value) => {
       if (value) {
         el.classList.add(key);
@@ -60,6 +83,8 @@ const DIRECTIVES = [
     keyRequired: false,
     sourceType: SIGNAL_SOURCE_TYPE,
     allowMultiple: false,
+    allowTypeHint: true,
+    allowSync: false,
     read: (el, key) => {
       return el[key];
     },
@@ -72,6 +97,7 @@ const DIRECTIVES = [
 const DIRECTIVES_SELECTOR = DIRECTIVES.map((directive) => `[${directive.name}]`).join(', ');
 
 const components = new Map();
+let syncListener;
 
 let onError = (error) => {
   throw error;
@@ -88,6 +114,7 @@ export function init(config) {
   onError = config?.onError ?? onError;
   try {
     mountComponents(document);
+    initializeSyncEvents();
   } catch (error) {
     onError(error);
   }
@@ -100,6 +127,11 @@ export function destroy() {
     } catch (error) {
       onError(error);
     }
+  }
+
+  if (syncListener) {
+    document.removeEventListener('het:sync', syncListener);
+    syncListener = undefined;
   }
 }
 
@@ -149,9 +181,20 @@ function mountComponent(rootEl, def) {
     }
   };
   const ctx = { el: rootEl, refs, signals, onCleanup };
-  const methods = (def.setup && def.setup(ctx)) || {};
   const boundEls = scopedQuerySelectorAll(rootEl, DIRECTIVES_SELECTOR);
   const bindings = getBindings(boundEls);
+  const syncBindings = bindings.filter((binding) => binding.acquisitionStrategy === 'sync');
+  const bindingsToInit = bindings.filter((binding) => binding.acquisitionStrategy);
+
+  for (const binding of bindingsToInit) {
+    if (rawSignals[binding.source]) {
+      throw new Error(
+        `HET Error: Attempting to seed initial value for signal ${binding.source} but it already exists`,
+      );
+    }
+    rawSignals[binding.source] = signal(readValue(binding));
+  }
+  const methods = (def.setup && def.setup(ctx)) || {};
 
   for (const binding of bindings) {
     if (binding.sourceType === SIGNAL_SOURCE_TYPE) {
@@ -164,6 +207,7 @@ function mountComponent(rootEl, def) {
   rootEl.__het_instance = {
     methods,
     signals,
+    syncBindings,
     cleanup: () => {
       cleanups.forEach((fn) => fn());
     },
@@ -188,7 +232,23 @@ function getParsedBindingDeclarations(directive, el) {
     : [rawAttr];
 
   return declarations.map((declaration) => {
-    const parts = declaration.split('=');
+    const declarationParts = declaration.split(':');
+    if (declarationParts.length > 2) {
+      throw new Error(`HET Error: Invalid declaration '${declaration}'`);
+    }
+    const [assignment, acquisitionClause] = declarationParts;
+
+    if (acquisitionClause && !directive.read) {
+      throw new Error(
+        `HET Error: Acquisition clause not supported in binding declaration '${declaration}'`,
+      );
+    }
+
+    const parsedAcquisition = acquisitionClause
+      ? getParsedAcquisition(directive, declaration, acquisitionClause)
+      : {};
+
+    const parts = assignment.split('=');
     let key;
     let source;
 
@@ -214,9 +274,51 @@ function getParsedBindingDeclarations(directive, el) {
       sourceType: directive.sourceType,
       read: directive.read,
       write: directive.write,
+      typeHint: parsedAcquisition.typeHint,
+      acquisitionStrategy: parsedAcquisition.strategy,
       exp: declaration,
     };
   });
+}
+
+function getParsedAcquisition(directive, declaration, acquisitionClause) {
+  const typeHintStart = acquisitionClause.indexOf('[');
+  if (typeHintStart === -1) {
+    return getValidatedAcquisitionStrategy(directive, declaration, acquisitionClause);
+  }
+
+  if (!directive.allowTypeHint) {
+    throw new Error(
+      `HET Error: Type hints unsupported for ${directive.name}: '${declaration}'`,
+    );
+  }
+
+  const typeHint = acquisitionClause.slice(typeHintStart + 1, -1);
+  if (!TYPE_HINTS.includes(typeHint)) {
+    throw new Error(`HET Error: Type hint '${typeHint}' not recognised in '${declaration}'`);
+  }
+
+  const strategy = acquisitionClause.slice(0, typeHintStart);
+  return {
+    ...getValidatedAcquisitionStrategy(directive, declaration, strategy),
+    typeHint,
+  };
+}
+
+function getValidatedAcquisitionStrategy(directive, declaration, strategy) {
+  if (strategy !== 'seed' && strategy !== 'sync') {
+    throw new Error(
+      `HET Error: Acquisition strategy '${strategy}' not recognised in '${declaration}'`,
+    );
+  }
+
+  if (strategy === 'sync' && directive.allowSync === false) {
+    throw new Error(
+      `HET error: '${directive.name}' does not support :sync in '${declaration}'`,
+    );
+  }
+
+  return { strategy };
 }
 
 function configureEventBinding(methods, binding, onCleanup) {
@@ -261,9 +363,9 @@ function configureSignalBinding(ctx, binding) {
           );
         }
 
-        const value = binding.read(binding.el, binding.key);
-        if (currentSignal.value !== value) {
-          currentSignal.value = value;
+        const nextValue = readValue(binding);
+        if (currentSignal.value !== nextValue) {
+          currentSignal.value = nextValue;
         }
       } catch (error) {
         onError(error);
@@ -314,6 +416,71 @@ function inferModelKey(el) {
 
 function inferInputEvent(key) {
   return key === 'checked' ? 'change' : 'input';
+}
+
+function readValue(binding) {
+  const rawValue = binding.read(binding.el, binding.key);
+
+  if (binding.typeHint === 'int') {
+    return parseInt(rawValue, 10);
+  }
+
+  if (binding.typeHint === 'float') {
+    return parseFloat(rawValue);
+  }
+
+  if (binding.typeHint === 'bool') {
+    return rawValue === true || rawValue === 'true';
+  }
+
+  return rawValue;
+}
+
+function initializeSyncEvents() {
+  if (syncListener) return;
+
+  syncListener = (event) => {
+    try {
+      const root = event?.detail?.root ?? event.target ?? document;
+      syncComponents(root);
+    } catch (error) {
+      onError(error);
+    }
+  };
+
+  document.addEventListener('het:sync', syncListener);
+}
+
+function syncComponents(root) {
+  const componentsToSync = [];
+
+  if (isComponentRoot(root)) componentsToSync.push(root);
+  if (typeof root.querySelectorAll === 'function') {
+    componentsToSync.push(...root.querySelectorAll('[het-component]'));
+  }
+
+  for (const rootEl of componentsToSync) {
+    syncComponent(rootEl);
+  }
+}
+
+function syncComponent(rootEl) {
+  try {
+    if (!rootEl?.isConnected) return;
+
+    const instance = rootEl.__het_instance;
+    if (!instance?.syncBindings?.length) return;
+
+    for (const binding of instance.syncBindings) {
+      const currentSignal = instance.signals[binding.source];
+      const nextValue = readValue(binding);
+      if (currentSignal.value !== nextValue) {
+        currentSignal.value = nextValue;
+      }
+    }
+  } catch (error) {
+    onError(error);
+  }
 }
 
 function createSignalsProxy(target) {

@@ -1,0 +1,22 @@
+<section class="card shadow-sm border-0">
+  <div class="card-body">
+    <h1 class="h4 mb-3">{{title}}</h1>
+    <div het-component="acquisition-signal-reassignment"></div>
+    <p id="error-message" class="mb-0 text-muted">No error</p>
+  </div>
+</section>
+<script nonce="{{{cspNonce}}}">
+  window.HET.registerComponent('acquisition-signal-reassignment', {
+    setup: ({ signals }) => {
+      signals.count = window.HET.signal(1);
+      signals.count = window.HET.signal(2);
+      return {};
+    },
+  });
+  window.addEventListener('load', () => {
+    const message = window.hetErrors.at(-1);
+    if (message) {
+      document.getElementById('error-message').textContent = message;
+    }
+  });
+</script>

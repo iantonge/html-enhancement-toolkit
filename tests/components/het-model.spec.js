@@ -45,4 +45,18 @@ test.describe('components het-model', () => {
     await expect(page.locator('#choice-radio')).toBeChecked();
     await expect(page.locator('#chosen-value')).toHaveText('true');
   });
+
+  test('reports error for empty het-model expression', async ({ page }) => {
+    await page.goto('/components/het-model/invalid-expression-empty');
+    await expect(page.locator('#error-message')).toHaveText(
+      "HET Error: Invalid expression ''",
+    );
+  });
+
+  test('reports error for extra equals in het-model expression', async ({ page }) => {
+    await page.goto('/components/het-model/invalid-expression-extra-equals');
+    await expect(page.locator('#error-message')).toHaveText(
+      "HET Error: Invalid expression 'name=first=second'",
+    );
+  });
 });

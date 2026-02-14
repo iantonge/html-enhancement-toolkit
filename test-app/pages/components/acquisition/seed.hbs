@@ -1,0 +1,22 @@
+<section class="card shadow-sm border-0">
+  <div class="card-body">
+    <h1 class="h4 mb-3">{{title}}</h1>
+    <div het-component="acquisition-seed">
+      <p id="seed-count" het-props="textContent=count:seed[int]" class="mb-2">7</p>
+      <button id="seed-inc" type="button" het-on="click=increment" class="btn btn-sm btn-primary">
+        Increment
+      </button>
+    </div>
+  </div>
+</section>
+<script nonce="{{{cspNonce}}}">
+  window.HET.registerComponent('acquisition-seed', {
+    setup: ({ signals }) => {
+      return {
+        increment: () => {
+          signals.count.value += 1;
+        },
+      };
+    },
+  });
+</script>

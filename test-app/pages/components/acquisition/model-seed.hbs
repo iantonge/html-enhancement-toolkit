@@ -1,0 +1,21 @@
+<section class="card shadow-sm border-0">
+  <div class="card-body">
+    <h1 class="h4 mb-3">{{title}}</h1>
+    <div het-component="acquisition-model-seed">
+      <input id="model-seed-input" het-model="name:seed" class="form-control" value="Seeded">
+      <p id="model-seed-value" het-props="textContent=name" class="mt-2 mb-2 text-muted"></p>
+      <button id="model-seed-set" type="button" het-on="click=setFromSignal" class="btn btn-sm btn-primary">
+        Set from signal
+      </button>
+    </div>
+  </div>
+</section>
+<script nonce="{{{cspNonce}}}">
+  window.HET.registerComponent('acquisition-model-seed', {
+    setup: ({ signals }) => ({
+      setFromSignal: () => {
+        signals.name.value = 'Updated';
+      },
+    }),
+  });
+</script>

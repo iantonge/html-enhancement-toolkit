@@ -1,0 +1,24 @@
+<section class="card shadow-sm border-0">
+  <div class="card-body">
+    <h1 class="h4 mb-3">{{title}}</h1>
+    <div het-component="acquisition-not-supported">
+      <button type="button" het-on="click=increment:seed" class="btn btn-sm btn-primary">
+        Click
+      </button>
+    </div>
+    <p id="error-message" class="mb-0 mt-3 text-muted">No error</p>
+  </div>
+</section>
+<script nonce="{{{cspNonce}}}">
+  window.HET.registerComponent('acquisition-not-supported', {
+    setup: () => ({
+      increment: () => {},
+    }),
+  });
+  window.addEventListener('load', () => {
+    const message = window.hetErrors.at(-1);
+    if (message) {
+      document.getElementById('error-message').textContent = message;
+    }
+  });
+</script>

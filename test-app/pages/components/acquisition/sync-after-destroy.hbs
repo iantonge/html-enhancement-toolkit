@@ -1,0 +1,14 @@
+<section class="card shadow-sm border-0">
+  <div class="card-body">
+    <h1 class="h4 mb-3">{{title}}</h1>
+    <div id="sync-destroy-root" het-component="acquisition-sync-after-destroy">
+      <input id="sync-destroy-input" class="form-control" het-props="value=query:sync" value="alpha">
+      <p id="sync-destroy-value" het-props="textContent=query" class="mt-2 mb-0 text-muted"></p>
+    </div>
+  </div>
+</section>
+<script nonce="{{{cspNonce}}}">
+  window.HET.registerComponent('acquisition-sync-after-destroy', {
+    setup: () => ({}),
+  });
+</script>

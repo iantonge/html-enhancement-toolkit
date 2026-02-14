@@ -1,0 +1,38 @@
+<section class="card shadow-sm border-0">
+  <div class="card-body">
+    <h1 class="h4 mb-3">{{title}}</h1>
+    <div het-component="acquisition-type-hints">
+      <p id="int-value" het-props="textContent=intValue:seed[int]" class="mb-2">7</p>
+      <button id="int-inc" type="button" het-on="click=incrementInt" class="btn btn-sm btn-outline-primary mb-3">
+        Increment int
+      </button>
+
+      <p id="float-value" het-props="textContent=floatValue:seed[float]" class="mb-2">3.5</p>
+      <button id="float-inc" type="button" het-on="click=incrementFloat" class="btn btn-sm btn-outline-primary mb-3">
+        Increment float
+      </button>
+
+      <p id="bool-value" het-props="textContent=boolValue:seed[bool]" class="mb-2">true</p>
+      <button id="bool-toggle" type="button" het-on="click=toggleBool" class="btn btn-sm btn-outline-primary">
+        Toggle bool
+      </button>
+    </div>
+  </div>
+</section>
+<script nonce="{{{cspNonce}}}">
+  window.HET.registerComponent('acquisition-type-hints', {
+    setup: ({ signals }) => {
+      return {
+        incrementInt: () => {
+          signals.intValue.value += 1;
+        },
+        incrementFloat: () => {
+          signals.floatValue.value += 0.5;
+        },
+        toggleBool: () => {
+          signals.boolValue.value = !signals.boolValue.value;
+        },
+      };
+    },
+  });
+</script>

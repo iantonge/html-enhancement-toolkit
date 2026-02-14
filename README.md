@@ -230,6 +230,9 @@ window.HET.registerComponent('counter', {
 `het-on` supports multiple declarations separated by whitespace, e.g.
 `het-on="click=increment focus=handleFocus"`.
 
+Acquisition support: not supported (`:seed`/`:sync` are invalid on `het-on`).
+Type hints: not supported.
+
 ### `het-props`
 
 Use `het-props` to bind signal values to element properties.
@@ -253,6 +256,9 @@ window.HET.registerComponent('counter', {
   },
 });
 ```
+
+Acquisition support: `:seed`, `:sync`.
+Type hints: `[int]`, `[float]`, `[bool]`.
 
 ### `het-attrs`
 
@@ -278,6 +284,9 @@ window.HET.registerComponent('statusCard', {
 });
 ```
 
+Acquisition support: `:seed`, `:sync`.
+Type hints: `[int]`, `[float]`, `[bool]`.
+
 ### `het-bool-attrs`
 
 Use `het-bool-attrs` to toggle boolean attributes based on signal truthiness.
@@ -301,6 +310,9 @@ window.HET.registerComponent('lockInput', {
   },
 });
 ```
+
+Acquisition support: `:seed`, `:sync`.
+Type hints: not supported.
 
 ### `het-class`
 
@@ -326,6 +338,9 @@ window.HET.registerComponent('alertBox', {
 });
 ```
 
+Acquisition support: `:seed`, `:sync`.
+Type hints: not supported.
+
 ### `het-model`
 
 Use `het-model` for two-way signal binding on form controls.
@@ -349,6 +364,46 @@ window.HET.registerComponent('profileForm', {
   },
 });
 ```
+
+Acquisition support: `:seed` only (`:sync` is invalid for `het-model`).
+Type hints: `[int]`, `[float]`, `[bool]`.
+
+### Acquisition Strategies (`:seed`, `:sync`)
+
+Signal bindings can initialize from existing DOM values using acquisition clauses for some directives (see the directive support matrix below):
+
+- `:seed` initializes the signal once from the bound element.
+- `:sync` initializes once and updates the signal again when a `het:sync` event is dispatched.
+
+```html
+<div het-component="searchBox">
+  <input het-props="value=query:sync" value="initial query">
+  <p het-props="textContent=query"></p>
+</div>
+```
+
+Type hints can be applied to acquisition values for some directives (see the directive support matrix below):
+
+- `[int]` uses `parseInt(value, 10)`
+- `[float]` uses `parseFloat(value)`
+- `[bool]` treats `true` and `"true"` as `true`
+
+```html
+<p het-props="textContent=count:seed[int]">7</p>
+<p het-props="textContent=price:seed[float]">3.5</p>
+<p het-props="textContent=enabled:seed[bool]">true</p>
+```
+
+Directive support matrix:
+
+| Directive | `:seed` | `:sync` | Type hints |
+| --- | --- | --- | --- |
+| `het-on` | No | No | No |
+| `het-props` | Yes | Yes | Yes (`[int]`, `[float]`, `[bool]`) |
+| `het-attrs` | Yes | Yes | Yes (`[int]`, `[float]`, `[bool]`) |
+| `het-bool-attrs` | Yes | Yes | No |
+| `het-class` | Yes | Yes | No |
+| `het-model` | Yes | No | Yes (`[int]`, `[float]`, `[bool]`) |
 
 ## Request enhancement
 

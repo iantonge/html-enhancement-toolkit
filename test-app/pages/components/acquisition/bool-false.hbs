@@ -1,0 +1,20 @@
+<section class="card shadow-sm border-0">
+  <div class="card-body">
+    <h1 class="h4 mb-3">{{title}}</h1>
+    <div het-component="acquisition-bool-false">
+      <p id="bool-false-value" het-props="textContent=isEnabled:seed[bool]" class="mb-2">false</p>
+      <button id="bool-false-toggle" type="button" het-on="click=toggle" class="btn btn-sm btn-primary">
+        Toggle
+      </button>
+    </div>
+  </div>
+</section>
+<script nonce="{{{cspNonce}}}">
+  window.HET.registerComponent('acquisition-bool-false', {
+    setup: ({ signals }) => ({
+      toggle: () => {
+        signals.isEnabled.value = !signals.isEnabled.value;
+      },
+    }),
+  });
+</script>
