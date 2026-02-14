@@ -326,6 +326,30 @@ window.HET.registerComponent('alertBox', {
 });
 ```
 
+### `het-model`
+
+Use `het-model` for two-way signal binding on form controls.
+When no key is provided, HET infers `value` for most inputs and `checked` for checkbox/radio inputs.
+It also infers the DOM event: `input` for `value` bindings and `change` for `checked` bindings.
+
+```html
+<div het-component="profileForm">
+  <input het-model="name">
+  <input type="checkbox" het-model="isSubscribed">
+  <p het-props="textContent=name"></p>
+</div>
+```
+
+```js
+window.HET.registerComponent('profileForm', {
+  setup: ({ signals }) => {
+    signals.name = window.HET.signal('Ada');
+    signals.isSubscribed = window.HET.signal(false);
+    return {};
+  },
+});
+```
+
 ## Request enhancement
 
 HET progressively enhances both links and forms by replacing a named target pane from server-rendered HTML responses.

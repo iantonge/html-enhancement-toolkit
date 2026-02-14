@@ -55,6 +55,18 @@ const DIRECTIVES = [
       }
     },
   },
+  {
+    name: 'het-model',
+    keyRequired: false,
+    sourceType: SIGNAL_SOURCE_TYPE,
+    allowMultiple: false,
+    read: (el, key) => {
+      return el[key];
+    },
+    write: (el, key, value) => {
+      el[key] = value;
+    },
+  },
 ];
 
 const DIRECTIVES_SELECTOR = DIRECTIVES.map((directive) => `[${directive.name}]`).join(', ');
@@ -177,18 +189,30 @@ function getParsedBindingDeclarations(directive, el) {
 
   return declarations.map((declaration) => {
     const parts = declaration.split('=');
-    if (
-      directive.keyRequired &&
-      (parts.length !== 2 || parts.some((part) => part.length === 0))
-    ) {
+    let key;
+    let source;
+
+    if (directive.keyRequired) {
+      if (parts.length !== 2 || parts.some((part) => part.length === 0)) {
+        throw new Error(`HET Error: Invalid expression '${declaration}'`);
+      }
+      [key, source] = parts;
+    } else if (parts.length === 1 && parts[0].length > 0) {
+      key = inferModelKey(el);
+      [source] = parts;
+    } else if (parts.length === 2 && parts.every((part) => part.length > 0)) {
+      [key, source] = parts;
+    } else {
       throw new Error(`HET Error: Invalid expression '${declaration}'`);
     }
-    const [key, source] = parts;
+
     return {
+      dirName: directive.name,
       el,
       key,
       source,
       sourceType: directive.sourceType,
+      read: directive.read,
       write: directive.write,
       exp: declaration,
     };
@@ -226,6 +250,30 @@ function configureSignalBinding(ctx, binding) {
     }
   });
   ctx.onCleanup(dispose);
+
+  if (binding.dirName === 'het-model') {
+    const updateFromEl = () => {
+      try {
+        const currentSignal = ctx.signals[binding.source];
+        if (!currentSignal) {
+          throw new Error(
+            `HET Error: Attempting to bind signal ${binding.source} but it does not exist`,
+          );
+        }
+
+        const value = binding.read(binding.el, binding.key);
+        if (currentSignal.value !== value) {
+          currentSignal.value = value;
+        }
+      } catch (error) {
+        onError(error);
+      }
+    };
+
+    const eventName = inferInputEvent(binding.key);
+    binding.el.addEventListener(eventName, updateFromEl);
+    ctx.onCleanup(() => binding.el.removeEventListener(eventName, updateFromEl));
+  }
 }
 
 function isComponentRoot(node) {
@@ -251,6 +299,21 @@ function scopedQuerySelectorAll(root, selector) {
   );
 
   return root.matches(selector) ? [root, ...descendants] : descendants;
+}
+
+function inferModelKey(el) {
+  if (
+    el instanceof HTMLInputElement &&
+    (el.type === 'checkbox' || el.type === 'radio')
+  ) {
+    return 'checked';
+  }
+
+  return 'value';
+}
+
+function inferInputEvent(key) {
+  return key === 'checked' ? 'change' : 'input';
 }
 
 function createSignalsProxy(target) {

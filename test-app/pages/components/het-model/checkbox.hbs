@@ -1,0 +1,27 @@
+<section class="card shadow-sm border-0">
+  <div class="card-body">
+    <h1 class="h4 mb-3">{{title}}</h1>
+    <div het-component="het-model-checkbox">
+      <div class="form-check">
+        <input id="done-checkbox" type="checkbox" het-model="isDone" class="form-check-input">
+        <label class="form-check-label" for="done-checkbox">Done</label>
+      </div>
+      <p id="done-value" het-props="textContent=isDone" class="mt-2 mb-0 text-muted"></p>
+      <button id="set-done" type="button" het-on="click=setDone" class="btn btn-sm btn-primary mt-2">
+        Set true from signal
+      </button>
+    </div>
+  </div>
+</section>
+<script nonce="{{{cspNonce}}}">
+  window.HET.registerComponent('het-model-checkbox', {
+    setup: ({ signals }) => {
+      signals.isDone = window.HET.signal(false);
+      return {
+        setDone: () => {
+          signals.isDone.value = true;
+        },
+      };
+    },
+  });
+</script>
