@@ -22,7 +22,7 @@
           throw new Error('HET test error: write failed');
         },
       });
-      signals.count = 1;
+      signals.count = window.HET.signal(1);
       return {};
     },
   });

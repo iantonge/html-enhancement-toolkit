@@ -8,6 +8,13 @@ test.describe('components het-props', () => {
     await expect(page.locator('#count-value')).toHaveText('1');
   });
 
+  test('reports an error when a signal is initialized without signal(...)', async ({ page }) => {
+    await page.goto('/components/het-props/invalid-assignment');
+    await expect(page.locator('#error-message')).toHaveText(
+      "HET Error: Signal 'count' must be initialized with signal(...)",
+    );
+  });
+
   test('reports an error when a bound signal is missing', async ({ page }) => {
     await page.goto('/components/het-props/missing-signal');
     await expect(page.locator('#error-message')).toHaveText(

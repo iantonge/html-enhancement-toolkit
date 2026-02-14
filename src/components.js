@@ -1,7 +1,8 @@
-import { effect, signal } from '@preact/signals-core';
+import { effect } from '@preact/signals-core';
 
 const SIGNAL_SOURCE_TYPE = 0;
 const FUNC_SOURCE_TYPE = 1;
+const PREACT_SIGNAL_BRAND = Symbol.for('preact-signals');
 
 const DIRECTIVES = [
   {
@@ -17,6 +18,41 @@ const DIRECTIVES = [
     allowMultiple: true,
     write: (el, key, value) => {
       el[key] = value;
+    },
+  },
+  {
+    name: 'het-attrs',
+    keyRequired: true,
+    sourceType: SIGNAL_SOURCE_TYPE,
+    allowMultiple: true,
+    write: (el, key, value) => {
+      el.setAttribute(key, String(value));
+    },
+  },
+  {
+    name: 'het-bool-attrs',
+    keyRequired: true,
+    sourceType: SIGNAL_SOURCE_TYPE,
+    allowMultiple: true,
+    write: (el, key, value) => {
+      if (value) {
+        el.setAttribute(key, '');
+      } else {
+        el.removeAttribute(key);
+      }
+    },
+  },
+  {
+    name: 'het-class',
+    keyRequired: true,
+    sourceType: SIGNAL_SOURCE_TYPE,
+    allowMultiple: true,
+    write: (el, key, value) => {
+      if (value) {
+        el.classList.add(key);
+      } else {
+        el.classList.remove(key);
+      }
     },
   },
 ];
@@ -228,11 +264,12 @@ function createSignalsProxy(target) {
           `HET error: Attempting to override signal '${prop}' after initialization`,
         );
       }
-      if (value && typeof value === 'object' && 'value' in value) {
-        obj[prop] = value;
-      } else {
-        obj[prop] = signal(value);
+      if (value?.brand !== PREACT_SIGNAL_BRAND) {
+        throw new Error(
+          `HET Error: Signal '${String(prop)}' must be initialized with signal(...)`,
+        );
       }
+      obj[prop] = value;
       return true;
     },
   });

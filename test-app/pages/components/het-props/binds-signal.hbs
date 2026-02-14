@@ -10,7 +10,7 @@
 <script nonce="{{{cspNonce}}}">
   window.HET.registerComponent('het-props-binds', {
     setup: ({ signals }) => {
-      signals.count = 0;
+      signals.count = window.HET.signal(0);
       return {
         increment: () => {
           signals.count.value += 1;

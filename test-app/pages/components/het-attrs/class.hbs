@@ -1,0 +1,25 @@
+<section class="card shadow-sm border-0">
+  <div class="card-body">
+    <h1 class="h4 mb-3">{{title}}</h1>
+    <div het-component="het-class-basic">
+      <button id="activate-target" type="button" het-on="click=activate">Activate</button>
+      <button id="deactivate-target" type="button" het-on="click=deactivate">Deactivate</button>
+      <div id="class-target" het-class="active=isActive" class="mt-2">Class target</div>
+    </div>
+  </div>
+</section>
+<script nonce="{{{cspNonce}}}">
+  window.HET.registerComponent('het-class-basic', {
+    setup: ({ signals }) => {
+      signals.isActive = window.HET.signal(false);
+      return {
+        activate: () => {
+          signals.isActive.value = true;
+        },
+        deactivate: () => {
+          signals.isActive.value = false;
+        },
+      };
+    },
+  });
+</script>

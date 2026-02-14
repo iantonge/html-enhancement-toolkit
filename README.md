@@ -191,7 +191,7 @@ window.HET.registerComponent('counter', {
     el.textContent = 'Mounted';
     // refs are collected from [het-ref] within this component scope
     console.log(refs);
-    signals.count = 0;
+    signals.count = window.HET.signal(0);
     onCleanup(() => {
       // cleanup work
     });
@@ -205,6 +205,7 @@ Call `window.HET.destroy()` to run cleanup for mounted components and remove req
 
 `refs` includes elements marked with `het-ref` on the component root and its descendants,
 but excludes elements inside nested `[het-component]` subtrees.
+Initialize signals explicitly (for example `signals.count = window.HET.signal(0)` in the IIFE build).
 
 ### `het-on`
 
@@ -243,10 +244,82 @@ Use `het-props` to bind signal values to element properties.
 ```js
 window.HET.registerComponent('counter', {
   setup: ({ signals }) => {
-    signals.count = 0;
+    signals.count = window.HET.signal(0);
     return {
       increment: () => {
         signals.count.value += 1;
+      },
+    };
+  },
+});
+```
+
+### `het-attrs`
+
+Use `het-attrs` to bind signal values to element attributes.
+
+```html
+<div het-component="statusCard">
+  <button type="button" het-on="click=toggle">Toggle status</button>
+  <p het-attrs="data-status=status"></p>
+</div>
+```
+
+```js
+window.HET.registerComponent('statusCard', {
+  setup: ({ signals }) => {
+    signals.status = window.HET.signal('idle');
+    return {
+      toggle: () => {
+        signals.status.value = signals.status.value === 'idle' ? 'busy' : 'idle';
+      },
+    };
+  },
+});
+```
+
+### `het-bool-attrs`
+
+Use `het-bool-attrs` to toggle boolean attributes based on signal truthiness.
+
+```html
+<div het-component="lockInput">
+  <button type="button" het-on="click=toggle">Toggle disabled</button>
+  <input het-bool-attrs="disabled=isDisabled">
+</div>
+```
+
+```js
+window.HET.registerComponent('lockInput', {
+  setup: ({ signals }) => {
+    signals.isDisabled = window.HET.signal(false);
+    return {
+      toggle: () => {
+        signals.isDisabled.value = !signals.isDisabled.value;
+      },
+    };
+  },
+});
+```
+
+### `het-class`
+
+Use `het-class` to toggle classes from signal values.
+
+```html
+<div het-component="alertBox">
+  <button type="button" het-on="click=toggle">Toggle active</button>
+  <div het-class="active=isActive"></div>
+</div>
+```
+
+```js
+window.HET.registerComponent('alertBox', {
+  setup: ({ signals }) => {
+    signals.isActive = window.HET.signal(false);
+    return {
+      toggle: () => {
+        signals.isActive.value = !signals.isActive.value;
       },
     };
   },

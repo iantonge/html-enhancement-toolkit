@@ -1,0 +1,29 @@
+<section class="card shadow-sm border-0">
+  <div class="card-body">
+    <h1 class="h4 mb-3">{{title}}</h1>
+    <div het-component="het-bool-attrs-basic">
+      <button id="disable-target" type="button" het-on="click=disable">Disable</button>
+      <button id="enable-target" type="button" het-on="click=enable">Enable</button>
+      <input
+        id="bool-attr-target"
+        het-bool-attrs="disabled=isDisabled"
+        class="form-control mt-2"
+        value="editable">
+    </div>
+  </div>
+</section>
+<script nonce="{{{cspNonce}}}">
+  window.HET.registerComponent('het-bool-attrs-basic', {
+    setup: ({ signals }) => {
+      signals.isDisabled = window.HET.signal(false);
+      return {
+        disable: () => {
+          signals.isDisabled.value = true;
+        },
+        enable: () => {
+          signals.isDisabled.value = false;
+        },
+      };
+    },
+  });
+</script>

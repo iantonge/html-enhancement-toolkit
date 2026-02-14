@@ -26,4 +26,10 @@ router.get('/write-error', (request, response) => {
   });
 });
 
+router.get('/invalid-assignment', (request, response) => {
+  response.render('components/het-props/invalid-assignment', {
+    title: 'Invalid assignment',
+  });
+});
+
 export default router;
