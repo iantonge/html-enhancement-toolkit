@@ -38,7 +38,7 @@ init();
 
 ## Config
 
-The `init` function accepts an optional config object which can be used to customize the behavioiur of HET. It accepts the followin options:
+The `init` function accepts an optional config object which can be used to customize the behavioiur of HET. It accepts the following options:
 
 ### `onError(error)`
 
@@ -217,6 +217,24 @@ Call `window.HET.destroy()` to run cleanup for mounted components and remove req
 but excludes elements inside nested `[het-component]` subtrees.
 Initialize signals explicitly (for example `signals.count = window.HET.signal(0)` in the IIFE build).
 
+### `het-ref`
+
+Use `het-ref` to expose DOM element references in `setup({ refs })`.
+
+```html
+<div het-component="profileForm">
+  <input het-ref="emailInput" type="email">
+</div>
+```
+
+```js
+window.HET.registerComponent('profileForm', {
+  setup: ({ refs }) => {
+    refs.emailInput?.focus();
+  },
+});
+```
+
 ### `het-on`
 
 Use `het-on` to bind DOM events to methods returned from `setup`.
@@ -246,6 +264,7 @@ Type hints: not supported.
 ### `het-props`
 
 Use `het-props` to bind signal values to element properties.
+Use this for DOM properties (for example `textContent`, `value`, `checked`).
 
 ```html
 <div het-component="counter">
@@ -273,6 +292,7 @@ Type hints: `[int]`, `[float]`, `[bool]`.
 ### `het-attrs`
 
 Use `het-attrs` to bind signal values to element attributes.
+Use for attributes whose meaning comes from their value. For boolean presence/absence attributes such as `disabled`, `required` or `hidden`, use `het-bool-attrs` instead.
 
 ```html
 <div het-component="statusCard">
@@ -300,6 +320,7 @@ Type hints: `[int]`, `[float]`, `[bool]`.
 ### `het-bool-attrs`
 
 Use `het-bool-attrs` to toggle boolean attributes based on signal truthiness.
+Use for attributes whose meaning comes from presence/absence like `disabled`, `required` or `hidden`. If an attribute merely stores a boolean-like value (e.g. `aria-expanded="true"`), bind it with `het-attrs` instead. If the signal value is truthy, the attribute is added. If the signal value is falsy, the attribute is removed.
 
 ```html
 <div het-component="lockInput">
@@ -410,6 +431,16 @@ Signal bindings can initialize from existing DOM values using acquisition clause
 
 - `:seed` initializes the signal once from the bound element.
 - `:sync` initializes once and updates the signal again when a `het:sync` event is dispatched.
+
+Sync trigger behavior:
+- In full toolkit usage (`requests` + `components`), HET dispatches `het:sync` after request content loads.
+- In components-only usage, no automatic sync event is dispatched.
+- You can manually dispatch `het:sync` on the smallest container that owns the component(s).
+
+```js
+const container = document.querySelector('#profile-editor');
+container.dispatchEvent(new CustomEvent('het:sync', { bubbles: true }));
+```
 
 ```html
 <div het-component="searchBox">
@@ -579,6 +610,12 @@ events (they are not awaited), and they bubble from the target pane.
 - `het:afterFetch` with `detail.response`
 - `het:beforeLoadContent` with `detail.newContent` (cancelable)
 - `het:afterLoadContent`
+
+## Component lifecycle notes
+
+- Component bindings are discovered when a component mounts. Adding/changing `het-*` bindings inside an already-mounted component does not register new bindings.
+- New component roots inserted after `init()` auto-mount only if their component definition has already been registered.
+- Registering a component after `init()` does not retroactively mount existing matching elements; it applies to future insertions.
 
 ## Developing HET
 
