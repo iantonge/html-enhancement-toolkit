@@ -1,0 +1,27 @@
+<section class="card shadow-sm border-0">
+  <div class="card-body">
+    <h1 class="h4 mb-3">{{title}}</h1>
+    <div het-component="imports-export-missing-parent" het-exports="count">
+      <div het-component="imports-export-missing-child" het-imports="count">
+        <p id="missing-export-value" het-props="textContent=count" class="mb-0 text-muted"></p>
+      </div>
+    </div>
+    <p id="error-message" class="mb-0 mt-3 text-muted">No error</p>
+  </div>
+</section>
+<script nonce="{{{cspNonce}}}">
+  window.HET.registerComponent('imports-export-missing-parent', {
+    setup: () => ({}),
+  });
+
+  window.HET.registerComponent('imports-export-missing-child', {
+    setup: () => ({}),
+  });
+
+  window.addEventListener('load', () => {
+    const message = window.hetErrors.at(-1);
+    if (message) {
+      document.getElementById('error-message').textContent = message;
+    }
+  });
+</script>

@@ -3,6 +3,7 @@ import { Router } from 'express';
 import acquisitionRoutes from './acquisition/routes.js';
 import baseFlowRoutes from './base-flow/routes.js';
 import hetAttrsRoutes from './het-attrs/routes.js';
+import hetImportsRoutes from './het-imports/routes.js';
 import hetModelRoutes from './het-model/routes.js';
 import hetOnRoutes from './het-on/routes.js';
 import hetPropsRoutes from './het-props/routes.js';
@@ -20,6 +21,7 @@ router.get('/', (request, response) => {
 router.use('/acquisition', acquisitionRoutes);
 router.use('/base-flow', baseFlowRoutes);
 router.use('/het-attrs', hetAttrsRoutes);
+router.use('/het-imports', hetImportsRoutes);
 router.use('/het-model', hetModelRoutes);
 router.use('/het-on', hetOnRoutes);
 router.use('/het-props', hetPropsRoutes);

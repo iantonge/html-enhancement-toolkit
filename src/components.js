@@ -4,6 +4,11 @@ const SIGNAL_SOURCE_TYPE = 0;
 const FUNC_SOURCE_TYPE = 1;
 const PREACT_SIGNAL_BRAND = Symbol.for('preact-signals');
 const TYPE_HINTS = ['int', 'bool', 'float'];
+const EXPORTS_ATTR = 'het-exports';
+const IMPORTS_ATTR = 'het-imports';
+const IMPORTED_SIGNAL_WRAPPER = Symbol('hetImportedSignalWrapper');
+const exportsAttrCache = new WeakMap();
+const EMPTY_EXPORTS_SET = new Set();
 
 const DIRECTIVES = [
   {
@@ -178,7 +183,9 @@ function mountComponent(rootEl, def) {
   if (rootEl.__het_instance) return;
 
   const rawSignals = {};
+  const signalMeta = Object.create(null);
   const signals = createSignalsProxy(rawSignals);
+  const importDeclarations = getImportDeclarations(rootEl);
   const refs = Object.fromEntries(
     scopedQuerySelectorAll(rootEl, '[het-ref]').map((refEl) => [
       refEl.getAttribute('het-ref'),
@@ -197,13 +204,21 @@ function mountComponent(rootEl, def) {
   const syncBindings = bindings.filter((binding) => binding.acquisitionStrategy === 'sync');
   const bindingsToInit = bindings.filter((binding) => binding.acquisitionStrategy);
 
+  resolveImports(rootEl, importDeclarations, rawSignals, signalMeta);
+
   for (const binding of bindingsToInit) {
+    if (signalMeta[binding.source] === 'imported') {
+      throw new Error(
+        `HET Error: Signal name conflict for '${binding.source}' (import vs local)`,
+      );
+    }
     if (rawSignals[binding.source]) {
       throw new Error(
         `HET Error: Attempting to seed initial value for signal ${binding.source} but it already exists`,
       );
     }
     rawSignals[binding.source] = signal(readValue(binding));
+    signalMeta[binding.source] = 'local';
   }
   const methods = (def.setup && def.setup(ctx)) || {};
 
@@ -218,11 +233,46 @@ function mountComponent(rootEl, def) {
   rootEl.__het_instance = {
     methods,
     signals,
+    rawSignals,
+    signalMeta,
+    importDeclarations,
     syncBindings,
     cleanup: () => {
       cleanups.forEach((fn) => fn());
     },
   };
+}
+
+function getDeclaredExports(el) {
+  const rawAttr = el.getAttribute(EXPORTS_ATTR) || '';
+
+  const cached = exportsAttrCache.get(el);
+  if (cached?.rawAttr === rawAttr) return cached.exportsSet;
+
+  const declarations = rawAttr.split(/\s+/).filter(Boolean);
+  const exportsSet = declarations.length ? new Set(declarations) : EMPTY_EXPORTS_SET;
+
+  exportsAttrCache.set(el, { rawAttr, exportsSet });
+  return exportsSet;
+}
+
+function getImportDeclarations(el) {
+  const rawAttr = el.getAttribute(IMPORTS_ATTR) || '';
+  const declarations = rawAttr.split(/\s+/).filter(Boolean);
+
+  return declarations.map((declaration) => {
+    const parts = declaration.split('=');
+    if (parts.length === 1 && parts[0]) {
+      return { local: parts[0], source: parts[0] };
+    }
+    if (parts.length === 2 && parts[0] && parts[1]) {
+      return { local: parts[0], source: parts[1] };
+    }
+
+    throw new Error(
+      `HET Error: Invalid ${IMPORTS_ATTR} declaration '${declaration}'`,
+    );
+  });
 }
 
 function getBindings(boundEls) {
@@ -560,7 +610,11 @@ function syncComponent(rootEl) {
     if (!rootEl?.isConnected) return;
 
     const instance = rootEl.__het_instance;
-    if (!instance?.syncBindings?.length) return;
+    if (!instance) return;
+
+    syncImportedSignals(rootEl, instance);
+
+    if (!instance.syncBindings?.length) return;
 
     for (const binding of instance.syncBindings) {
       const currentSignal = instance.signals[binding.source];
@@ -572,6 +626,105 @@ function syncComponent(rootEl) {
   } catch (error) {
     onError(error);
   }
+}
+
+function syncImportedSignals(rootEl, instance) {
+  if (!instance.importDeclarations?.length) return;
+
+  resolveImports(
+    rootEl,
+    instance.importDeclarations,
+    instance.rawSignals,
+    instance.signalMeta,
+  );
+}
+
+function resolveImports(rootEl, importDeclarations, rawSignals, signalMeta) {
+  if (!importDeclarations.length) return false;
+
+  let updated = false;
+
+  for (const { local, source } of importDeclarations) {
+    if (signalMeta[local] === 'local') {
+      throw new Error(
+        `HET Error: Signal name conflict for '${local}' (import vs local)`,
+      );
+    }
+
+    const parentEl = findNearestExportingAncestor(rootEl, source);
+    if (!parentEl) {
+      throw new Error(
+        `HET Error: Unable to resolve import '${source}' for '${local}' (no exporting parent found)`,
+      );
+    }
+
+    const parentInstance = parentEl.__het_instance;
+    if (!parentInstance) {
+      throw new Error(
+        `HET Error: Exported signal '${source}' is unavailable because the parent component is not mounted`,
+      );
+    }
+
+    const parentSignal = parentInstance.signals?.[source];
+    if (!parentSignal) {
+      throw new Error(
+        `HET Error: Exported signal '${source}' not found on nearest parent component`,
+      );
+    }
+
+    if (signalMeta[local] !== 'imported') {
+      rawSignals[local] = createImportedSignalWrapper(parentSignal);
+      signalMeta[local] = 'imported';
+      updated = true;
+      continue;
+    }
+
+    const wrapper = rawSignals[local];
+    if (!wrapper?.[IMPORTED_SIGNAL_WRAPPER]) {
+      rawSignals[local] = createImportedSignalWrapper(parentSignal);
+      updated = true;
+      continue;
+    }
+
+    if (wrapper.getTarget() !== parentSignal) {
+      wrapper.setTarget(parentSignal);
+      updated = true;
+    }
+  }
+
+  return updated;
+}
+
+function createImportedSignalWrapper(initialTarget) {
+  const current = signal(initialTarget);
+
+  return {
+    [IMPORTED_SIGNAL_WRAPPER]: true,
+    get value() {
+      return current.value.value;
+    },
+    set value(nextValue) {
+      current.value.value = nextValue;
+    },
+    getTarget() {
+      return current.value;
+    },
+    setTarget(nextTarget) {
+      current.value = nextTarget;
+    },
+  };
+}
+
+function findNearestExportingAncestor(rootEl, signalName) {
+  let current = rootEl.parentElement;
+  while (current) {
+    if (current.hasAttribute('het-component')) {
+      const exportsSet = getDeclaredExports(current);
+      if (exportsSet.has(signalName)) return current;
+    }
+    current = current.parentElement;
+  }
+  return null;
 }
 
 function createSignalsProxy(target) {

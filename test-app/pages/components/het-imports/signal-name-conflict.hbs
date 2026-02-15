@@ -1,0 +1,30 @@
+<section class="card shadow-sm border-0">
+  <div class="card-body">
+    <h1 class="h4 mb-3">{{title}}</h1>
+    <div het-component="imports-conflict-parent" het-exports="count">
+      <div het-component="imports-conflict-child" het-imports="count">
+        <p het-props="textContent=count:seed">5</p>
+      </div>
+    </div>
+    <p id="error-message" class="mb-0 mt-3 text-muted">No error</p>
+  </div>
+</section>
+<script nonce="{{{cspNonce}}}">
+  window.HET.registerComponent('imports-conflict-parent', {
+    setup: ({ signals }) => {
+      signals.count = window.HET.signal(0);
+      return {};
+    },
+  });
+
+  window.HET.registerComponent('imports-conflict-child', {
+    setup: () => ({}),
+  });
+
+  window.addEventListener('load', () => {
+    const message = window.hetErrors.at(-1);
+    if (message) {
+      document.getElementById('error-message').textContent = message;
+    }
+  });
+</script>

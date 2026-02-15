@@ -131,6 +131,8 @@ const trustedTypesPolicy = trustedTypes.createPolicy('het', {
         'het-bool-attrs',
         'het-class',
         'het-model',
+        'het-exports',
+        'het-imports',
         'het-pane',
         'het-nav-pane',
         'het-target',
@@ -375,6 +377,32 @@ window.HET.registerComponent('profileForm', {
 
 Acquisition support: `:seed` only (`:sync` is invalid for `het-model`).
 Type hints: `[int]`, `[float]`, `[bool]`.
+
+### `het-exports` and `het-imports`
+
+Use `het-exports` on a parent component to declare which signals can be imported by descendants.
+Use `het-imports` on a child component to import from the nearest ancestor component that exports the signal.
+
+```html
+<div het-component="parent" het-exports="count">
+  <div het-component="child" het-imports="count">
+    <p het-props="textContent=count"></p>
+  </div>
+</div>
+```
+
+`het-imports` supports alias syntax:
+
+```html
+<div het-component="child" het-imports="childCount=count">
+  <p het-props="textContent=childCount"></p>
+</div>
+```
+
+If multiple ancestors export the same signal name, HET resolves to the nearest exporting ancestor.
+
+Performance note:
+On `het:sync`, imported bindings are re-resolved against the current ancestor chain so nearest-export semantics remain correct after DOM updates. In very deep trees or pages with many imports, this can add measurable sync overhead. For those cases, consider managing shared signals explicitly outside component ancestry (for example, a module-level store) and wiring them in `setup` directly instead of relying on `het-imports`.
 
 ### Acquisition Strategies (`:seed`, `:sync`)
 
