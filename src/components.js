@@ -345,7 +345,9 @@ function getParsedBindingDeclarations(directive, el) {
 function getParsedAcquisition(directive, declaration, acquisitionClause) {
   const typeHintStart = acquisitionClause.indexOf('[');
   if (typeHintStart === -1) {
-    return getValidatedAcquisitionStrategy(directive, declaration, acquisitionClause);
+    return {
+      strategy: getValidatedAcquisitionStrategy(directive, declaration, acquisitionClause),
+    };
   }
 
   if (!directive.allowTypeHint) {
@@ -361,7 +363,7 @@ function getParsedAcquisition(directive, declaration, acquisitionClause) {
 
   const strategy = acquisitionClause.slice(0, typeHintStart);
   return {
-    ...getValidatedAcquisitionStrategy(directive, declaration, strategy),
+    strategy: getValidatedAcquisitionStrategy(directive, declaration, strategy),
     typeHint,
   };
 }
@@ -379,7 +381,7 @@ function getValidatedAcquisitionStrategy(directive, declaration, strategy) {
     );
   }
 
-  return { strategy };
+  return strategy;
 }
 
 function configureEventBinding(methods, binding, onCleanup) {
