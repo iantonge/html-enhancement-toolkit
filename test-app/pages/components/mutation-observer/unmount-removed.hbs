@@ -1,0 +1,29 @@
+<section class="card shadow-sm border-0">
+  <div class="card-body">
+    <h1 class="h4 mb-3">{{title}}</h1>
+    <button id="remove-component" type="button" class="btn btn-sm btn-primary mb-3">
+      Remove component
+    </button>
+    <div id="host">
+      <div het-component="observer-removed">
+        <span het-ref="state" id="component-state"></span>
+      </div>
+    </div>
+    <p id="cleanup-state" class="mb-0 text-muted">not-cleaned</p>
+  </div>
+</section>
+<script nonce="{{{cspNonce}}}">
+  window.HET.registerComponent('observer-removed', {
+    setup: ({ refs, onCleanup }) => {
+      refs.state.textContent = 'mounted';
+      onCleanup(() => {
+        document.getElementById('cleanup-state').textContent = 'cleaned';
+      });
+      return {};
+    },
+  });
+
+  document.getElementById('remove-component').addEventListener('click', () => {
+    document.getElementById('host').replaceChildren();
+  });
+</script>

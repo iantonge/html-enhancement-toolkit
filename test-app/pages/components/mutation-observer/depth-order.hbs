@@ -1,0 +1,61 @@
+<section class="card shadow-sm border-0">
+  <div class="card-body">
+    <h1 class="h4 mb-3">{{title}}</h1>
+    <div class="d-flex gap-2 mb-3">
+      <button id="add-tree" type="button" class="btn btn-sm btn-primary">Add tree</button>
+      <button id="remove-tree" type="button" class="btn btn-sm btn-outline-primary">Remove tree</button>
+    </div>
+    <div id="host"></div>
+    <p id="mount-order" class="mb-1 text-muted"></p>
+    <p id="cleanup-order" class="mb-0 text-muted"></p>
+  </div>
+</section>
+<script nonce="{{{cspNonce}}}">
+  window.hetDepthLog = {
+    mounts: [],
+    cleanups: [],
+  };
+
+  window.HET.registerComponent('depth-parent', {
+    setup: ({ onCleanup }) => {
+      window.hetDepthLog.mounts.push('parent');
+      onCleanup(() => {
+        window.hetDepthLog.cleanups.push('parent');
+      });
+      return {};
+    },
+  });
+
+  window.HET.registerComponent('depth-child', {
+    setup: ({ onCleanup }) => {
+      window.hetDepthLog.mounts.push('child');
+      onCleanup(() => {
+        window.hetDepthLog.cleanups.push('child');
+      });
+      return {};
+    },
+  });
+
+  const renderLogs = () => {
+    document.getElementById('mount-order').textContent = window.hetDepthLog.mounts.join(',');
+    document.getElementById('cleanup-order').textContent = window.hetDepthLog.cleanups.join(',');
+  };
+
+  document.getElementById('add-tree').addEventListener('click', () => {
+    window.hetDepthLog.mounts = [];
+    window.hetDepthLog.cleanups = [];
+    const host = document.getElementById('host');
+    const parent = document.createElement('div');
+    parent.setAttribute('het-component', 'depth-parent');
+    const child = document.createElement('div');
+    child.setAttribute('het-component', 'depth-child');
+    parent.appendChild(child);
+    host.replaceChildren(parent);
+    setTimeout(renderLogs, 0);
+  });
+
+  document.getElementById('remove-tree').addEventListener('click', () => {
+    document.getElementById('host').replaceChildren();
+    setTimeout(renderLogs, 0);
+  });
+</script>

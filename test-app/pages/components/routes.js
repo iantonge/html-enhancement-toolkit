@@ -6,6 +6,7 @@ import hetAttrsRoutes from './het-attrs/routes.js';
 import hetModelRoutes from './het-model/routes.js';
 import hetOnRoutes from './het-on/routes.js';
 import hetPropsRoutes from './het-props/routes.js';
+import mutationObserverRoutes from './mutation-observer/routes.js';
 import scopedRefsRoutes from './scoped-refs/routes.js';
 
 const router = Router();
@@ -22,6 +23,7 @@ router.use('/het-attrs', hetAttrsRoutes);
 router.use('/het-model', hetModelRoutes);
 router.use('/het-on', hetOnRoutes);
 router.use('/het-props', hetPropsRoutes);
+router.use('/mutation-observer', mutationObserverRoutes);
 router.use('/scoped-refs', scopedRefsRoutes);
 
 export default router;

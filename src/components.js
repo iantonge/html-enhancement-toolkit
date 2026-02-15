@@ -97,6 +97,9 @@ const DIRECTIVES = [
 const DIRECTIVES_SELECTOR = DIRECTIVES.map((directive) => `[${directive.name}]`).join(', ');
 
 const components = new Map();
+const pendingRemovals = new Set();
+const pendingAdditions = new Set();
+let observer;
 let syncListener;
 
 let onError = (error) => {
@@ -114,6 +117,7 @@ export function init(config) {
   onError = config?.onError ?? onError;
   try {
     mountComponents(document);
+    initializeObserver();
     initializeSyncEvents();
   } catch (error) {
     onError(error);
@@ -132,6 +136,13 @@ export function destroy() {
   if (syncListener) {
     document.removeEventListener('het:sync', syncListener);
     syncListener = undefined;
+  }
+
+  if (observer) {
+    observer.disconnect();
+    observer = undefined;
+    pendingAdditions.clear();
+    pendingRemovals.clear();
   }
 }
 
@@ -393,6 +404,86 @@ function getNodeDepth(node) {
     current = current.parentElement;
   }
   return depth;
+}
+
+function initializeObserver() {
+  if (observer) return;
+
+  observer = new MutationObserver((records) => {
+    for (const record of records) {
+      try {
+        if (record.type === 'childList') {
+          for (const node of record.removedNodes) {
+            if (node.nodeType !== Node.ELEMENT_NODE) continue;
+            if (node.hasAttribute('het-component')) pendingRemovals.add(node);
+            node
+              .querySelectorAll('[het-component]')
+              .forEach((child) => pendingRemovals.add(child));
+          }
+
+          for (const node of record.addedNodes) {
+            if (node.nodeType !== Node.ELEMENT_NODE) continue;
+            if (node.hasAttribute('het-component')) pendingAdditions.add(node);
+            node
+              .querySelectorAll('[het-component]')
+              .forEach((child) => pendingAdditions.add(child));
+          }
+        } else if (
+          record.type === 'attributes' &&
+          record.attributeName === 'het-component'
+        ) {
+          const el = record.target;
+          if (el.isConnected && !el.hasAttribute('het-component')) {
+            pendingRemovals.add(el);
+          }
+          if (el.isConnected && el.hasAttribute('het-component')) {
+            pendingAdditions.add(el);
+          }
+        }
+      } catch (error) {
+        onError(error);
+      }
+    }
+
+    queueMicrotask(() => {
+      const additions = Array.from(pendingAdditions).sort(
+        (a, b) => getNodeDepth(a) - getNodeDepth(b),
+      );
+      const removals = Array.from(pendingRemovals).sort(
+        (a, b) => getNodeDepth(b) - getNodeDepth(a),
+      );
+
+      for (const el of additions) {
+        try {
+          if (!el.isConnected) continue;
+          if (!el.hasAttribute('het-component')) continue;
+          const definition = components.get(el.getAttribute('het-component'));
+          if (definition) mountComponent(el, definition);
+        } catch (error) {
+          onError(error);
+        }
+      }
+      pendingAdditions.clear();
+
+      for (const el of removals) {
+        try {
+          const stillComponent = el.isConnected && el.hasAttribute('het-component');
+          if (stillComponent) continue;
+          if (el.__het_instance) destroyComponent(el);
+        } catch (error) {
+          onError(error);
+        }
+      }
+      pendingRemovals.clear();
+    });
+  });
+
+  observer.observe(document, {
+    childList: true,
+    subtree: true,
+    attributes: true,
+    attributeFilter: ['het-component'],
+  });
 }
 
 function scopedQuerySelectorAll(root, selector) {

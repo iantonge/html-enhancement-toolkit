@@ -1,0 +1,36 @@
+<section class="card shadow-sm border-0">
+  <div class="card-body">
+    <h1 class="h4 mb-3">{{title}}</h1>
+    <button id="add-component" type="button" class="btn btn-sm btn-primary mb-3">
+      Add component
+    </button>
+    <div id="host"></div>
+    <p id="mount-state" class="mb-0 text-muted">not-mounted</p>
+  </div>
+</section>
+<script nonce="{{{cspNonce}}}">
+  window.HET.registerComponent('observer-added', {
+    setup: ({ refs }) => {
+      refs.state.textContent = 'mounted';
+      return {};
+    },
+  });
+
+  document.getElementById('add-component').addEventListener('click', () => {
+    const host = document.getElementById('host');
+    const root = document.createElement('div');
+    root.setAttribute('het-component', 'observer-added');
+
+    const stateEl = document.createElement('span');
+    stateEl.setAttribute('het-ref', 'state');
+    stateEl.id = 'added-state';
+    root.appendChild(stateEl);
+
+    host.replaceChildren(root);
+
+    setTimeout(() => {
+      const state = document.getElementById('added-state')?.textContent || 'not-mounted';
+      document.getElementById('mount-state').textContent = state;
+    }, 0);
+  });
+</script>
