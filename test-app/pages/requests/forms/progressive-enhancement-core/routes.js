@@ -14,6 +14,7 @@ import missingTargetResponseRoutes from './missing-target-response-form/routes.j
 import multipartRoutes from './multipart/routes.js';
 import noTargetRoutes from './no-target-form/routes.js';
 import postRoutes from './post/routes.js';
+import relativeActionRoutes from './relative-action-form/routes.js';
 import responsesRoutes from './responses/routes.js';
 import submitterEnctypeRoutes from './submitter-enctype-form/routes.js';
 import submitterTargetRoutes from './submitter-target-form/routes.js';
@@ -40,6 +41,7 @@ router.use(missingTargetResponseRoutes);
 router.use(multipartRoutes);
 router.use(noTargetRoutes);
 router.use(postRoutes);
+router.use(relativeActionRoutes);
 router.use(responsesRoutes);
 router.use(submitterEnctypeRoutes);
 router.use(submitterTargetRoutes);

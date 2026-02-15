@@ -1,0 +1,19 @@
+<section het-pane="main" class="card shadow-sm border-0">
+  <div class="card-body">
+    <h1 class="h4 mb-3">{{title}}</h1>
+
+    <form id="get-form" method="get" action="get-form" het-target="main" class="mb-3">
+      <div class="mb-2">
+        <input id="get-field" type="text" name="some-field" value="relative get value" class="form-control" />
+      </div>
+      <button id="get-submit" type="submit" class="btn btn-primary">Submit GET</button>
+    </form>
+
+    <form id="post-form" method="post" action="post-form" het-target="main">
+      <div class="mb-2">
+        <input id="post-field" type="text" name="some-field" value="relative post value" class="form-control" />
+      </div>
+      <button id="post-submit" type="submit" class="btn btn-primary">Submit POST</button>
+    </form>
+  </div>
+</section>

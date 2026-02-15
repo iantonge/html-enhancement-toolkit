@@ -51,6 +51,30 @@ test.describe('form progressive enhancement (core)', () => {
     expect(content).toContain('POST form submitted');
   });
 
+  test('resolves relative GET form action against current document URL', async ({
+    page,
+  }) => {
+    await page.goto('/requests/forms/progressive-enhancement-core/relative-action-form');
+    await Promise.all([
+      page.waitForSelector('#response-message'),
+      page.click('#get-submit'),
+    ]);
+    const content = await page.textContent('#response-message');
+    expect(content).toContain('GET form submitted: relative get value');
+  });
+
+  test('resolves relative POST form action against current document URL', async ({
+    page,
+  }) => {
+    await page.goto('/requests/forms/progressive-enhancement-core/relative-action-form');
+    await Promise.all([
+      page.waitForSelector('#response-message'),
+      page.click('#post-submit'),
+    ]);
+    const content = await page.textContent('#response-message');
+    expect(content).toContain('POST form submitted: relative post value');
+  });
+
   test('honors multipart form enctype', async ({ page }) => {
     await page.goto('/requests/forms/progressive-enhancement-core/multipart');
     await Promise.all([

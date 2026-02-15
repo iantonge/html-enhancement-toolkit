@@ -284,7 +284,8 @@ const getSubmitContext = (event) => {
     event.target.getAttribute('enctype') ||
     'application/x-www-form-urlencoded'
   ).toLowerCase();
-  if (new URL(action, window.location.origin).origin !== window.location.origin)
+  const resolvedActionUrl = new URL(action, window.location.href);
+  if (resolvedActionUrl.origin !== window.location.origin)
     throw new Error(
       'HET error: Cannot progressively enhance cross-origin form submissions',
     );
@@ -292,8 +293,14 @@ const getSubmitContext = (event) => {
   const abortController = new AbortController();
   const request =
     method === 'GET'
-      ? buildGetRequest(action, formData, abortController)
-      : buildPostRequest(action, method, formData, enctype, abortController);
+      ? buildGetRequest(resolvedActionUrl, formData, abortController)
+      : buildPostRequest(
+          resolvedActionUrl,
+          method,
+          formData,
+          enctype,
+          abortController,
+        );
   const target = getTarget(targetName);
   return {
     request,
@@ -305,16 +312,22 @@ const getSubmitContext = (event) => {
   };
 };
 
-const buildGetRequest = (action, formData, abortController) => {
-  const url = new URL(action, window.location.origin);
+const buildGetRequest = (actionUrl, formData, abortController) => {
+  const url = new URL(actionUrl.href);
   const params = new URLSearchParams(formData);
-  if (params.size) url.search = `?${params.toString()}`;
+  url.search = params.size ? `?${params.toString()}` : '';
   return new Request(url.href, { method: 'GET', signal: abortController.signal });
 };
 
-const buildPostRequest = (action, method, formData, enctype, abortController) => {
+const buildPostRequest = (
+  actionUrl,
+  method,
+  formData,
+  enctype,
+  abortController,
+) => {
   if (enctype === 'multipart/form-data') {
-    return new Request(action, {
+    return new Request(actionUrl.href, {
       method,
       body: formData,
       signal: abortController.signal,
@@ -324,7 +337,7 @@ const buildPostRequest = (action, method, formData, enctype, abortController) =>
     const textBody = Array.from(formData.entries())
       .map(([key, value]) => `${key}=${value}`)
       .join('\r\n');
-    return new Request(action, {
+    return new Request(actionUrl.href, {
       method,
       headers: {
         'Content-Type': 'text/plain;charset=UTF-8',
@@ -334,7 +347,7 @@ const buildPostRequest = (action, method, formData, enctype, abortController) =>
     });
   }
   const params = new URLSearchParams(formData);
-  return new Request(action, {
+  return new Request(actionUrl.href, {
     method,
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
