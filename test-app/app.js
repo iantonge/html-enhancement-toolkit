@@ -55,6 +55,7 @@ app.use(
 app.use('/css', express.static(path.join(__dirname, '../node_modules/bootstrap/dist/css')));
 app.use('/js/dompurify', express.static(path.join(__dirname, '../node_modules/dompurify/dist')));
 app.use('/js/het', express.static(path.join(__dirname, '../dist')));
+app.use('/js/idiomorph', express.static(path.join(__dirname, '../node_modules/idiomorph/dist')));
 app.use('/js/trusted-types', express.static(path.join(__dirname, '../node_modules/trusted-types/dist/es6')));
 app.use('/assets', express.static(path.join(__dirname, 'assets')));
 

@@ -1,3 +1,4 @@
+window.hetInitConfig = window.hetInitConfig || {};
 window.hetErrors = window.hetErrors || [];
 const trustedTypesPolicy = trustedTypes.createPolicy('het', {
   createHTML: (html) => DOMPurify.sanitize(html, {
@@ -5,6 +6,14 @@ const trustedTypesPolicy = trustedTypes.createPolicy('het', {
     WHOLE_DOCUMENT: true,
     ADD_TAGS: ['html', 'head', 'body', 'meta', 'title', 'link', 'style', 'script'],
     ADD_ATTR: [
+      'het-component',
+      'het-ref',
+      'het-on',
+      'het-props',
+      'het-attrs',
+      'het-bool-attrs',
+      'het-class',
+      'het-model',
       'het-pane',
       'het-nav-pane',
       'het-target',
@@ -24,11 +33,9 @@ const trustedTypesPolicy = trustedTypes.createPolicy('het', {
   }),
 });
 
-window.HET.init({
-  ...(window.hetInitConfig || {}),
-  trustedTypesPolicy: trustedTypesPolicy,
-  onError: (err) => {
-    window.hetErrors.push(err.message);
-    console.error(err);
-  }
-});
+window.hetInitConfig.trustedTypesPolicy = trustedTypesPolicy;
+window.hetInitConfig.onError = (err) => {
+  window.hetErrors.push(err.message);
+  console.error(err);
+};
+window.HET.init(window.hetInitConfig);

@@ -16,6 +16,7 @@
     "express": "^5.2.1",
     "hbs": "^4.2.0",
     "helmet": "^8.1.0",
+    "idiomorph": "^0.7.4",
     "multer": "^2.0.2",
     "trusted-types": "^2.0.0"
   }
