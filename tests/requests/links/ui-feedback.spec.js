@@ -91,4 +91,30 @@ test.describe('link UI feedback', () => {
     await page.waitForSelector('#main-content:has-text("Slow response.")');
     await expect(target).not.toHaveClass(/custom-busy/);
   });
+
+  test('does not swap content after destroy during in-flight request', async ({
+    page,
+  }) => {
+    await page.goto('/requests/links/ui-feedback');
+
+    let releaseSlow;
+    const slowGate = new Promise((resolve) => {
+      releaseSlow = resolve;
+    });
+    await page.route('**/requests/links/ui-feedback/responses/slow**', async (route) => {
+      await slowGate;
+      await route.continue();
+    });
+
+    await page.click('#slow-link', { noWaitAfter: true });
+    await expect(page.locator('#main-pane')).toHaveAttribute('data-het-busy', /\d+/);
+
+    await page.evaluate(() => {
+      window.HET.destroy();
+    });
+
+    releaseSlow();
+    await page.waitForTimeout(700);
+    await expect(page.locator('#main-content')).toHaveText('UI feedback content.');
+  });
 });

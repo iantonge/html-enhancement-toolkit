@@ -26,4 +26,30 @@ test.describe('form UI feedback', () => {
     await expect(target).not.toHaveClass(/het-busy/);
     await expect(target).not.toHaveAttribute('aria-busy', 'true');
   });
+
+  test('does not swap content after destroy during in-flight request', async ({
+    page,
+  }) => {
+    await page.goto('/requests/forms/ui-feedback');
+
+    let releaseSlow;
+    const slowGate = new Promise((resolve) => {
+      releaseSlow = resolve;
+    });
+    await page.route('**/requests/forms/ui-feedback/responses/slow**', async (route) => {
+      await slowGate;
+      await route.continue();
+    });
+
+    await page.click('#submit', { noWaitAfter: true });
+    await expect(page.locator('#main-pane')).toHaveAttribute('data-het-busy', /\d+/);
+
+    await page.evaluate(() => {
+      window.HET.destroy();
+    });
+
+    releaseSlow();
+    await page.waitForTimeout(700);
+    await expect(page.locator('#main-content')).toHaveText('Form UI feedback content.');
+  });
 });

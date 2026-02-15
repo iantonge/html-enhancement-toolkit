@@ -559,6 +559,8 @@ export function init(config) {
 }
 
 export function destroy() {
+  inFlightRequests.forEach((controller) => controller.abort());
+  inFlightRequests.clear();
   document.removeEventListener('click', clickPipeline);
   document.removeEventListener('submit', submitPipeline);
   window.removeEventListener('popstate', popstatePipeline);
