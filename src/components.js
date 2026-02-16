@@ -236,6 +236,7 @@ function mountComponent(rootEl, def) {
     rawSignals,
     signalMeta,
     importDeclarations,
+    bindings,
     syncBindings,
     cleanup: () => {
       cleanups.forEach((fn) => fn());
@@ -293,41 +294,30 @@ function getParsedBindingDeclarations(directive, el) {
     : [rawAttr];
 
   return declarations.map((declaration) => {
-    const declarationParts = declaration.split(':');
-    if (declarationParts.length > 2) {
-      throw new Error(`HET Error: Invalid declaration '${declaration}'`);
-    }
-    const [assignment, acquisitionClause] = declarationParts;
-
-    if (acquisitionClause && !directive.read) {
-      throw new Error(
-        `HET Error: Acquisition clause not supported in binding declaration '${declaration}'`,
-      );
-    }
-
-    const parsedAcquisition = acquisitionClause
-      ? getParsedAcquisition(directive, declaration, acquisitionClause)
-      : {};
-
-    const parts = assignment.split('=');
+    const parts = declaration.split('=');
     let key;
-    let source;
+    let sourceWithAcquisition;
 
     if (directive.keyRequired) {
       if (parts.length !== 2 || parts.some((part) => part.length === 0)) {
         throw new Error(`HET Error: Invalid expression '${declaration}'`);
       }
-      [key, source] = parts;
+      [key, sourceWithAcquisition] = parts;
     } else if (parts.length === 1 && parts[0].length > 0) {
       key = inferModelKey(el);
-      [source] = parts;
+      [sourceWithAcquisition] = parts;
     } else if (parts.length === 2 && parts.every((part) => part.length > 0)) {
-      [key, source] = parts;
+      [key, sourceWithAcquisition] = parts;
     } else {
       throw new Error(`HET Error: Invalid expression '${declaration}'`);
     }
+    const { source, parsedAcquisition } = getSourceAndAcquisition(
+      directive,
+      declaration,
+      sourceWithAcquisition,
+    );
 
-    return {
+    const parsedBinding = {
       dirName: directive.name,
       el,
       key,
@@ -339,7 +329,38 @@ function getParsedBindingDeclarations(directive, el) {
       acquisitionStrategy: parsedAcquisition.strategy,
       exp: declaration,
     };
+    return parsedBinding;
   });
+}
+
+function getSourceAndAcquisition(directive, declaration, sourceWithAcquisition) {
+  const separatorCount = (sourceWithAcquisition.match(/:/g) || []).length;
+  if (separatorCount === 0) {
+    return {
+      source: sourceWithAcquisition,
+      parsedAcquisition: {},
+    };
+  }
+
+  if (separatorCount > 1) {
+    throw new Error(`HET Error: Invalid declaration '${declaration}'`);
+  }
+
+  const [source, acquisitionClause] = sourceWithAcquisition.split(':');
+  if (!source || !acquisitionClause) {
+    throw new Error(`HET Error: Invalid declaration '${declaration}'`);
+  }
+
+  if (!directive.read) {
+    throw new Error(
+      `HET Error: Acquisition clause not supported in binding declaration '${declaration}'`,
+    );
+  }
+
+  return {
+    source,
+    parsedAcquisition: getParsedAcquisition(directive, declaration, acquisitionClause),
+  };
 }
 
 function getParsedAcquisition(directive, declaration, acquisitionClause) {
@@ -615,7 +636,7 @@ function syncComponent(rootEl) {
     if (!instance) return;
 
     syncImportedSignals(rootEl, instance);
-
+    reapplySignalBindings(instance);
     if (!instance.syncBindings?.length) return;
 
     for (const binding of instance.syncBindings) {
@@ -627,6 +648,23 @@ function syncComponent(rootEl) {
     }
   } catch (error) {
     onError(error);
+  }
+}
+
+function reapplySignalBindings(instance) {
+  const syncSources = new Set(
+    (instance.syncBindings || []).map((binding) => binding.source),
+  );
+
+  for (const binding of instance.bindings || []) {
+    if (binding.sourceType !== SIGNAL_SOURCE_TYPE) continue;
+    if (syncSources.has(binding.source)) {
+      continue;
+    }
+    if (!binding.el?.isConnected) continue;
+    const currentSignal = instance.signals[binding.source];
+    if (!currentSignal) continue;
+    binding.write(binding.el, binding.key, currentSignal.value);
   }
 }
 

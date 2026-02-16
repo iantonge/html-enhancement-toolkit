@@ -1,0 +1,30 @@
+<section class="card shadow-sm border-0">
+  <div class="card-body">
+    <h1 class="h4 mb-3">{{title}}</h1>
+    <div id="custom-event-root" het-component="het-on-custom-event" het-on="het:beforeFetch=onBeforeFetch">
+      <button id="dispatch-custom-event" type="button" het-on="click=dispatchCustomEvent">
+        Dispatch custom event
+      </button>
+      <p id="custom-event-count" class="mb-0 mt-2 text-muted">0</p>
+    </div>
+  </div>
+</section>
+<script nonce="{{{cspNonce}}}">
+  window.HET.registerComponent('het-on-custom-event', {
+    setup: () => {
+      let count = 0;
+
+      return {
+        dispatchCustomEvent: () => {
+          document
+            .getElementById('custom-event-root')
+            .dispatchEvent(new CustomEvent('het:beforeFetch', { bubbles: true }));
+        },
+        onBeforeFetch: () => {
+          count += 1;
+          document.getElementById('custom-event-count').textContent = String(count);
+        },
+      };
+    },
+  });
+</script>

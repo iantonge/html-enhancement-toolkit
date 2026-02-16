@@ -44,4 +44,10 @@ router.get('/multiple-handlers', (request, response) => {
   });
 });
 
+router.get('/custom-event-colon', (request, response) => {
+  response.render('components/het-on/custom-event-colon', {
+    title: 'Custom event (colon)',
+  });
+});
+
 export default router;
