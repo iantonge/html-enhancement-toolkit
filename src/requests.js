@@ -42,6 +42,7 @@ const clickPipeline = async (event) => {
         ctx.target,
         ctx.select,
         ctx.also,
+        ctx.initiator,
       );
       if (!response) return;
       if (response.finalTarget.type === 'het-nav-pane') {
@@ -78,6 +79,7 @@ const submitPipeline = async (event) => {
         ctx.target,
         ctx.select,
         ctx.also,
+        ctx.initiator,
       );
       if (!response) return;
       if (response.finalTarget.type === 'het-nav-pane') {
@@ -105,7 +107,13 @@ const popstatePipeline = async (event) => {
     startUiFeedback(ctx.target.el, requestId);
     inFlightRequests.set(ctx.target.el, ctx.abortController);
     try {
-      const response = await fetchAndSwap(ctx.request, ctx.target, ctx.select, ctx.also);
+      const response = await fetchAndSwap(
+        ctx.request,
+        ctx.target,
+        ctx.select,
+        ctx.also,
+        document,
+      );
       if (!response) return;
       if (response.finalTarget.type === 'het-nav-pane') {
         updateHead(response.newHead);
@@ -123,24 +131,24 @@ const popstatePipeline = async (event) => {
   }
 };
 
-const fetchAndSwap = async (request, target, select, also) => {
+const fetchAndSwap = async (request, target, select, also, initiator) => {
   if (nonce) {
     request.headers.set(nonceHeader, nonce);
   }
   request.headers.set('X-HET-Target', target.name);
   const beforeFetchEvent = new CustomEvent('het:beforeFetch', {
-    detail: { request },
+    detail: { request, initiator, target: target.el },
     cancelable: true,
     bubbles: true,
   });
-  target.el.dispatchEvent(beforeFetchEvent);
+  initiator.dispatchEvent(beforeFetchEvent);
   if (beforeFetchEvent.defaultPrevented) return;
   const response = await fetch(beforeFetchEvent.detail.request);
   const afterFetchEvent = new CustomEvent('het:afterFetch', {
-    detail: { response },
+    detail: { response, initiator, target: target.el },
     bubbles: true,
   });
-  target.el.dispatchEvent(afterFetchEvent);
+  initiator.dispatchEvent(afterFetchEvent);
   const finalResponse = afterFetchEvent.detail.response;
   const targetOverride = finalResponse.headers.get('X-HET-Target-Override');
   const finalTarget = targetOverride ? getTarget(targetOverride) : target;
@@ -248,7 +256,7 @@ const getClickContext = (event) => {
   const target = getTarget(targetName);
   const abortController = new AbortController();
   const request = new Request(link.href, { signal: abortController.signal });
-  return { request, target, abortController, select, also };
+  return { request, target, abortController, select, also, initiator: link };
 };
 
 const getRequestId = () => {
@@ -309,6 +317,7 @@ const getSubmitContext = (event) => {
     abortController,
     select,
     also,
+    initiator: event.target,
   };
 };
 
