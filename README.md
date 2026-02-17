@@ -65,7 +65,7 @@ window.HET.init({
 
 ### `headContentSelectors`
 
-Controls which `<head>` elements HET synchronizes from responses during `het-nav-pane` navigations. Default:
+Controls which `<head>` elements HET synchronizes from responses during `het-nav` navigations. Default:
 
 ```js
 [
@@ -134,7 +134,7 @@ const trustedTypesPolicy = trustedTypes.createPolicy('het', {
         'het-exports',
         'het-imports',
         'het-pane',
-        'het-nav-pane',
+        'het-nav',
         'het-target',
         'het-select',
         'het-also',
@@ -559,16 +559,16 @@ Use `het-also` to replace elements outside the target pane in the same response.
 - The response HTML must also contain exactly one pane with the same name.
 - If the pane is missing or duplicated in either place, HET throws an error.
 
-### Navigation panes (`het-nav-pane`)
+### Navigation panes (`het-nav`)
 
-Use `het-nav-pane` when pane replacement should also update browser history.
+Use `het-nav` when pane replacement should also update browser history.
 
 ```html
-<main het-nav-pane="main">
+<main het-pane="main" het-nav>
   <a href="/next" het-target="main">Next page</a>
 </main>
 
-<main het-nav-pane="main">
+<main het-pane="main" het-nav>
   <form method="get" action="/search" het-target="main">
     <input name="q" />
     <button type="submit">Search</button>
@@ -578,7 +578,7 @@ Use `het-nav-pane` when pane replacement should also update browser history.
 
 When HET performs the first navigation in a session, it replaces the initial history state. On `popstate`, HET cancels in-flight requests, re-fetches the URL from history state, and re-applies the saved pane/select/also settings.
 
-For `het-nav-pane` navigations, HET also synchronizes key `<head>` elements from the response (including `<title>`), so browser history navigation restores both pane content and page metadata.
+For `het-nav` navigations, HET also synchronizes key `<head>` elements from the response (including `<title>`), so browser history navigation restores both pane content and page metadata.
 
 ### UI feedback while requests are in flight
 

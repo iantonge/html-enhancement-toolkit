@@ -5,7 +5,6 @@
       <input id="seed-input" class="form-control" het-model="query:seed" value="alpha">
       <p id="seed-value" het-props="textContent=query" class="mt-2 text-muted mb-3"></p>
     </div>
-    <p id="error-message" class="text-muted mb-3">No error</p>
     <a
       id="load-seed-response"
       href="/integration/requests-components-model-seed/response"
@@ -25,12 +24,5 @@
 
   window.HET.registerComponent('integration-model-seed', {
     setup: () => ({}),
-  });
-
-  document.addEventListener('het:afterLoadContent', () => {
-    const message = window.hetErrors.at(-1);
-    if (message) {
-      document.getElementById('error-message').textContent = message;
-    }
   });
 </script>

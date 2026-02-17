@@ -45,7 +45,7 @@ const clickPipeline = async (event) => {
         ctx.initiator,
       );
       if (!response) return;
-      if (response.finalTarget.type === 'het-nav-pane') {
+      if (response.finalTarget.isNav) {
         updateHead(response.newHead);
       }
       updateHistory(response.finalTarget, response.url, ctx.select, ctx.also);
@@ -82,7 +82,7 @@ const submitPipeline = async (event) => {
         ctx.initiator,
       );
       if (!response) return;
-      if (response.finalTarget.type === 'het-nav-pane') {
+      if (response.finalTarget.isNav) {
         updateHead(response.newHead);
       }
       updateHistory(response.finalTarget, response.url, ctx.select, ctx.also);
@@ -115,7 +115,7 @@ const popstatePipeline = async (event) => {
         document,
       );
       if (!response) return;
-      if (response.finalTarget.type === 'het-nav-pane') {
+      if (response.finalTarget.isNav) {
         updateHead(response.newHead);
       }
     } catch (error) {
@@ -171,9 +171,7 @@ const fetchAndSwap = async (request, target, select, also, initiator) => {
   const responseHtml = await finalResponse.text();
   const htmlForParse = trustedTypesPolicy?.createHTML(responseHtml) ?? responseHtml;
   const parsedDocument = parser.parseFromString(htmlForParse, 'text/html');
-  const candidates = parsedDocument.querySelectorAll(
-    `[${finalTarget.type}="${finalTarget.name}"]`,
-  );
+  const candidates = parsedDocument.querySelectorAll(`[het-pane="${finalTarget.name}"]`);
   if (candidates.length === 0)
     throw new Error(
       `HET error: No pane named ${finalTarget.name} found in server response`,
@@ -500,7 +498,7 @@ const focusFirstAutofocus = (elements) => {
 };
 
 const updateHistory = (target, responseUrl, select, also) => {
-  if (target.type !== 'het-nav-pane' || !responseUrl) return;
+  if (!target.isNav || !responseUrl) return;
   const state = {
     paneName: target.name,
     url: responseUrl,
@@ -540,9 +538,7 @@ const getPopStateContext = (event) => {
 };
 
 const getTarget = (targetName) => {
-  const candidates = document.querySelectorAll(
-    `[het-pane="${targetName}"],[het-nav-pane="${targetName}"]`,
-  );
+  const candidates = document.querySelectorAll(`[het-pane="${targetName}"]`);
   if (candidates.length === 0)
     throw new Error(`HET error: No pane named ${targetName} found in current document`);
   if (candidates.length > 1)
@@ -550,8 +546,8 @@ const getTarget = (targetName) => {
       `HET error: Multiple panes named ${targetName} found in current document`,
     );
   const el = candidates[0];
-  const type = el.hasAttribute('het-pane') ? 'het-pane' : 'het-nav-pane';
-  return { el, name: targetName, type };
+  const isNav = el.hasAttribute('het-nav');
+  return { el, name: targetName, isNav };
 };
 
 export function init(config) {

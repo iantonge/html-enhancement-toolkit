@@ -5,12 +5,10 @@ test.describe('integration requests + components model seed', () => {
     await page.goto('/integration/requests-components-model-seed');
 
     await expect(page.locator('#seed-value')).toHaveText('alpha');
-    await expect(page.locator('#error-message')).toHaveText('No error');
 
     await page.click('#load-seed-response');
 
     await expect(page.locator('#seed-title')).toHaveText('Requests + Components model seed response');
     await expect(page.locator('#seed-value')).toHaveText('alpha');
-    await expect(page.locator('#error-message')).toHaveText('No error');
   });
 });

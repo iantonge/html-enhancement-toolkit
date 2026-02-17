@@ -8,10 +8,4 @@ router.get('/responses/basic', (request, response) => {
   });
 });
 
-router.get('/responses/missing', (request, response) => {
-  response.render('requests/links/nav-panes/responses/missing', {
-    title: 'Link Nav Panes',
-  });
-});
-
 export default router;

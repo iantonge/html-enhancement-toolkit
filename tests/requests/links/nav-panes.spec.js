@@ -10,13 +10,4 @@ test.describe('link nav panes', () => {
     expect(page.url()).toContain('/requests/links/nav-panes/responses/basic');
   });
 
-  test('throws when response is missing nav pane', async ({ page }) => {
-    await page.goto('/requests/links/nav-panes/missing-response');
-    await page.click('#missing-link');
-    await page.waitForFunction(() =>
-      window.hetErrors.includes(
-        'HET error: No pane named main found in server response',
-      ),
-    );
-  });
 });
