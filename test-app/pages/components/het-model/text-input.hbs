@@ -13,7 +13,7 @@
 <script nonce="{{{cspNonce}}}">
   window.HET.registerComponent('het-model-text', {
     setup: ({ signals }) => {
-      signals.name = window.HET.signal('Alpha');
+      signals.name = window.HET.signals.signal('Alpha');
       return {
         setName: () => {
           signals.name.value = 'Bravo';

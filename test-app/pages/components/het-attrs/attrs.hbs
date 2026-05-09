@@ -10,7 +10,7 @@
 <script nonce="{{{cspNonce}}}">
   window.HET.registerComponent('het-attrs-basic', {
     setup: ({ signals }) => {
-      signals.status = window.HET.signal('idle');
+      signals.status = window.HET.signals.signal('idle');
       return {
         setReady: () => {
           signals.status.value = 'ready';

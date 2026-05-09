@@ -16,14 +16,14 @@
 <script nonce="{{{cspNonce}}}">
   window.HET.registerComponent('imports-grandparent', {
     setup: ({ signals }) => {
-      signals.count = window.HET.signal(99);
+      signals.count = window.HET.signals.signal(99);
       return {};
     },
   });
 
   window.HET.registerComponent('imports-parent', {
     setup: ({ signals }) => {
-      signals.count = window.HET.signal(0);
+      signals.count = window.HET.signals.signal(0);
       return {
         increment: () => {
           signals.count.value += 1;

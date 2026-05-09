@@ -6,7 +6,8 @@ const common = {
 };
 
 const iife = {
-  ...common,
+  entryPoints: ['src/het.iife.js'],
+  bundle: true,
   sourcemap: true,
   format: 'iife',
   globalName: 'HET',

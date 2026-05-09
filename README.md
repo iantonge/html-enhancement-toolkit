@@ -202,7 +202,7 @@ window.HET.registerComponent('counter', {
     el.textContent = 'Mounted';
     // refs are collected from [het-ref] within this component scope
     console.log(refs);
-    signals.count = window.HET.signal(0);
+    signals.count = window.HET.signals.signal(0);
     onCleanup(() => {
       // cleanup work
     });
@@ -216,7 +216,7 @@ Call `window.HET.destroy()` to run cleanup for mounted components and remove req
 
 `refs` includes elements marked with `het-ref` on the component root and its descendants,
 but excludes elements inside nested `[het-component]` subtrees.
-Initialize signals explicitly (for example `signals.count = window.HET.signal(0)` in the IIFE build).
+Initialize signals explicitly (for example `signals.count = window.HET.signals.signal(0)` in the IIFE build).
 
 ### `het-ref`
 
@@ -277,7 +277,7 @@ Use this for DOM properties (for example `textContent`, `value`, `checked`).
 ```js
 window.HET.registerComponent('counter', {
   setup: ({ signals }) => {
-    signals.count = window.HET.signal(0);
+    signals.count = window.HET.signals.signal(0);
     return {
       increment: () => {
         signals.count.value += 1;
@@ -305,7 +305,7 @@ Use for attributes whose meaning comes from their value. For boolean presence/ab
 ```js
 window.HET.registerComponent('statusCard', {
   setup: ({ signals }) => {
-    signals.status = window.HET.signal('idle');
+    signals.status = window.HET.signals.signal('idle');
     return {
       toggle: () => {
         signals.status.value = signals.status.value === 'idle' ? 'busy' : 'idle';
@@ -333,7 +333,7 @@ Use for attributes whose meaning comes from presence/absence like `disabled`, `r
 ```js
 window.HET.registerComponent('lockInput', {
   setup: ({ signals }) => {
-    signals.isDisabled = window.HET.signal(false);
+    signals.isDisabled = window.HET.signals.signal(false);
     return {
       toggle: () => {
         signals.isDisabled.value = !signals.isDisabled.value;
@@ -360,7 +360,7 @@ Use `het-class` to toggle classes from signal values.
 ```js
 window.HET.registerComponent('alertBox', {
   setup: ({ signals }) => {
-    signals.isActive = window.HET.signal(false);
+    signals.isActive = window.HET.signals.signal(false);
     return {
       toggle: () => {
         signals.isActive.value = !signals.isActive.value;
@@ -390,8 +390,8 @@ It also infers the DOM event: `input` for `value` bindings and `change` for `che
 ```js
 window.HET.registerComponent('profileForm', {
   setup: ({ signals }) => {
-    signals.name = window.HET.signal('Ada');
-    signals.isSubscribed = window.HET.signal(false);
+    signals.name = window.HET.signals.signal('Ada');
+    signals.isSubscribed = window.HET.signals.signal(false);
     return {};
   },
 });

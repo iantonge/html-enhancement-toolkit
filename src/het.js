@@ -3,7 +3,6 @@ import {
   init as initComponents,
   registerComponent,
 } from './components.js';
-import { signal } from '@preact/signals-core';
 import { init as initRequests, destroy as destroyRequests } from './requests.js';
 
 let afterLoadContentListener;
@@ -36,4 +35,8 @@ function initializeSyncBridge() {
   document.addEventListener('het:afterLoadContent', afterLoadContentListener);
 }
 
-export { init, destroy, registerComponent, signal };
+export {
+  init,
+  destroy,
+  registerComponent,
+};

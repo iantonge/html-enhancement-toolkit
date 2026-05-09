@@ -8,8 +8,8 @@
 <script nonce="{{{cspNonce}}}">
   window.HET.registerComponent('acquisition-signal-reassignment', {
     setup: ({ signals }) => {
-      signals.count = window.HET.signal(1);
-      signals.count = window.HET.signal(2);
+      signals.count = window.HET.signals.signal(1);
+      signals.count = window.HET.signals.signal(2);
       return {};
     },
   });

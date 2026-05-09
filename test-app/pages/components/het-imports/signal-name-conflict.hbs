@@ -12,7 +12,7 @@
 <script nonce="{{{cspNonce}}}">
   window.HET.registerComponent('imports-conflict-parent', {
     setup: ({ signals }) => {
-      signals.count = window.HET.signal(0);
+      signals.count = window.HET.signals.signal(0);
       return {};
     },
   });

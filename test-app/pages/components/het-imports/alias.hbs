@@ -14,7 +14,7 @@
 <script nonce="{{{cspNonce}}}">
   window.HET.registerComponent('imports-alias-parent', {
     setup: ({ signals }) => {
-      signals.count = window.HET.signal(0);
+      signals.count = window.HET.signals.signal(0);
       return {
         increment: () => {
           signals.count.value += 1;
