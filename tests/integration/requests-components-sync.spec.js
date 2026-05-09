@@ -9,5 +9,6 @@ test.describe('integration requests + components sync', () => {
     await page.click('#load-response');
     await expect(page.locator('#sync-title')).toHaveText('Requests + Components sync response');
     await expect(page.locator('#sync-value')).toHaveText('beta');
+    await expect(page.locator('#sync-component')).not.toHaveAttribute('het-cloak', '');
   });
 });

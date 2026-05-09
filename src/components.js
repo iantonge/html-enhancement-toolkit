@@ -654,7 +654,10 @@ function syncComponent(rootEl) {
 
     syncImportedSignals(rootEl, instance);
     reapplySignalBindings(instance);
-    if (!instance.syncBindings?.length) return;
+    if (!instance.syncBindings?.length) {
+      rootEl.removeAttribute('het-cloak');
+      return;
+    }
 
     for (const binding of instance.syncBindings) {
       const currentSignal = instance.signals[binding.source];
@@ -663,6 +666,8 @@ function syncComponent(rootEl) {
         currentSignal.value = nextValue;
       }
     }
+
+    rootEl.removeAttribute('het-cloak');
   } catch (error) {
     onError(error);
   }
