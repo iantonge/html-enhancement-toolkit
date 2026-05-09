@@ -195,17 +195,18 @@ const fetchAndSwap = async (request, target, select, also, initiator) => {
   const newContent = beforeLoadContentEvent.detail.newContent;
   const responseDoc = parsedDocument;
   const insertedElements = [];
+  let alsoElements = [];
   let loadedContent;
   if (!finalSelect || finalSelect.length === 0) {
     if (finalAlso && finalAlso.length) {
-      insertedElements.push(
-        ...applyAlsoReplacements(finalAlso, finalTarget.el, newContent, responseDoc),
-      );
+      alsoElements = applyAlsoReplacements(finalAlso, finalTarget.el, newContent, responseDoc);
+      insertedElements.push(...alsoElements);
     }
     loadedContent = replaceContent(finalTarget.el, newContent);
     insertedElements.push(loadedContent);
     focusFirstAutofocus(insertedElements);
     const afterLoadContentEvent = new CustomEvent('het:afterLoadContent', {
+      detail: { alsoElements },
       bubbles: true,
     });
     loadedContent.dispatchEvent(afterLoadContentEvent);
@@ -218,13 +219,13 @@ const fetchAndSwap = async (request, target, select, also, initiator) => {
     insertedElements.push(replaceContent(currentEl, replacement));
   }
   if (finalAlso && finalAlso.length) {
-    insertedElements.push(
-      ...applyAlsoReplacements(finalAlso, finalTarget.el, newContent, responseDoc),
-    );
+    alsoElements = applyAlsoReplacements(finalAlso, finalTarget.el, newContent, responseDoc);
+    insertedElements.push(...alsoElements);
   }
   focusFirstAutofocus(insertedElements);
   loadedContent = finalTarget.el;
   const afterLoadContentEvent = new CustomEvent('het:afterLoadContent', {
+    detail: { alsoElements },
     bubbles: true,
   });
   loadedContent.dispatchEvent(afterLoadContentEvent);

@@ -11,11 +11,16 @@
       id="load-response"
       href="/integration/requests-components-sync/response"
       het-target="main"
+      het-also="sync-sidebar"
       class="btn btn-sm btn-primary">
       Load sync response
     </a>
   </div>
 </section>
+<aside id="sync-sidebar" het-component="integration-sync" class="mt-3">
+  <input id="sync-sidebar-input" class="form-control" het-props="value=query:sync" value="aside alpha">
+  <p id="sync-sidebar-value" het-props="textContent=query" class="mt-2 text-muted mb-0"></p>
+</aside>
 <script nonce="{{{cspNonce}}}">
   window.hetInitConfig = {
     replaceContent: (currentEl, replacementEl) => {

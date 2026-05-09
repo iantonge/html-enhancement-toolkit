@@ -441,7 +441,7 @@ Signal bindings can initialize from existing DOM values using acquisition clause
 - `:sync` initializes once and updates the signal again when a `het:sync` event is dispatched.
 
 Sync trigger behavior:
-- In full toolkit usage (`requests` + `components`), HET dispatches `het:sync` after request content loads.
+- In full toolkit usage (`requests` + `components`), HET dispatches `het:sync` after request content loads. This covers the target pane and any content updated through `het-also`.
 - In components-only usage, no automatic sync event is dispatched.
 - You can manually dispatch `het:sync` on the smallest container that owns the component(s).
 

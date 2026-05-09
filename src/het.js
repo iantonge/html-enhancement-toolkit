@@ -26,13 +26,21 @@ function initializeSyncBridge() {
   if (afterLoadContentListener) return;
 
   afterLoadContentListener = (afterLoadContentEvent) => {
-    const syncEvent = new CustomEvent('het:sync', {
-      bubbles: true,
-    });
-    afterLoadContentEvent.target.dispatchEvent(syncEvent);
+    dispatchSyncEvent(afterLoadContentEvent.target);
+
+    for (const el of afterLoadContentEvent.detail?.alsoElements || []) {
+      dispatchSyncEvent(el);
+    }
   };
 
   document.addEventListener('het:afterLoadContent', afterLoadContentListener);
+}
+
+function dispatchSyncEvent(root) {
+  if (!(root instanceof Element)) return;
+  root.dispatchEvent(new CustomEvent('het:sync', {
+    bubbles: true,
+  }));
 }
 
 export {
