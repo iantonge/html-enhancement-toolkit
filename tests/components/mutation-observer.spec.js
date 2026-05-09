@@ -7,6 +7,13 @@ test.describe('components mutation observer', () => {
     await expect(page.locator('#mount-state')).toHaveText('mounted');
   });
 
+  test('removes het-cloak from components added after init', async ({ page }) => {
+    await page.goto('/components/mutation-observer/mount-added');
+    await page.click('#add-cloaked-component');
+    await expect(page.locator('#cloak-state')).toHaveText('uncloaked');
+    await expect(page.locator('#added-cloaked')).not.toHaveAttribute('het-cloak', '');
+  });
+
   test('runs cleanup when component is removed', async ({ page }) => {
     await page.goto('/components/mutation-observer/unmount-removed');
     await page.click('#remove-component');

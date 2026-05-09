@@ -158,6 +158,7 @@ export function destroyComponent(el) {
 
 function mountComponents(root) {
   const componentsToMount = [];
+  const mountedComponents = [];
 
   if (isComponentRoot(root)) componentsToMount.push(root);
   if (typeof root.querySelectorAll === 'function') {
@@ -172,15 +173,19 @@ function mountComponents(root) {
     if (!definition) continue;
 
     try {
-      mountComponent(el, definition);
+      if (mountComponent(el, definition)) {
+        mountedComponents.push(el);
+      }
     } catch (error) {
       onError(error);
     }
   }
+
+  removeCloakAttributes(mountedComponents);
 }
 
 function mountComponent(rootEl, def) {
-  if (rootEl.__het_instance) return;
+  if (rootEl.__het_instance) return false;
 
   const rawSignals = {};
   const signalMeta = Object.create(null);
@@ -242,6 +247,14 @@ function mountComponent(rootEl, def) {
       cleanups.forEach((fn) => fn());
     },
   };
+
+  return true;
+}
+
+function removeCloakAttributes(components) {
+  for (const el of components) {
+    el.removeAttribute('het-cloak');
+  }
 }
 
 function getDeclaredExports(el) {
@@ -525,17 +538,21 @@ function initializeObserver() {
       const removals = Array.from(pendingRemovals).sort(
         (a, b) => getNodeDepth(b) - getNodeDepth(a),
       );
+      const mountedComponents = [];
 
       for (const el of additions) {
         try {
           if (!el.isConnected) continue;
           if (!el.hasAttribute('het-component')) continue;
           const definition = components.get(el.getAttribute('het-component'));
-          if (definition) mountComponent(el, definition);
+          if (definition && mountComponent(el, definition)) {
+            mountedComponents.push(el);
+          }
         } catch (error) {
           onError(error);
         }
       }
+      removeCloakAttributes(mountedComponents);
       pendingAdditions.clear();
 
       for (const el of removals) {

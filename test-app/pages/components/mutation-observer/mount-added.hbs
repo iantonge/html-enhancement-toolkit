@@ -4,12 +4,23 @@
     <button id="add-component" type="button" class="btn btn-sm btn-primary mb-3">
       Add component
     </button>
+    <button id="add-cloaked-component" type="button" class="btn btn-sm btn-primary mb-3">
+      Add cloaked component
+    </button>
     <div id="host"></div>
     <p id="mount-state" class="mb-0 text-muted">not-mounted</p>
+    <p id="cloak-state" class="mb-0 text-muted">cloaked</p>
   </div>
 </section>
 <script nonce="{{{cspNonce}}}">
   window.HET.registerComponent('observer-added', {
+    setup: ({ refs }) => {
+      refs.state.textContent = 'mounted';
+      return {};
+    },
+  });
+
+  window.HET.registerComponent('observer-cloaked', {
     setup: ({ refs }) => {
       refs.state.textContent = 'mounted';
       return {};
@@ -31,6 +42,25 @@
     setTimeout(() => {
       const state = document.getElementById('added-state')?.textContent || 'not-mounted';
       document.getElementById('mount-state').textContent = state;
+    }, 0);
+  });
+
+  document.getElementById('add-cloaked-component').addEventListener('click', () => {
+    const host = document.getElementById('host');
+    const root = document.createElement('div');
+    root.id = 'added-cloaked';
+    root.setAttribute('het-component', 'observer-cloaked');
+    root.setAttribute('het-cloak', '');
+
+    const stateEl = document.createElement('span');
+    stateEl.setAttribute('het-ref', 'state');
+    root.appendChild(stateEl);
+
+    host.replaceChildren(root);
+
+    setTimeout(() => {
+      const isCloaked = document.getElementById('added-cloaked')?.hasAttribute('het-cloak');
+      document.getElementById('cloak-state').textContent = isCloaked ? 'cloaked' : 'uncloaked';
     }, 0);
   });
 </script>

@@ -139,6 +139,7 @@ const trustedTypesPolicy = trustedTypes.createPolicy('het', {
         'het-select',
         'het-also',
         'het-background',
+        'het-cloak',
         'name',
         'content',
         'property',
@@ -223,6 +224,23 @@ window.HET.registerComponent('profileForm', {
     refs.emailInput?.focus();
   },
 });
+```
+
+### `het-cloak`
+
+Use `het-cloak` to hide a component root until a component mount batch completes,
+then HET removes the attribute automatically. This avoids uncloaking parents before
+their nested components have mounted, which helps prevent brief visual mismatch.
+Preserve layout by using `visibility: hidden`.
+
+```html
+<style>
+  [het-cloak] { visibility: hidden; }
+</style>
+
+<div het-component="filterPanel" het-cloak>
+  ...
+</div>
 ```
 
 ### `het-on`

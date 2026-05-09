@@ -14,6 +14,12 @@ router.get('/destroy', (request, response) => {
   });
 });
 
+router.get('/cloak', (request, response) => {
+  response.render('components/base-flow/cloak', {
+    title: 'Cloak',
+  });
+});
+
 router.get('/register-without-name', (request, response) => {
   response.render('components/base-flow/register-without-name', {
     title: 'Register without name',

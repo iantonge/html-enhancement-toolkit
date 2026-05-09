@@ -22,6 +22,7 @@ const trustedTypesPolicy = trustedTypes.createPolicy('het', {
       'het-select',
       'het-also',
       'het-background',
+      'het-cloak',
       'name',
       'content',
       'property',

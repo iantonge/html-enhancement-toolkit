@@ -23,4 +23,29 @@ test.describe('components base flow', () => {
       ),
     );
   });
+
+  test('removes het-cloak after initial component mount', async ({ page }) => {
+    await page.goto('/components/base-flow/cloak');
+
+    await expect(page.locator('#cloaked-root')).toHaveText('Mounted');
+    await expect(page.locator('#cloaked-root')).not.toHaveAttribute('het-cloak', '');
+  });
+
+  test('removes het-cloak after nested import/export components mount', async ({ page }) => {
+    await page.goto('/components/base-flow/cloak');
+
+    await expect(page.locator('#imported-value')).toHaveText('parent value');
+    await expect(page.locator('#cloak-parent')).not.toHaveAttribute('het-cloak', '');
+    await expect(page.locator('#cloak-child')).not.toHaveAttribute('het-cloak', '');
+  });
+
+  test('keeps het-cloak when a component cannot mount', async ({ page }) => {
+    await page.goto('/components/base-flow/cloak');
+
+    await expect(page.locator('#unregistered-root')).toHaveAttribute('het-cloak', '');
+    await expect(page.locator('#throwing-root')).toHaveAttribute('het-cloak', '');
+    await page.waitForFunction(() =>
+      window.hetErrors.includes('HET test error: cloak setup failed'),
+    );
+  });
 });

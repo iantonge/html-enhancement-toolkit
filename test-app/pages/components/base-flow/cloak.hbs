@@ -1,0 +1,46 @@
+<section class="card shadow-sm border-0">
+  <div class="card-body">
+    <h1 class="h4 mb-3">{{title}}</h1>
+
+    <div id="cloaked-root" het-component="cloak-basic" het-cloak></div>
+
+    <div id="cloak-parent" het-component="cloak-parent" het-exports="count" het-cloak>
+      <div id="cloak-child" het-component="cloak-child" het-imports="count" het-cloak>
+        <p id="imported-value" het-props="textContent=count" class="mb-0 text-muted"></p>
+      </div>
+    </div>
+
+    <div id="unregistered-root" het-component="cloak-unregistered" het-cloak></div>
+    <div id="throwing-root" het-component="cloak-throwing" het-cloak></div>
+  </div>
+</section>
+<script nonce="{{{cspNonce}}}">
+  window.HET.registerComponent('cloak-basic', {
+    setup: ({ el }) => {
+      el.textContent = 'Mounted';
+      return {};
+    },
+  });
+
+  window.HET.registerComponent('cloak-parent', {
+    setup: ({ signals }) => {
+      signals.count = window.HET.signals.signal('parent value');
+      return {};
+    },
+  });
+
+  window.HET.registerComponent('cloak-child', {
+    setup: ({ signals }) => {
+      if (!signals.count) {
+        throw new Error('HET test error: missing imported count');
+      }
+      return {};
+    },
+  });
+
+  window.HET.registerComponent('cloak-throwing', {
+    setup: () => {
+      throw new Error('HET test error: cloak setup failed');
+    },
+  });
+</script>
