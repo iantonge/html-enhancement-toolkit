@@ -19,6 +19,12 @@ router.get('/child-target', (request, response) => {
   });
 });
 
+router.get('/background-form', (request, response) => {
+  response.render('requests/forms/disables-in-flight/background-form/index', {
+    title: 'Form Disable',
+  });
+});
+
 router.use(externalControlsRoutes);
 router.use(formControlsRoutes);
 router.use(preDisabledRoutes);

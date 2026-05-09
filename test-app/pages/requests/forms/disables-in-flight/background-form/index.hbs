@@ -1,0 +1,22 @@
+<section het-pane="main" class="card shadow-sm border-0">
+  <div class="card-body">
+    <h1 class="h4 mb-3">{{title}}</h1>
+    <form
+      id="background-form"
+      method="get"
+      action="/requests/forms/disables-in-flight/child-target"
+      het-target="child"
+      het-background
+    >
+      <div class="mb-2">
+        <input id="background-form-field" type="text" name="child-field" value="child value" class="form-control" />
+      </div>
+      <button id="background-form-submit" type="submit" class="btn btn-outline-secondary">Submit</button>
+    </form>
+  </div>
+</section>
+<section het-pane="child" class="card shadow-sm border-0 mt-3">
+  <div class="card-body">
+    <p id="child-content">Original child content.</p>
+  </div>
+</section>

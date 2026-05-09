@@ -138,6 +138,7 @@ const trustedTypesPolicy = trustedTypes.createPolicy('het', {
         'het-target',
         'het-select',
         'het-also',
+        'het-background',
         'name',
         'content',
         'property',
@@ -494,6 +495,7 @@ Use `het-target="<name>"` on links and forms (or submit buttons) to target a pan
 Form-specific behavior:
 - `het-target` on the clicked submit button overrides `het-target` on the form.
 - HET respects native form defaults and submitter overrides (`formaction`, `formmethod`, `formenctype`, default `method`/`action`, and submitter name/value pairs).
+- If a `het-background` attribute is present on the form or the submitter, the form will not be disabled while the request is in-flight. NOTE: if the form is targeting a pane that contains the form itself, the form will still be disabled.
 - Only same-origin form submissions are enhanced.
 
 Link-specific behavior:
@@ -593,6 +595,7 @@ When the request finishes (or is aborted), HET removes the busy markers and only
 
 Form-specific addition:
 - HET also disables/enables controls associated to the form via the `form` attribute.
+- This form-disable behavior is skipped when the active submitter or form has `het-background`.
 
 ### Request coordination
 
