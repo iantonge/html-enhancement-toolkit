@@ -121,7 +121,7 @@ const trustedTypesPolicy = trustedTypes.createPolicy('het', {
     DOMPurify.sanitize(html, {
       RETURN_TRUSTED_TYPE: false,
       WHOLE_DOCUMENT: true,
-      ADD_TAGS: ['html', 'head', 'body', 'meta', 'title', 'link', 'style', 'script'],
+      ADD_TAGS: ['html', 'head', 'body', 'meta', 'title', 'link', 'style'],
       ADD_ATTR: [
         'het-component',
         'het-ref',
@@ -158,18 +158,7 @@ window.HET.init({
 });
 ```
 
-Security guidance: keep the DOMPurify allowlist as narrow as possible. Only enable
-`WHOLE_DOCUMENT` and head-related tags/attributes if you rely on head updates,
-and avoid allowing `<script>` unless you also keep swapped scripts inert via CSP
-(recommended). If you want stricter control, consider separate policies for head
-and body swaps.
-
-Note: Firefox does not yet support Trusted Types natively. A polyfill is available
-from:
-
-```text
-https://github.com/w3c/trusted-types
-```
+Note: Firefox does not yet support Trusted Types natively. A polyfill is available from <https://github.com/w3c/trusted-types>
 
 ### `replaceContent`
 
