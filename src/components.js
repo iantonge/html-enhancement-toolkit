@@ -653,18 +653,18 @@ function syncComponent(rootEl) {
     if (!instance) return;
 
     syncImportedSignals(rootEl, instance);
-    reapplySignalBindings(instance);
-    if (!instance.syncBindings?.length) {
-      rootEl.removeAttribute('het-cloak');
-      return;
-    }
 
     for (const binding of instance.syncBindings) {
       const currentSignal = instance.signals[binding.source];
       const nextValue = readValue(binding);
-      if (currentSignal.value !== nextValue) {
-        currentSignal.value = nextValue;
-      }
+      currentSignal.value = nextValue;
+    }
+
+    reapplySignalBindings(instance);
+
+    if (!instance.syncBindings?.length) {
+      rootEl.removeAttribute('het-cloak');
+      return;
     }
 
     rootEl.removeAttribute('het-cloak');
@@ -674,15 +674,8 @@ function syncComponent(rootEl) {
 }
 
 function reapplySignalBindings(instance) {
-  const syncSources = new Set(
-    (instance.syncBindings || []).map((binding) => binding.source),
-  );
-
   for (const binding of instance.bindings || []) {
     if (binding.sourceType !== SIGNAL_SOURCE_TYPE) continue;
-    if (syncSources.has(binding.source)) {
-      continue;
-    }
     if (!binding.el?.isConnected) continue;
     const currentSignal = instance.signals[binding.source];
     if (!currentSignal) continue;
