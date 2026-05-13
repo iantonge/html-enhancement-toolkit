@@ -243,31 +243,14 @@ Preserve layout by using `visibility: hidden`.
 </div>
 ```
 
-### `het-on`
+### Binding syntax
 
-Use `het-on` to bind DOM events to methods returned from `setup`.
+Binding attributes connect an element property, attribute, class, model value, or event to a signal or component method using `target=source` declarations.
+For example, `het-props="textContent=count"` writes the `count` signal to the element's `textContent` property.
 
-```html
-<div het-component="counter">
-  <button type="button" het-on="click=increment">+</button>
-</div>
-```
-
-```js
-window.HET.registerComponent('counter', {
-  setup: () => ({
-    increment: () => {
-      // handle click
-    },
-  }),
-});
-```
-
-`het-on` supports multiple declarations separated by whitespace, e.g.
-`het-on="click=increment focus=handleFocus"`.
-
-Acquisition support: not supported (`:seed`/`:sync` are invalid on `het-on`).
-Type hints: not supported.
+Some signal bindings can add an acquisition clause, such as `:seed` or `:sync`, to initialize a signal from the DOM.
+Some acquisition clauses can also add a type hint, such as `:seed[int]`.
+Each directive has its own support limits; see [Acquisition Strategies (`:seed`, `:sync`)](#acquisition-strategies-seed-sync) for the full reference.
 
 ### `het-props`
 
@@ -294,8 +277,8 @@ window.HET.registerComponent('counter', {
 });
 ```
 
-Acquisition support: `:seed`, `:sync`.
-Type hints: `[int]`, `[float]`, `[bool]`.
+[Acquisition support](#acquisition-strategies-seed-sync): `:seed`, `:sync`.
+[Type hints](#acquisition-strategies-seed-sync): `[int]`, `[float]`, `[bool]`.
 
 ### `het-attrs`
 
@@ -322,8 +305,8 @@ window.HET.registerComponent('statusCard', {
 });
 ```
 
-Acquisition support: `:seed`, `:sync`.
-Type hints: `[int]`, `[float]`, `[bool]`.
+[Acquisition support](#acquisition-strategies-seed-sync): `:seed`, `:sync`.
+[Type hints](#acquisition-strategies-seed-sync): `[int]`, `[float]`, `[bool]`.
 
 ### `het-bool-attrs`
 
@@ -350,8 +333,8 @@ window.HET.registerComponent('lockInput', {
 });
 ```
 
-Acquisition support: `:seed`, `:sync`.
-Type hints: not supported.
+[Acquisition support](#acquisition-strategies-seed-sync): `:seed`, `:sync`.
+[Type hints](#acquisition-strategies-seed-sync): not supported.
 
 ### `het-class`
 
@@ -377,8 +360,8 @@ window.HET.registerComponent('alertBox', {
 });
 ```
 
-Acquisition support: `:seed`, `:sync`.
-Type hints: not supported.
+[Acquisition support](#acquisition-strategies-seed-sync): `:seed`, `:sync`.
+[Type hints](#acquisition-strategies-seed-sync): not supported.
 
 ### `het-model`
 
@@ -404,8 +387,34 @@ window.HET.registerComponent('profileForm', {
 });
 ```
 
-Acquisition support: `:seed` only (`:sync` is invalid for `het-model`).
-Type hints: `[int]`, `[float]`, `[bool]`.
+[Acquisition support](#acquisition-strategies-seed-sync): `:seed` only (`:sync` is invalid for `het-model`).
+[Type hints](#acquisition-strategies-seed-sync): `[int]`, `[float]`, `[bool]`.
+
+### `het-on`
+
+Use `het-on` to bind DOM events to methods returned from `setup`.
+
+```html
+<div het-component="counter">
+  <button type="button" het-on="click=increment">+</button>
+</div>
+```
+
+```js
+window.HET.registerComponent('counter', {
+  setup: () => ({
+    increment: () => {
+      // handle click
+    },
+  }),
+});
+```
+
+`het-on` supports multiple declarations separated by whitespace, e.g.
+`het-on="click=increment focus=handleFocus"`.
+
+[Acquisition support](#acquisition-strategies-seed-sync): not supported (`:seed`/`:sync` are invalid on `het-on`).
+[Type hints](#acquisition-strategies-seed-sync): not supported.
 
 ### `het-exports` and `het-imports`
 
@@ -435,6 +444,7 @@ On `het:sync`, imported bindings are re-resolved against the current ancestor ch
 
 ### Acquisition Strategies (`:seed`, `:sync`)
 
+This section is the full reference for acquisition clauses and type hints.
 Signal bindings can initialize from existing DOM values using acquisition clauses for some directives (see the directive support matrix below):
 
 - `:seed` initializes the signal once from the bound element.
