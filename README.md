@@ -202,6 +202,20 @@ window.HET.registerComponent('counter', {
 window.HET.init();
 ```
 
+`window.HET.registerComponent(name, definition)` accepts:
+
+- `name`: the string used by `het-component`.
+- `definition`: an optional object. If it includes `setup`, HET calls `setup(context)` when a matching component mounts.
+
+`setup(context)` receives:
+
+- `el`: the component root element.
+- `refs`: elements in this component scope marked with `het-ref`.
+- `signals`: the component signal registry.
+- `onCleanup(fn)`: register cleanup work to run when the component is destroyed.
+
+`setup` may return an object of methods for `het-on` bindings. `registerComponent` does not return a value.
+
 Call `window.HET.destroy()` to run cleanup for mounted components and remove request listeners.
 
 `refs` includes elements marked with `het-ref` on the component root and its descendants,
