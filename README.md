@@ -1,6 +1,23 @@
 # html-enhancement-toolkit
 
-HET (HTML Enhancement Toolkit) is a lightweight, HTML-first enhancement library that brings reactivity and progressive navigation to traditional server-rendered pages without adopting a single-page application (SPA) architecture.
+HET (HTML Enhancement Toolkit) is a lightweight, HTML-first enhancement library for server-rendered applications that need progressive navigation and small reactive components without adopting a single-page application (SPA) architecture.
+
+HET is a good fit when you want:
+
+- **Progressive enhancement for server-rendered apps:** HET enhances regular links, forms, and HTML responses instead of moving rendering and routing into a client-side SPA.
+- **Navigation and components together:** HET pairs pane-based request enhancement with small signal-driven components for interactive server-rendered pages.
+- **Opinionated defaults over configuration sprawl:** Navigation, request coordination, UI feedback, and sync behavior are designed to reduce repeated per-link and per-form configuration.
+- **Strict-CSP-conscious interactivity:** Component behavior is wired through normal JavaScript functions and signal bindings, without requiring `unsafe-eval` or similar CSP compromises.
+- **Safer content-loading defaults:** HET uses browser-native HTML parsing and DOM replacement, supports Trusted Types policies and nonce headers, and avoids evaluating swapped scripts or component expressions.
+- **Explicit, readable wiring:** Refs, event handlers, bindings, imports, and exports are declared with predictable `het-*` attributes and ordinary JavaScript.
+
+HET is probably not the right fit when you need:
+
+- **Browser-owned application state:** Most state lives in the browser and changes independently of the server.
+- **Rich client-side application behavior:** You need client-side routing, offline-first workflows, or complex browser-owned UI state.
+- **Large client-rendered DOM regions:** Components need to generate or rewrite large portions of DOM instead of tweaking existing HTML.
+- **Maximum per-request configurability:** You need fine-grained per-link or per-form control over every request behavior.
+- **Unstable server-rendered targets:** Your server cannot return HTML with stable target panes.
 
 ## Contents
 
