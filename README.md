@@ -747,33 +747,25 @@ Fetch events bubble from the initiator: the `a[het-target]` or `form[het-target]
 ## Development
 
 Project layout:
+
 - `src/` source modules (built into `dist/`).
 - `dist/` build output from `npm run build`.
 - `test-app/` Express + Handlebars demo server used for manual exploration and tests.
 - `tests/` Playwright specs that exercise the test app.
 - `build.js` build script that bundles the toolkit.
 
-Install dependencies and Playwright browsers:
+Install dependencies, then install Playwright browsers:
 
 ```bash
 npm install
 npx playwright install
 ```
 
-Build the toolkit bundle:
+Common scripts:
 
-```bash
-npm run build
-```
-
-Run the test app:
-
-```bash
-npm run test-app
-```
-
-Run the Playwright tests (this starts the test app automatically):
-
-```bash
-npm run test
-```
+| Command | Description |
+| --- | --- |
+| `npm run build` | Build `dist/het.js`, `dist/het.iife.js`, and `dist/het.iife.min.js`. |
+| `npm run test-app` | Build HET and start the Express test app. |
+| `npm run samples-app` | Build HET and start the sample app. |
+| `npm run test` | Run the Playwright test suite. The Playwright config starts the test app automatically. |
