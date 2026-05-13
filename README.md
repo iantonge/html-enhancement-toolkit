@@ -339,6 +339,7 @@ window.HET.registerComponent('lockInput', {
 ### `het-class`
 
 Use `het-class` to toggle classes from signal values.
+If the signal value is truthy, the class is added. If the signal value is falsy, the class is removed.
 
 ```html
 <div het-component="alertBox">
@@ -367,13 +368,16 @@ window.HET.registerComponent('alertBox', {
 
 Use `het-model` for two-way signal binding on form controls.
 When no key is provided, HET infers `value` for most inputs and `checked` for checkbox/radio inputs.
-It also infers the DOM event: `input` for `value` bindings and `change` for `checked` bindings.
+You can also specify the property name explicitly with `property=signal`.
+The DOM event cannot be specified; HET infers `change` for `checked` bindings and `input` for all other properties.
 
 ```html
 <div het-component="profileForm">
   <input het-model="name">
+  <input het-model="value=email">
   <input type="checkbox" het-model="isSubscribed">
   <p het-props="textContent=name"></p>
+  <p het-props="textContent=email"></p>
 </div>
 ```
 
@@ -381,6 +385,7 @@ It also infers the DOM event: `input` for `value` bindings and `change` for `che
 window.HET.registerComponent('profileForm', {
   setup: ({ signals }) => {
     signals.name = window.HET.signals.signal('Ada');
+    signals.email = window.HET.signals.signal('ada@example.com');
     signals.isSubscribed = window.HET.signals.signal(false);
     return {};
   },
