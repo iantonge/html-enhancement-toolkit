@@ -725,21 +725,24 @@ HET coordinates in-flight requests by target pane so overlapping updates do not 
 
 ### Lifecycle events
 
-HET dispatches lifecycle events around fetch and content loading. These are notification
-events (they are not awaited). Fetch events bubble from the request source: the initiating
-element (`a[het-target]` or `form[het-target]`) for enhanced interactions, and `document`
-for browser history (`popstate`) re-fetches. Content-load events bubble from the target pane.
+HET dispatches lifecycle events around fetch and content loading. These events are not awaited.
 
-- `het:beforeFetch` with `detail.request` (cancelable)
-- `het:afterFetch` with `detail.response`
-- `het:beforeLoadContent` with `detail.newContent` (cancelable)
-- `het:afterLoadContent`
+Fetch events bubble from the initiator: the `a[het-target]` or `form[het-target]` for enhanced interactions, and `document` for browser history (`popstate`) re-fetches. Content-load events bubble from the target pane or inserted pane.
+
+| Event | Cancelable | Detail | Notes |
+| --- | --- | --- | --- |
+| `het:beforeFetch` | Yes | `request`, `initiator`, `target` | Listeners may replace `detail.request` before HET calls `fetch`. |
+| `het:afterFetch` | No | `response`, `initiator`, `target` | Listeners may replace `detail.response` before HET reads the response body. |
+| `het:beforeLoadContent` | Yes | `newContent` | Listeners may replace `detail.newContent` before HET swaps content. |
+| `het:afterLoadContent` | No | `alsoElements` | Dispatched after target/select/also replacements and autofocus handling. |
 
 ## Component lifecycle notes
 
-- Component bindings are discovered when a component mounts. Adding/changing `het-*` bindings inside an already-mounted component does not register new bindings.
-- New component roots inserted after `init()` auto-mount only if their component definition has already been registered.
+- Components mount when `init()` runs, and new component roots inserted later auto-mount only if their component definition has already been registered.
 - Registering a component after `init()` does not retroactively mount existing matching elements; it applies to future insertions.
+- Component bindings are discovered when a component mounts. Adding or changing `het-*` bindings inside an already-mounted component does not register new bindings.
+- Removing a mounted component runs cleanup callbacks registered with `onCleanup`.
+- `het-cloak` is removed after a component mount batch completes. If a component cannot mount, HET leaves `het-cloak` in place.
 
 ## Development
 
