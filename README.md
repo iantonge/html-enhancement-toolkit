@@ -5,7 +5,7 @@ HET (HTML Enhancement Toolkit) is a lightweight, HTML-first enhancement library 
 ## Contents
 
 - [Quick start](#quick-start)
-- [Config](#config)
+- [API reference](#api-reference)
 - [Components](#components)
 - [Request enhancement](#request-enhancement)
 - [Component lifecycle notes](#component-lifecycle-notes)
@@ -49,11 +49,17 @@ init();
 
 The ESM build exports `init`, `destroy`, and `registerComponent`.
 
-## Config
+## API reference
 
-The `init` function accepts an optional config object which can be used to customize the behavioiur of HET. It accepts the following options:
+### `init(config)`
 
-### `onError(error)`
+Initialize HET. This mounts registered components, starts component mutation observation, installs request enhancement listeners, and connects request-driven content loads to component synchronization.
+
+`config` is optional. It accepts the options below. `init` does not return a value.
+
+### Config options
+
+#### `onError(error)`
 
 Handle internal errors with your own logging/reporting. Signature: `(error: Error | DOMException | unknown) => void`. Default behavior is to rethrow; return value is ignored.
 
@@ -66,7 +72,7 @@ window.HET.init({
 });
 ```
 
-### `busyClass`
+#### `busyClass`
 
 Override the CSS class HET applies to a busy target pane while a request is in flight. Default: `"het-busy"`.
 
@@ -76,7 +82,7 @@ window.HET.init({
 });
 ```
 
-### `headContentSelectors`
+#### `headContentSelectors`
 
 Controls which `<head>` elements HET synchronizes from responses during `het-nav` navigations. Default:
 
@@ -99,7 +105,7 @@ window.HET.init({
 });
 ```
 
-### `nonce`
+#### `nonce`
 
 Adds a nonce value to enhanced fetch requests using the configured nonce header name. This is mainly useful for nonce-protected inline `<style>` blocks in swapped HTML. Inline `<script>` tags in swapped content are inert and are not executed automatically.
 
@@ -109,7 +115,7 @@ window.HET.init({
 });
 ```
 
-### `nonceHeader`
+#### `nonceHeader`
 
 Overrides the request header name used for `nonce`. Default: `"X-HET-Nonce"`.
 
@@ -120,7 +126,7 @@ window.HET.init({
 });
 ```
 
-### `trustedTypesPolicy`
+#### `trustedTypesPolicy`
 
 Optional Trusted Types policy object used to transform response HTML before parsing. If provided, HET calls `trustedTypesPolicy.createHTML(responseHtml)`.
 
@@ -174,7 +180,7 @@ window.HET.init({
 
 Note: Firefox does not yet support Trusted Types natively. A polyfill is available from <https://github.com/w3c/trusted-types>
 
-### `replaceContent`
+#### `replaceContent`
 
 Optional function to customize how HET swaps a matched element with its replacement.
 This is called for the target pane, `het-select` replacements, and `het-also`
@@ -190,6 +196,30 @@ window.HET.init({
   },
 });
 ```
+
+### `destroy()`
+
+Destroy mounted components, run their cleanup callbacks, abort in-flight enhanced requests, and remove HET's document/window event listeners.
+
+`destroy` accepts no parameters and does not return a value.
+
+### `registerComponent(name, definition)`
+
+Register a component definition for elements whose `het-component` value matches `name`.
+
+Parameters:
+
+- `name`: the string used by `het-component`.
+- `definition`: an optional object. If it includes `setup`, HET calls `setup(context)` when a matching component mounts.
+
+`setup(context)` receives:
+
+- `el`: the component root element.
+- `refs`: elements in this component scope marked with `het-ref`.
+- `signals`: the component signal registry.
+- `onCleanup(fn)`: register cleanup work to run when the component is destroyed.
+
+`setup` may return an object of methods for `het-on` bindings. `registerComponent` does not return a value.
 
 ## Components
 
@@ -214,20 +244,6 @@ window.HET.registerComponent('counter', {
 
 window.HET.init();
 ```
-
-`window.HET.registerComponent(name, definition)` accepts:
-
-- `name`: the string used by `het-component`.
-- `definition`: an optional object. If it includes `setup`, HET calls `setup(context)` when a matching component mounts.
-
-`setup(context)` receives:
-
-- `el`: the component root element.
-- `refs`: elements in this component scope marked with `het-ref`.
-- `signals`: the component signal registry.
-- `onCleanup(fn)`: register cleanup work to run when the component is destroyed.
-
-`setup` may return an object of methods for `het-on` bindings. `registerComponent` does not return a value.
 
 Call `window.HET.destroy()` to run cleanup for mounted components and remove request listeners.
 
