@@ -554,7 +554,7 @@ On `het:sync`, imported bindings are re-resolved against the current ancestor ch
 ### Acquisition Strategies (`:seed`, `:sync`)
 
 This section is the full reference for acquisition clauses and type hints.
-Signal bindings can initialize from existing DOM values using acquisition clauses for some directives (see the directive support matrix below):
+Signal bindings can initialize from existing DOM values using acquisition clauses for some directives (see the acquisition support matrix below):
 
 - `:seed` initializes the signal once from the bound element.
 - `:sync` initializes once and updates the signal again when a `het:sync` event is dispatched.
@@ -593,7 +593,7 @@ container.dispatchEvent(new CustomEvent('het:sync', { bubbles: true }));
 </div>
 ```
 
-Type hints can be applied to acquisition values for some directives (see the directive support matrix below):
+Type hints can be applied to acquisition values for some directives (see the acquisition support matrix below):
 
 - `[int]` uses `parseInt(value, 10)`
 - `[float]` uses `parseFloat(value)`
@@ -605,16 +605,18 @@ Type hints can be applied to acquisition values for some directives (see the dir
 <p het-props="textContent=enabled:seed[bool]">true</p>
 ```
 
-Directive support matrix:
+Acquisition support matrix:
 
-| Directive | Multiple declarations | `:seed` | `:sync` | Type hints |
-| --- | --- | --- | --- | --- |
-| `het-on` | Yes | No | No | No |
-| `het-props` | Yes | Yes | Yes | Yes (`[int]`, `[float]`, `[bool]`) |
-| `het-attrs` | Yes | Yes | Yes | Yes (`[int]`, `[float]`, `[bool]`) |
-| `het-bool-attrs` | Yes | Yes | Yes | No |
-| `het-class` | Yes | Yes | Yes | No |
-| `het-model` | No | Yes | No | Yes (`[int]`, `[float]`, `[bool]`) |
+| Directive | `:seed` | `:sync` | Type hints |
+| --- | --- | --- | --- |
+| `het-props` | Yes | Yes | Yes (`[int]`, `[float]`, `[bool]`) |
+| `het-attrs` | Yes | Yes | Yes (`[int]`, `[float]`, `[bool]`) |
+| `het-bool-attrs` | Yes | Yes | No |
+| `het-class` | Yes | Yes | No |
+| `het-model` | Yes | No | Yes (`[int]`, `[float]`, `[bool]`) |
+| `het-on` | No | No | No |
+
+`het-component`, `het-ref`, `het-cloak`, `het-exports`, and `het-imports` do not use acquisition syntax.
 
 ## Request enhancement
 
