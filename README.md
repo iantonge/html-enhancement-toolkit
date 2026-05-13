@@ -2,7 +2,16 @@
 
 HET (HTML Enhancement Toolkit) is a lightweight, HTML-first enhancement library that brings reactivity and progressive navigation to traditional server-rendered pages without adopting a single-page application (SPA) architecture.
 
-## Getting started
+## Contents
+
+- [Quick start](#quick-start)
+- [Config](#config)
+- [Components](#components)
+- [Request enhancement](#request-enhancement)
+- [Component lifecycle notes](#component-lifecycle-notes)
+- [Development](#development)
+
+## Quick start
 
 ### Using HET in your app
 
@@ -671,7 +680,7 @@ for browser history (`popstate`) re-fetches. Content-load events bubble from the
 - New component roots inserted after `init()` auto-mount only if their component definition has already been registered.
 - Registering a component after `init()` does not retroactively mount existing matching elements; it applies to future insertions.
 
-## Developing HET
+## Development
 
 Project layout:
 - `src/` source modules (built into `dist/`).
