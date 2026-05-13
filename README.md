@@ -247,7 +247,7 @@ Preserve layout by using `visibility: hidden`.
 
 Binding attributes connect an element property, attribute, class, model value, or event to a signal or component method using `target=source` declarations.
 For example, `het-props="textContent=count"` writes the `count` signal to the element's `textContent` property.
-
+Some binding attributes support multiple declarations in the same attribute, separated by whitespace.
 Some signal bindings can add an acquisition clause, such as `:seed` or `:sync`, to initialize a signal from the DOM.
 Some acquisition clauses can also add a type hint, such as `:seed[int]`.
 Each directive has its own support limits; see [Acquisition Strategies (`:seed`, `:sync`)](#acquisition-strategies-seed-sync) for the full reference.
@@ -256,6 +256,8 @@ Each directive has its own support limits; see [Acquisition Strategies (`:seed`,
 
 Use `het-props` to bind signal values to element properties.
 Use this for DOM properties (for example `textContent`, `value`, `checked`).
+`het-props` supports multiple declarations separated by whitespace, e.g.
+`het-props="textContent=count title=label"`.
 
 ```html
 <div het-component="counter">
@@ -284,6 +286,8 @@ window.HET.registerComponent('counter', {
 
 Use `het-attrs` to bind signal values to element attributes.
 Use for attributes whose meaning comes from their value. For boolean presence/absence attributes such as `disabled`, `required` or `hidden`, use `het-bool-attrs` instead.
+`het-attrs` supports multiple declarations separated by whitespace, e.g.
+`het-attrs="aria-label=label data-status=status"`.
 
 ```html
 <div het-component="statusCard">
@@ -312,6 +316,8 @@ window.HET.registerComponent('statusCard', {
 
 Use `het-bool-attrs` to toggle boolean attributes based on signal truthiness.
 Use for attributes whose meaning comes from presence/absence like `disabled`, `required` or `hidden`. If an attribute merely stores a boolean-like value (e.g. `aria-expanded="true"`), bind it with `het-attrs` instead. If the signal value is truthy, the attribute is added. If the signal value is falsy, the attribute is removed.
+`het-bool-attrs` supports multiple declarations separated by whitespace, e.g.
+`het-bool-attrs="disabled=isDisabled hidden=isHidden"`.
 
 ```html
 <div het-component="lockInput">
@@ -340,6 +346,8 @@ window.HET.registerComponent('lockInput', {
 
 Use `het-class` to toggle classes from signal values.
 If the signal value is truthy, the class is added. If the signal value is falsy, the class is removed.
+`het-class` supports multiple declarations separated by whitespace, e.g.
+`het-class="active=isActive selected=isSelected"`.
 
 ```html
 <div het-component="alertBox">
@@ -370,6 +378,7 @@ Use `het-model` for two-way signal binding on form controls.
 When no key is provided, HET infers `value` for most inputs and `checked` for checkbox/radio inputs.
 You can also specify the property name explicitly with `property=signal`.
 The DOM event cannot be specified; HET infers `change` for `checked` bindings and `input` for all other properties.
+`het-model` supports one declaration per attribute.
 
 ```html
 <div het-component="profileForm">
@@ -425,6 +434,8 @@ window.HET.registerComponent('counter', {
 
 Use `het-exports` on a parent component to declare which signals can be imported by descendants.
 Use `het-imports` on a child component to import from the nearest ancestor component that exports the signal.
+Both attributes support multiple declarations separated by whitespace, e.g.
+`het-exports="count status"` and `het-imports="count localStatus=status"`.
 
 ```html
 <div het-component="parent" het-exports="count">
