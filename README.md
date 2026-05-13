@@ -15,10 +15,10 @@ HET (HTML Enhancement Toolkit) is a lightweight, HTML-first enhancement library 
 
 ### Using HET in your app
 
-HET is designed to work in a no-build workflow, but it also supports module imports. Start by choosing which build you want to serve:
+HET is designed to work in a no-build workflow, but it also ships an ESM bundle. The repository builds browser-ready files into `dist/`; serve or copy one of those files into your application.
 
 - IIFE build (no-build): use `dist/het.iife.js` or the minified `dist/het.iife.min.js` (with optional sourcemap).
-- ESM build (bundlers): use `dist/het.js` and import `init` in your app.
+- ESM build: use `dist/het.js` and import from the file path you serve.
 
 #### IIFE build
 
@@ -29,21 +29,25 @@ HET is designed to work in a no-build workflow, but it also supports module impo
 <script src="/path/to/het.iife.js"></script>
 ```
 
-The IIFE build then exposes `window.HET` for use by other scripts on the page. To get started just call the `init()` function.
+The IIFE build exposes `window.HET` for use by other scripts on the page. To get started, call `init()`.
 
 ```js
 window.HET.init();
 ```
 
+Available APIs are `window.HET.init`, `window.HET.destroy`, `window.HET.registerComponent`, and `window.HET.signals`.
+
 #### ESM build
 
-Simply import HET in your js and call the `init()` function.
+Import the ESM bundle from wherever you serve it, then call `init()`.
 
 ```js
-import { init } from 'het';
+import { init, destroy, registerComponent } from '/path/to/het.js';
 
 init();
 ```
+
+The ESM build exports `init`, `destroy`, and `registerComponent`.
 
 ## Config
 
