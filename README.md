@@ -439,6 +439,8 @@ Use `het-imports` on a child component to import from the nearest ancestor compo
 
 If multiple ancestors export the same signal name, HET resolves to the nearest exporting ancestor.
 
+Acquisition strategies and type hints are not supported on `het-exports` or `het-imports`; these attributes only declare signal names and import aliases.
+
 Performance note:
 On `het:sync`, imported bindings are re-resolved against the current ancestor chain so nearest-export semantics remain correct after DOM updates. In very deep trees or pages with many imports, this can add measurable sync overhead. For those cases, consider managing shared signals explicitly outside component ancestry (for example, a module-level store) and wiring them in `setup` directly instead of relying on `het-imports`.
 
