@@ -543,7 +543,22 @@ Signal bindings can initialize from existing DOM values using acquisition clause
 - `:seed` initializes the signal once from the bound element.
 - `:sync` initializes once and updates the signal again when a `het:sync` event is dispatched.
 
-An acquired signal is created before `setup` runs. Do not initialize the same signal manually in `setup`, and do not import a signal with the same local name.
+An acquired signal is created before `setup` runs. A signal may be referenced by multiple bindings, but it may have only one DOM acquisition source. That acquisition binding becomes the source of truth for the signal's initial value (`:seed`) or synchronized value (`:sync`).
+
+Do not initialize an acquired signal manually in `setup`, import a signal with the same local name, or declare a second acquisition binding for the same signal.
+
+```html
+<!-- Valid: one acquisition source, multiple output bindings -->
+<input het-props="value=count:seed[int]" value="7">
+<span het-props="textContent=count"></span>
+<output het-attrs="data-count=count"></output>
+```
+
+```html
+<!-- Invalid: two acquisition sources for the same signal -->
+<input het-props="value=count:seed[int]" value="7">
+<span het-props="textContent=count:seed[int]">7</span>
+```
 
 Sync trigger behavior:
 - In full toolkit usage (`requests` + `components`), HET dispatches `het:sync` after request content loads. This covers the target pane and any content updated through `het-also`.
