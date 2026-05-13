@@ -251,6 +251,23 @@ Call `window.HET.destroy()` to run cleanup for mounted components and remove req
 but excludes elements inside nested `[het-component]` subtrees.
 Initialize signals explicitly (for example `signals.count = window.HET.signals.signal(0)` in the IIFE build).
 
+### Signals
+
+Component bindings expect Preact signal objects. In the IIFE build, use the helpers exposed on `window.HET.signals`, such as `window.HET.signals.signal(0)`.
+
+The ESM build does not re-export signal helpers. If you use components with the ESM build, import signal helpers from `@preact/signals-core`:
+
+```js
+import { signal } from '@preact/signals-core';
+import { registerComponent } from '/path/to/het.js';
+
+registerComponent('counter', {
+  setup: ({ signals }) => {
+    signals.count = signal(0);
+  },
+});
+```
+
 ### `het-ref`
 
 Use `het-ref` to expose DOM element references in `setup({ refs })`.
@@ -294,6 +311,14 @@ Some binding attributes support multiple declarations in the same attribute, sep
 Some signal bindings can add an acquisition clause, such as `:seed` or `:sync`, to initialize a signal from the DOM.
 Some acquisition clauses can also add a type hint, such as `:seed[int]`.
 Each directive has its own support limits; see [Acquisition Strategies (`:seed`, `:sync`)](#acquisition-strategies-seed-sync) for the full reference.
+
+General forms:
+
+```text
+target=source
+target=source:seed
+target=source:sync[bool]
+```
 
 ### `het-props`
 
@@ -511,6 +536,8 @@ Signal bindings can initialize from existing DOM values using acquisition clause
 - `:seed` initializes the signal once from the bound element.
 - `:sync` initializes once and updates the signal again when a `het:sync` event is dispatched.
 
+An acquired signal is created before `setup` runs. Do not initialize the same signal manually in `setup`, and do not import a signal with the same local name.
+
 Sync trigger behavior:
 - In full toolkit usage (`requests` + `components`), HET dispatches `het:sync` after request content loads. This covers the target pane and any content updated through `het-also`.
 - In components-only usage, no automatic sync event is dispatched.
@@ -532,7 +559,7 @@ Type hints can be applied to acquisition values for some directives (see the dir
 
 - `[int]` uses `parseInt(value, 10)`
 - `[float]` uses `parseFloat(value)`
-- `[bool]` treats `true` and `"true"` as `true`
+- `[bool]` treats `true` and `"true"` as `true`; other values are `false`
 
 ```html
 <p het-props="textContent=count:seed[int]">7</p>
@@ -542,14 +569,14 @@ Type hints can be applied to acquisition values for some directives (see the dir
 
 Directive support matrix:
 
-| Directive | `:seed` | `:sync` | Type hints |
-| --- | --- | --- | --- |
-| `het-on` | No | No | No |
-| `het-props` | Yes | Yes | Yes (`[int]`, `[float]`, `[bool]`) |
-| `het-attrs` | Yes | Yes | Yes (`[int]`, `[float]`, `[bool]`) |
-| `het-bool-attrs` | Yes | Yes | No |
-| `het-class` | Yes | Yes | No |
-| `het-model` | Yes | No | Yes (`[int]`, `[float]`, `[bool]`) |
+| Directive | Multiple declarations | `:seed` | `:sync` | Type hints |
+| --- | --- | --- | --- | --- |
+| `het-on` | Yes | No | No | No |
+| `het-props` | Yes | Yes | Yes | Yes (`[int]`, `[float]`, `[bool]`) |
+| `het-attrs` | Yes | Yes | Yes | Yes (`[int]`, `[float]`, `[bool]`) |
+| `het-bool-attrs` | Yes | Yes | Yes | No |
+| `het-class` | Yes | Yes | Yes | No |
+| `het-model` | No | Yes | No | Yes (`[int]`, `[float]`, `[bool]`) |
 
 ## Request enhancement
 
