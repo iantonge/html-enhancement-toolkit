@@ -582,46 +582,53 @@ Directive support matrix:
 
 HET progressively enhances both links and forms by replacing a named target pane from server-rendered HTML responses.
 
-### Targeting a pane with `het-target`
+### Links
 
-Use `het-target="<name>"` on links and forms (or submit buttons) to target a pane.
+Add `het-target="<pane-name>"` to a same-origin link to fetch the link URL and replace the matching pane from the response.
 
 ```html
 <main het-pane="main">
   <a href="/next" het-target="main">Next page</a>
 </main>
-
-<form method="get" action="/search" het-target="main">
-  <input name="q" />
-  <button type="submit">Search</button>
-</form>
 ```
 
-Form-specific behavior:
-- `het-target` on the clicked submit button overrides `het-target` on the form.
-- HET respects native form defaults and submitter overrides (`formaction`, `formmethod`, `formenctype`, default `method`/`action`, and submitter name/value pairs).
-- If a `het-background` attribute is present on the form or the submitter, the form will not be disabled while the request is in-flight. NOTE: if the form is targeting a pane that contains the form itself, the form will still be disabled.
-- Only same-origin form submissions are enhanced.
-
-Link-specific behavior:
 - Links to another origin are not enhanced.
 - Links with a `target` attribute are not enhanced.
 - Modifier clicks (Ctrl, Cmd, Shift, or middle click) are not enhanced.
 - Clicks on nested elements inside a link still resolve to the nearest ancestor `<a het-target="...">`.
 
-For both links and forms, enhanced requests include an `X-HET-Target` header containing the resolved target pane name.
+### Forms
 
-Servers can respond with `X-HET-Target-Override` to replace a different pane than originally targeted. The override pane must exist in the current document and response.
+Add `het-target="<pane-name>"` to a same-origin form to submit it with `fetch` and replace the matching pane from the response.
 
-Servers can respond with `X-HET-Select-Override` to override the selected ids used for partial updates. Use a space-separated list of ids; an empty value clears `het-select` and performs a full pane replacement.
+```html
+<form method="get" action="/search" het-target="main">
+  <input name="q">
+  <button type="submit">Search</button>
+</form>
+```
 
-When using `X-HET-Target-Override`, it is usually safer to also clear selection (`X-HET-Select-Override: ""`) unless the selected ids are guaranteed to exist in the overridden target pane.
+- HET respects native form defaults and submitter overrides: `formaction`, `formmethod`, `formenctype`, default `method`/`action`, and submitter name/value pairs.
+- `het-target` on the clicked submit button overrides `het-target` on the form.
+- `het-select` and `het-also` on the clicked submit button override the form attributes.
+- Only same-origin form submissions are enhanced.
+- If `het-background` is present on the form or submitter, HET does not disable the form while the request is in flight. The target pane is still marked busy.
 
-Servers can respond with `X-HET-Also-Override` to override `het-also` ids for out-of-target replacements. Use a space-separated list of ids; an empty value clears `het-also`.
+### Panes
+
+Use `het-pane="<name>"` to mark replaceable content. The current document and the response HTML must each contain exactly one pane with the resolved target name.
+
+```html
+<main het-pane="main">
+  ...
+</main>
+```
+
+If the pane is missing or duplicated in either place, HET throws an error.
 
 ### Partial updates with `het-select`
 
-Use `het-select` to replace only specific ids inside the target pane.
+Use `het-select` to replace only specific ids inside the target pane. The value is a whitespace-separated list of ids.
 
 ```html
 <main het-pane="main">
@@ -636,15 +643,12 @@ Use `het-select` to replace only specific ids inside the target pane.
 </form>
 ```
 
-`het-select` throws if any listed id is missing in the current target or in the server response.
-
-Without `het-select`, HET replaces the entire target pane element with the matching pane from the response.
-
-After swapping content, HET honors the first `[autofocus]` in newly inserted content (target replacements first, then `het-also` replacements) and removes the attribute so it does not trigger again.
+- Without `het-select`, HET replaces the entire target pane element with the matching pane from the response.
+- `het-select` throws if any listed id is missing in the current target or in the response target.
 
 ### Additional replacements with `het-also`
 
-Use `het-also` to replace elements outside the target pane in the same response.
+Use `het-also` to replace elements outside the target pane from the same response. The value is a whitespace-separated list of ids.
 
 ```html
 <main het-pane="main">
@@ -660,15 +664,9 @@ Use `het-also` to replace elements outside the target pane in the same response.
 
 `het-also` throws if any listed id is missing in the current document or server response, or if an id refers to an element inside the target.
 
-### Pane requirements
-
-- The current document must contain exactly one pane with the target name.
-- The response HTML must also contain exactly one pane with the same name.
-- If the pane is missing or duplicated in either place, HET throws an error.
-
 ### Navigation panes (`het-nav`)
 
-Use `het-nav` when pane replacement should also update browser history.
+Add `het-nav` to a pane when replacements should also update browser history.
 
 ```html
 <main het-pane="main" het-nav>
@@ -687,6 +685,20 @@ When HET performs the first navigation in a session, it replaces the initial his
 
 For `het-nav` navigations, HET also synchronizes key `<head>` elements from the response (including `<title>`), so browser history navigation restores both pane content and page metadata.
 
+### Server contract
+
+Enhanced requests include an `X-HET-Target` header containing the resolved target pane name.
+
+Responses must be HTML containing the target pane. Servers may also return override headers:
+
+| Header | Effect |
+| --- | --- |
+| `X-HET-Target-Override` | Replace a different pane than originally targeted. The override pane must exist in the current document and response. |
+| `X-HET-Select-Override` | Override `het-select` ids. Use a whitespace-separated list of ids; an empty value clears selection and performs a full pane replacement. |
+| `X-HET-Also-Override` | Override `het-also` ids. Use a whitespace-separated list of ids; an empty value clears additional replacements. |
+
+When using `X-HET-Target-Override`, it is usually safer to also clear selection (`X-HET-Select-Override: ""`) unless the selected ids are guaranteed to exist in the overridden target pane.
+
 ### UI feedback while requests are in flight
 
 When an enhanced request starts, HET marks the target pane as busy and disables interactive controls inside that pane:
@@ -701,6 +713,8 @@ When the request finishes (or is aborted), HET removes the busy markers and only
 Form-specific addition:
 - HET also disables/enables controls associated to the form via the `form` attribute.
 - This form-disable behavior is skipped when the active submitter or form has `het-background`.
+
+After swapping content, HET honors the first `[autofocus]` in newly inserted content (target replacements first, then `het-also` replacements) and removes the attribute so it does not trigger again.
 
 ### Request coordination
 
