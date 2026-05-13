@@ -249,11 +249,18 @@ Call `window.HET.destroy()` to run cleanup for mounted components and remove req
 
 `refs` includes elements marked with `het-ref` on the component root and its descendants,
 but excludes elements inside nested `[het-component]` subtrees.
-Initialize signals explicitly (for example `signals.count = window.HET.signals.signal(0)` in the IIFE build).
 
 ### Signals
 
-Component bindings expect Preact signal objects. In the IIFE build, use the helpers exposed on `window.HET.signals`, such as `window.HET.signals.signal(0)`.
+Component bindings expect Preact signal objects. Signals can come from three places:
+
+- Local signals you initialize in `setup`, such as `signals.count = window.HET.signals.signal(0)`.
+- Acquired signals created from DOM values with `:seed` or `:sync` before `setup` runs.
+- Imported signals declared with `het-imports`.
+
+Initialize only the local signals your component owns. Do not initialize signals that are acquired from the DOM or imported from an ancestor.
+
+In the IIFE build, use the helpers exposed on `window.HET.signals`, such as `window.HET.signals.signal(0)`.
 
 The ESM build does not re-export signal helpers. If you use components with the ESM build, import signal helpers from `@preact/signals-core`:
 
