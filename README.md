@@ -683,9 +683,7 @@ For `het-nav` navigations, HET also synchronizes configured `<head>` elements fr
 
 Enhanced requests include an `X-HET-Target` header containing the resolved target pane name.
 
-HET reads the response body as text and parses it as HTML. It does not currently validate response status or `Content-Type` before parsing.
-
-Responses must be HTML containing exactly one matching target pane. Servers may also return override headers:
+Responses must be HTML containing exactly one matching target pane, regardless of HTTP status code. Servers may also return override headers:
 
 | Header | Effect |
 | --- | --- |
