@@ -72,13 +72,13 @@ The ESM build exports `init`, `destroy`, and `registerComponent`.
 
 Initialize HET. This mounts registered components, starts component mutation observation, installs request enhancement listeners, and connects request-driven content loads to component synchronization.
 
-`config` is optional. It accepts the options below. `init` does not return a value.
+`config` is optional, and every config property is optional. Omitted properties use the defaults described below. `init` does not return a value.
 
 ### Config options
 
 #### `onError(error)`
 
-Handle internal errors with your own logging/reporting. Signature: `(error: Error | DOMException | unknown) => void`. Default behavior is to rethrow; return value is ignored.
+Handle internal errors with your own logging/reporting. Signature: `(error: Error | DOMException | unknown) => void`. Default: rethrow. Return value is ignored.
 
 ```js
 window.HET.init({
@@ -124,7 +124,9 @@ window.HET.init({
 
 #### `nonce`
 
-Adds a nonce value to enhanced fetch requests using the configured nonce header name. This is mainly useful for nonce-protected inline `<style>` blocks in swapped HTML. Inline `<script>` tags in swapped content are inert and are not executed automatically.
+Adds a nonce value to enhanced fetch requests using the configured nonce header name. Default: unset.
+
+This is mainly useful for nonce-protected inline `<style>` blocks in swapped HTML. Inline `<script>` tags in swapped content are inert and are not executed automatically.
 
 ```js
 window.HET.init({
@@ -145,7 +147,7 @@ window.HET.init({
 
 #### `trustedTypesPolicy`
 
-Optional Trusted Types policy object used to transform response HTML before parsing. If provided, HET calls `trustedTypesPolicy.createHTML(responseHtml)`.
+Trusted Types policy object used to transform response HTML before parsing. Default: unset. If provided, HET calls `trustedTypesPolicy.createHTML(responseHtml)`.
 
 DOMPurify is a suitable sanitizer for this. If you use head updates, configure it to keep the document structure and allow head elements/attributes.
 
@@ -199,9 +201,9 @@ Note: Firefox does not yet support Trusted Types natively. A polyfill is availab
 
 #### `replaceContent`
 
-Optional function to customize how HET swaps a matched element with its replacement.
-This is called for the target pane, `het-select` replacements, and `het-also`
-replacements.
+Function to customize how HET swaps a matched element with its replacement.
+Default: replace the matched element with an imported clone of the response element.
+This is called for the target pane, `het-select` replacements, and `het-also` replacements.
 
 We recommend using a DOM morphing library (such as Idiomorph) for smoother updates.
 
