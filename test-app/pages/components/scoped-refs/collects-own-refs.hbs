@@ -9,10 +9,8 @@
   </div>
 </section>
 <script nonce="{{{cspNonce}}}">
-  window.HET.registerComponent('refs-basic', {
-    setup: ({ refs }) => {
-      const keys = Object.keys(refs).sort().join(',');
-      document.getElementById('refs-result').textContent = keys;
-    },
+  window.HET.registerComponent('refs-basic', ({ refs }) => {
+    const keys = Object.keys(refs).sort().join(',');
+    document.getElementById('refs-result').textContent = keys;
   });
 </script>

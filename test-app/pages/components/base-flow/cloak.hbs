@@ -15,32 +15,24 @@
   </div>
 </section>
 <script nonce="{{{cspNonce}}}">
-  window.HET.registerComponent('cloak-basic', {
-    setup: ({ el }) => {
-      el.textContent = 'Mounted';
-      return {};
-    },
+  window.HET.registerComponent('cloak-basic', ({ el }) => {
+    el.textContent = 'Mounted';
+    return {};
   });
 
-  window.HET.registerComponent('cloak-parent', {
-    setup: ({ signals }) => {
-      signals.count = window.HET.signals.signal('parent value');
-      return {};
-    },
+  window.HET.registerComponent('cloak-parent', ({ signals }) => {
+    signals.count = window.HET.signals.signal('parent value');
+    return {};
   });
 
-  window.HET.registerComponent('cloak-child', {
-    setup: ({ signals }) => {
-      if (!signals.count) {
-        throw new Error('HET test error: missing imported count');
-      }
-      return {};
-    },
+  window.HET.registerComponent('cloak-child', ({ signals }) => {
+    if (!signals.count) {
+      throw new Error('HET test error: missing imported count');
+    }
+    return {};
   });
 
-  window.HET.registerComponent('cloak-throwing', {
-    setup: () => {
-      throw new Error('HET test error: cloak setup failed');
-    },
+  window.HET.registerComponent('cloak-throwing', () => {
+    throw new Error('HET test error: cloak setup failed');
   });
 </script>

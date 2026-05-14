@@ -10,13 +10,11 @@
   </div>
 </section>
 <script nonce="{{{cspNonce}}}">
-  window.HET.registerComponent('acquisition-seed', {
-    setup: ({ signals }) => {
-      return {
-        increment: () => {
-          signals.count.value += 1;
-        },
-      };
-    },
+  window.HET.registerComponent('acquisition-seed', ({ signals }) => {
+    return {
+      increment: () => {
+        signals.count.value += 1;
+      },
+    };
   });
 </script>

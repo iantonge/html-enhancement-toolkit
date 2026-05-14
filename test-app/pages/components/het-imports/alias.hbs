@@ -12,23 +12,19 @@
   </div>
 </section>
 <script nonce="{{{cspNonce}}}">
-  window.HET.registerComponent('imports-alias-parent', {
-    setup: ({ signals }) => {
-      signals.count = window.HET.signals.signal(0);
-      return {
-        increment: () => {
-          signals.count.value += 1;
-        },
-      };
-    },
+  window.HET.registerComponent('imports-alias-parent', ({ signals }) => {
+    signals.count = window.HET.signals.signal(0);
+    return {
+      increment: () => {
+        signals.count.value += 1;
+      },
+    };
   });
 
-  window.HET.registerComponent('imports-alias-child', {
-    setup: ({ signals }) => {
-      if (!signals.childCount) {
-        throw new Error('HET test error: missing imported childCount');
-      }
-      return {};
-    },
+  window.HET.registerComponent('imports-alias-child', ({ signals }) => {
+    if (!signals.childCount) {
+      throw new Error('HET test error: missing imported childCount');
+    }
+    return {};
   });
 </script>

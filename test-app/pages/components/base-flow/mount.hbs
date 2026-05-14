@@ -7,13 +7,11 @@
 </section>
 <script nonce="{{{cspNonce}}}">
   window.baseFlowSetupCount = 0;
-  window.HET.registerComponent('base-flow', {
-    setup: ({ el }) => {
-      window.baseFlowSetupCount += 1;
-      if (el.dataset.mode === 'mount') {
-        el.textContent = 'Mounted';
-      }
-      document.getElementById('setup-count').textContent = `Setup count: ${window.baseFlowSetupCount}`;
-    },
+  window.HET.registerComponent('base-flow', ({ el }) => {
+    window.baseFlowSetupCount += 1;
+    if (el.dataset.mode === 'mount') {
+      el.textContent = 'Mounted';
+    }
+    document.getElementById('setup-count').textContent = `Setup count: ${window.baseFlowSetupCount}`;
   });
 </script>

@@ -14,17 +14,15 @@
   </div>
 </section>
 <script nonce="{{{cspNonce}}}">
-  window.HET.registerComponent('het-props-write-error', {
-    setup: ({ refs, signals }) => {
-      Object.defineProperty(refs.target, 'customValue', {
-        configurable: true,
-        set: () => {
-          throw new Error('HET test error: write failed');
-        },
-      });
-      signals.count = window.HET.signals.signal(1);
-      return {};
-    },
+  window.HET.registerComponent('het-props-write-error', ({ refs, signals }) => {
+    Object.defineProperty(refs.target, 'customValue', {
+      configurable: true,
+      set: () => {
+        throw new Error('HET test error: write failed');
+      },
+    });
+    signals.count = window.HET.signals.signal(1);
+    return {};
   });
   window.addEventListener('load', () => {
     const message = window.hetErrors.at(-1);

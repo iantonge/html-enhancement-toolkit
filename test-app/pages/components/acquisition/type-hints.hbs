@@ -20,19 +20,17 @@
   </div>
 </section>
 <script nonce="{{{cspNonce}}}">
-  window.HET.registerComponent('acquisition-type-hints', {
-    setup: ({ signals }) => {
-      return {
-        incrementInt: () => {
-          signals.intValue.value += 1;
-        },
-        incrementFloat: () => {
-          signals.floatValue.value += 0.5;
-        },
-        toggleBool: () => {
-          signals.boolValue.value = !signals.boolValue.value;
-        },
-      };
-    },
+  window.HET.registerComponent('acquisition-type-hints', ({ signals }) => {
+    return {
+      incrementInt: () => {
+        signals.intValue.value += 1;
+      },
+      incrementFloat: () => {
+        signals.floatValue.value += 0.5;
+      },
+      toggleBool: () => {
+        signals.boolValue.value = !signals.boolValue.value;
+      },
+    };
   });
 </script>

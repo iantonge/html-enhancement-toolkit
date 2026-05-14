@@ -8,9 +8,7 @@
   </div>
 </section>
 <script nonce="{{{cspNonce}}}">
-  window.HET.registerComponent('acquisition-type-hint-unsupported', {
-    setup: () => ({}),
-  });
+  window.HET.registerComponent('acquisition-type-hint-unsupported', () => ({}));
   window.addEventListener('load', () => {
     const message = window.hetErrors.at(-1);
     if (message) {

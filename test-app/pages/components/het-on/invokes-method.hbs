@@ -8,15 +8,13 @@
   </div>
 </section>
 <script nonce="{{{cspNonce}}}">
-  window.HET.registerComponent('het-on-invokes', {
-    setup: () => {
-      let count = 0;
-      return {
-        increment: () => {
-          count += 1;
-          document.getElementById('count-value').textContent = String(count);
-        },
-      };
-    },
+  window.HET.registerComponent('het-on-invokes', () => {
+    let count = 0;
+    return {
+      increment: () => {
+        count += 1;
+        document.getElementById('count-value').textContent = String(count);
+      },
+    };
   });
 </script>

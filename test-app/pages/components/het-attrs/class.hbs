@@ -9,17 +9,15 @@
   </div>
 </section>
 <script nonce="{{{cspNonce}}}">
-  window.HET.registerComponent('het-class-basic', {
-    setup: ({ signals }) => {
-      signals.isActive = window.HET.signals.signal(false);
-      return {
-        activate: () => {
-          signals.isActive.value = true;
-        },
-        deactivate: () => {
-          signals.isActive.value = false;
-        },
-      };
-    },
+  window.HET.registerComponent('het-class-basic', ({ signals }) => {
+    signals.isActive = window.HET.signals.signal(false);
+    return {
+      activate: () => {
+        signals.isActive.value = true;
+      },
+      deactivate: () => {
+        signals.isActive.value = false;
+      },
+    };
   });
 </script>

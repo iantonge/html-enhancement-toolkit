@@ -8,14 +8,12 @@
   </div>
 </section>
 <script nonce="{{{cspNonce}}}">
-  window.HET.registerComponent('het-props-binds', {
-    setup: ({ signals }) => {
-      signals.count = window.HET.signals.signal(0);
-      return {
-        increment: () => {
-          signals.count.value += 1;
-        },
-      };
-    },
+  window.HET.registerComponent('het-props-binds', ({ signals }) => {
+    signals.count = window.HET.signals.signal(0);
+    return {
+      increment: () => {
+        signals.count.value += 1;
+      },
+    };
   });
 </script>

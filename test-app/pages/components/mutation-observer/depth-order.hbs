@@ -16,24 +16,20 @@
     cleanups: [],
   };
 
-  window.HET.registerComponent('depth-parent', {
-    setup: ({ onCleanup }) => {
-      window.hetDepthLog.mounts.push('parent');
-      onCleanup(() => {
-        window.hetDepthLog.cleanups.push('parent');
-      });
-      return {};
-    },
+  window.HET.registerComponent('depth-parent', ({ onCleanup }) => {
+    window.hetDepthLog.mounts.push('parent');
+    onCleanup(() => {
+      window.hetDepthLog.cleanups.push('parent');
+    });
+    return {};
   });
 
-  window.HET.registerComponent('depth-child', {
-    setup: ({ onCleanup }) => {
-      window.hetDepthLog.mounts.push('child');
-      onCleanup(() => {
-        window.hetDepthLog.cleanups.push('child');
-      });
-      return {};
-    },
+  window.HET.registerComponent('depth-child', ({ onCleanup }) => {
+    window.hetDepthLog.mounts.push('child');
+    onCleanup(() => {
+      window.hetDepthLog.cleanups.push('child');
+    });
+    return {};
   });
 
   const renderLogs = () => {

@@ -10,21 +10,19 @@
   </div>
 </section>
 <script nonce="{{{cspNonce}}}">
-  window.HET.registerComponent('het-on-custom-event', {
-    setup: () => {
-      let count = 0;
+  window.HET.registerComponent('het-on-custom-event', () => {
+    let count = 0;
 
-      return {
-        dispatchCustomEvent: () => {
-          document
-            .getElementById('custom-event-root')
-            .dispatchEvent(new CustomEvent('het:beforeFetch', { bubbles: true }));
-        },
-        onBeforeFetch: () => {
-          count += 1;
-          document.getElementById('custom-event-count').textContent = String(count);
-        },
-      };
-    },
+    return {
+      dispatchCustomEvent: () => {
+        document
+          .getElementById('custom-event-root')
+          .dispatchEvent(new CustomEvent('het:beforeFetch', { bubbles: true }));
+      },
+      onBeforeFetch: () => {
+        count += 1;
+        document.getElementById('custom-event-count').textContent = String(count);
+      },
+    };
   });
 </script>

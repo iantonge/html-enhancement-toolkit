@@ -19,14 +19,12 @@
   </div>
 </section>
 <script nonce="{{{cspNonce}}}">
-  window.HET.registerComponent('het-model-radio', {
-    setup: ({ signals }) => {
-      signals.isChosen = window.HET.signals.signal(false);
-      return {
-        setChosen: () => {
-          signals.isChosen.value = true;
-        },
-      };
-    },
+  window.HET.registerComponent('het-model-radio', ({ signals }) => {
+    signals.isChosen = window.HET.signals.signal(false);
+    return {
+      setChosen: () => {
+        signals.isChosen.value = true;
+      },
+    };
   });
 </script>

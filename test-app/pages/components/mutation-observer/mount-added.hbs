@@ -13,18 +13,14 @@
   </div>
 </section>
 <script nonce="{{{cspNonce}}}">
-  window.HET.registerComponent('observer-added', {
-    setup: ({ refs }) => {
-      refs.state.textContent = 'mounted';
-      return {};
-    },
+  window.HET.registerComponent('observer-added', ({ refs }) => {
+    refs.state.textContent = 'mounted';
+    return {};
   });
 
-  window.HET.registerComponent('observer-cloaked', {
-    setup: ({ refs }) => {
-      refs.state.textContent = 'mounted';
-      return {};
-    },
+  window.HET.registerComponent('observer-cloaked', ({ refs }) => {
+    refs.state.textContent = 'mounted';
+    return {};
   });
 
   document.getElementById('add-component').addEventListener('click', () => {

@@ -8,9 +8,7 @@
   </div>
 </section>
 <script nonce="{{{cspNonce}}}">
-  window.HET.registerComponent('acquisition-unknown-strategy', {
-    setup: () => ({}),
-  });
+  window.HET.registerComponent('acquisition-unknown-strategy', () => ({}));
   window.addEventListener('load', () => {
     const message = window.hetErrors.at(-1);
     if (message) {

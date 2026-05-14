@@ -13,14 +13,12 @@
   </div>
 </section>
 <script nonce="{{{cspNonce}}}">
-  window.HET.registerComponent('observer-removed', {
-    setup: ({ refs, onCleanup }) => {
-      refs.state.textContent = 'mounted';
-      onCleanup(() => {
-        document.getElementById('cleanup-state').textContent = 'cleaned';
-      });
-      return {};
-    },
+  window.HET.registerComponent('observer-removed', ({ refs, onCleanup }) => {
+    refs.state.textContent = 'mounted';
+    onCleanup(() => {
+      document.getElementById('cleanup-state').textContent = 'cleaned';
+    });
+    return {};
   });
 
   document.getElementById('remove-component').addEventListener('click', () => {

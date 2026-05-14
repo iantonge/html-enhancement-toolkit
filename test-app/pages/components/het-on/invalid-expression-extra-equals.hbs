@@ -8,11 +8,9 @@
   </div>
 </section>
 <script nonce="{{{cspNonce}}}">
-  window.HET.registerComponent('het-on-invalid-extra-equals', {
-    setup: () => ({
-      increment: () => {},
-    }),
-  });
+  window.HET.registerComponent('het-on-invalid-extra-equals', () => ({
+    increment: () => {},
+  }));
   window.addEventListener('load', () => {
     const message = window.hetErrors.at(-1);
     if (message) {

@@ -14,30 +14,24 @@
   </div>
 </section>
 <script nonce="{{{cspNonce}}}">
-  window.HET.registerComponent('imports-grandparent', {
-    setup: ({ signals }) => {
-      signals.count = window.HET.signals.signal(99);
-      return {};
-    },
+  window.HET.registerComponent('imports-grandparent', ({ signals }) => {
+    signals.count = window.HET.signals.signal(99);
+    return {};
   });
 
-  window.HET.registerComponent('imports-parent', {
-    setup: ({ signals }) => {
-      signals.count = window.HET.signals.signal(0);
-      return {
-        increment: () => {
-          signals.count.value += 1;
-        },
-      };
-    },
+  window.HET.registerComponent('imports-parent', ({ signals }) => {
+    signals.count = window.HET.signals.signal(0);
+    return {
+      increment: () => {
+        signals.count.value += 1;
+      },
+    };
   });
 
-  window.HET.registerComponent('imports-child', {
-    setup: ({ signals }) => {
-      if (!signals.count) {
-        throw new Error('HET test error: missing imported count');
-      }
-      return {};
-    },
+  window.HET.registerComponent('imports-child', ({ signals }) => {
+    if (!signals.count) {
+      throw new Error('HET test error: missing imported count');
+    }
+    return {};
   });
 </script>

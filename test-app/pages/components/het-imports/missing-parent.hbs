@@ -8,9 +8,7 @@
   </div>
 </section>
 <script nonce="{{{cspNonce}}}">
-  window.HET.registerComponent('imports-missing-parent', {
-    setup: () => ({}),
-  });
+  window.HET.registerComponent('imports-missing-parent', () => ({}));
 
   window.addEventListener('load', () => {
     const message = window.hetErrors.at(-1);

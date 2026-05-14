@@ -13,17 +13,15 @@
   </div>
 </section>
 <script nonce="{{{cspNonce}}}">
-  window.HET.registerComponent('het-bool-attrs-basic', {
-    setup: ({ signals }) => {
-      signals.isDisabled = window.HET.signals.signal(false);
-      return {
-        disable: () => {
-          signals.isDisabled.value = true;
-        },
-        enable: () => {
-          signals.isDisabled.value = false;
-        },
-      };
-    },
+  window.HET.registerComponent('het-bool-attrs-basic', ({ signals }) => {
+    signals.isDisabled = window.HET.signals.signal(false);
+    return {
+      disable: () => {
+        signals.isDisabled.value = true;
+      },
+      enable: () => {
+        signals.isDisabled.value = false;
+      },
+    };
   });
 </script>

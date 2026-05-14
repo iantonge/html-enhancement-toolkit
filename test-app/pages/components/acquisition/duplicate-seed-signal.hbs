@@ -9,9 +9,7 @@
   </div>
 </section>
 <script nonce="{{{cspNonce}}}">
-  window.HET.registerComponent('acquisition-duplicate-seed', {
-    setup: () => ({}),
-  });
+  window.HET.registerComponent('acquisition-duplicate-seed', () => ({}));
   window.addEventListener('load', () => {
     const message = window.hetErrors.at(-1);
     if (message) {

@@ -10,11 +10,9 @@
   </div>
 </section>
 <script nonce="{{{cspNonce}}}">
-  window.HET.registerComponent('acquisition-not-supported', {
-    setup: () => ({
-      increment: () => {},
-    }),
-  });
+  window.HET.registerComponent('acquisition-not-supported', () => ({
+    increment: () => {},
+  }));
   window.addEventListener('load', () => {
     const message = window.hetErrors.at(-1);
     if (message) {

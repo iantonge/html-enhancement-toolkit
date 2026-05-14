@@ -8,9 +8,7 @@
   </div>
 </section>
 <script nonce="{{{cspNonce}}}">
-  window.HET.registerComponent('het-model-invalid-empty', {
-    setup: () => ({}),
-  });
+  window.HET.registerComponent('het-model-invalid-empty', () => ({}));
   window.addEventListener('load', () => {
     const message = window.hetErrors.at(-1);
     if (message) {

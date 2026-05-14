@@ -115,16 +115,14 @@ Register components before calling `init()`, then attach them with `het-componen
 ```
 
 ```js
-window.HET.registerComponent('counter', {
-  setup: ({ signals }) => {
-    signals.count = window.HET.signals.signal(0);
+window.HET.registerComponent('counter', ({ signals }) => {
+  signals.count = window.HET.signals.signal(0);
 
-    return {
-      increment() {
-        signals.count.value += 1;
-      },
-    };
-  },
+  return {
+    increment() {
+      signals.count.value += 1;
+    },
+  };
 });
 
 window.HET.init();
@@ -152,10 +150,8 @@ The ESM build does not re-export signal helpers. If you use components with the 
 import { signal } from '@preact/signals-core';
 import { registerComponent } from '/path/to/het.js';
 
-registerComponent('counter', {
-  setup: ({ signals }) => {
-    signals.count = signal(0);
-  },
+registerComponent('counter', ({ signals }) => {
+  signals.count = signal(0);
 });
 ```
 
@@ -171,10 +167,8 @@ The `refs` object includes elements marked with `het-ref` on the component root 
 ```
 
 ```js
-window.HET.registerComponent('profileForm', {
-  setup: ({ refs }) => {
-    refs.emailInput?.focus();
-  },
+window.HET.registerComponent('profileForm', ({ refs }) => {
+  refs.emailInput?.focus();
 });
 ```
 
@@ -242,15 +236,13 @@ Use this for DOM properties (for example `textContent`, `value`, `checked`).
 ```
 
 ```js
-window.HET.registerComponent('counter', {
-  setup: ({ signals }) => {
-    signals.count = window.HET.signals.signal(0);
-    return {
-      increment() {
-        signals.count.value += 1;
-      },
-    };
-  },
+window.HET.registerComponent('counter', ({ signals }) => {
+  signals.count = window.HET.signals.signal(0);
+  return {
+    increment() {
+      signals.count.value += 1;
+    },
+  };
 });
 ```
 
@@ -275,15 +267,13 @@ Use for attributes whose meaning comes from their value. For boolean presence/ab
 ```
 
 ```js
-window.HET.registerComponent('statusCard', {
-  setup: ({ signals }) => {
-    signals.status = window.HET.signals.signal('idle');
-    return {
-      toggle() {
-        signals.status.value = signals.status.value === 'idle' ? 'busy' : 'idle';
-      },
-    };
-  },
+window.HET.registerComponent('statusCard', ({ signals }) => {
+  signals.status = window.HET.signals.signal('idle');
+  return {
+    toggle() {
+      signals.status.value = signals.status.value === 'idle' ? 'busy' : 'idle';
+    },
+  };
 });
 ```
 
@@ -308,15 +298,13 @@ Use for attributes whose meaning comes from presence/absence like `disabled`, `r
 ```
 
 ```js
-window.HET.registerComponent('lockInput', {
-  setup: ({ signals }) => {
-    signals.isDisabled = window.HET.signals.signal(false);
-    return {
-      toggle() {
-        signals.isDisabled.value = !signals.isDisabled.value;
-      },
-    };
-  },
+window.HET.registerComponent('lockInput', ({ signals }) => {
+  signals.isDisabled = window.HET.signals.signal(false);
+  return {
+    toggle() {
+      signals.isDisabled.value = !signals.isDisabled.value;
+    },
+  };
 });
 ```
 
@@ -341,15 +329,13 @@ If the signal value is truthy, the class is added. If the signal value is falsy,
 ```
 
 ```js
-window.HET.registerComponent('alertBox', {
-  setup: ({ signals }) => {
-    signals.isActive = window.HET.signals.signal(false);
-    return {
-      toggle() {
-        signals.isActive.value = !signals.isActive.value;
-      },
-    };
-  },
+window.HET.registerComponent('alertBox', ({ signals }) => {
+  signals.isActive = window.HET.signals.signal(false);
+  return {
+    toggle() {
+      signals.isActive.value = !signals.isActive.value;
+    },
+  };
 });
 ```
 
@@ -379,13 +365,11 @@ The DOM event cannot be specified; HET infers `change` for `checked` bindings an
 ```
 
 ```js
-window.HET.registerComponent('profileForm', {
-  setup: ({ signals }) => {
-    signals.name = window.HET.signals.signal('Ada');
-    signals.email = window.HET.signals.signal('ada@example.com');
-    signals.isSubscribed = window.HET.signals.signal(false);
-    return {};
-  },
+window.HET.registerComponent('profileForm', ({ signals }) => {
+  signals.name = window.HET.signals.signal('Ada');
+  signals.email = window.HET.signals.signal('ada@example.com');
+  signals.isSubscribed = window.HET.signals.signal(false);
+  return {};
 });
 ```
 
@@ -408,45 +392,39 @@ Use `het-on` to bind DOM events to methods returned from `setup`.
 ```
 
 ```js
-window.HET.registerComponent('counter', {
-  setup: () => ({
-    increment() {
-      // handle click
-    },
-  }),
-});
+window.HET.registerComponent('counter', () => ({
+  increment() {
+    // handle click
+  },
+}));
 ```
 
 Handlers are methods returned from `setup`. HET invokes them with the returned methods object as `this`, so use method syntax instead of arrow functions when one handler needs to call another through `this`.
 
 ```js
-window.HET.registerComponent('searchBox', {
-  setup: () => ({
-    updateQuery: () => {
-      // Invalid: The `this` keyword is not bound in an arrow function,
-      // so calling `this.logChange()` will not work.
-      this.logChange();
-    },
-    logChange() {
-      // handle change
-    },
-  }),
-});
+window.HET.registerComponent('searchBox', () => ({
+  updateQuery: () => {
+    // Invalid: The `this` keyword is not bound in an arrow function,
+    // so calling `this.logChange()` will not work.
+    this.logChange();
+  },
+  logChange() {
+    // handle change
+  },
+}));
 ```
 
 ```js
-window.HET.registerComponent('searchBox', {
-  setup: () => ({
-    updateQuery() {
-      // Valid: The `this` keyword is bound when using the method syntax,
-      // so calling `this.logChange()` will do what you expect.
-      this.logChange();
-    },
-    logChange() {
-      // handle change
-    },
-  }),
-});
+window.HET.registerComponent('searchBox', () => ({
+  updateQuery() {
+    // Valid: The `this` keyword is bound when using the method syntax,
+    // so calling `this.logChange()` will do what you expect.
+    this.logChange();
+  },
+  logChange() {
+    // handle change
+  },
+}));
 ```
 
 Support:
@@ -729,7 +707,7 @@ Fetch events bubble from the initiator: the `a[het-target]` or `form[het-target]
 
 ## Component lifecycle notes
 
-- Components mount when `init()` runs, and new component roots inserted later auto-mount only if their component definition has already been registered.
+- Components mount when `init()` runs, and new component roots inserted later auto-mount only if their setup function has already been registered.
 - Registering a component after `init()` does not retroactively mount existing matching elements; it applies to future insertions.
 - Component bindings are discovered once, when a component mounts. Adding or changing `het-*` bindings inside an already-mounted component does not register new bindings, even if you later dispatch `het:sync`.
 - Removing a mounted component runs cleanup callbacks registered with `onCleanup`.
@@ -894,14 +872,14 @@ Destroy mounted components, run their cleanup callbacks, abort in-flight enhance
 
 `destroy` accepts no parameters and does not return a value.
 
-### `registerComponent(name, definition)`
+### `registerComponent(name, setup)`
 
-Register a component definition for elements whose `het-component` value matches `name`.
+Register a component setup function for elements whose `het-component` value matches `name`.
 
 Parameters:
 
 - `name`: the string used by `het-component`.
-- `definition`: an optional object. If it includes `setup`, HET calls `setup(context)` when a matching component mounts.
+- `setup`: an optional function. HET calls `setup(context)` when a matching component mounts.
 
 `setup(context)` receives:
 

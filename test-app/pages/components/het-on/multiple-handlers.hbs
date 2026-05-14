@@ -14,24 +14,22 @@
   </div>
 </section>
 <script nonce="{{{cspNonce}}}">
-  window.HET.registerComponent('het-on-multiple', {
-    setup: () => {
-      let countA = 0;
-      let countB = 0;
-      const render = () => {
-        document.getElementById('count-a').textContent = String(countA);
-        document.getElementById('count-b').textContent = String(countB);
-      };
-      return {
-        incrementA: () => {
-          countA += 1;
-          render();
-        },
-        incrementB: () => {
-          countB += 1;
-          render();
-        },
-      };
-    },
+  window.HET.registerComponent('het-on-multiple', () => {
+    let countA = 0;
+    let countB = 0;
+    const render = () => {
+      document.getElementById('count-a').textContent = String(countA);
+      document.getElementById('count-b').textContent = String(countB);
+    };
+    return {
+      incrementA: () => {
+        countA += 1;
+        render();
+      },
+      incrementB: () => {
+        countB += 1;
+        render();
+      },
+    };
   });
 </script>

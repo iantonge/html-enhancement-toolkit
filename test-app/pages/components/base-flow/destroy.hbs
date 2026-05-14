@@ -7,12 +7,10 @@
 </section>
 <script nonce="{{{cspNonce}}}">
   window.baseFlowCleanupCount = 0;
-  window.HET.registerComponent('base-flow', {
-    setup: ({ onCleanup }) => {
-      onCleanup(() => {
-        window.baseFlowCleanupCount += 1;
-        document.getElementById('cleanup-count').textContent = `Cleanup count: ${window.baseFlowCleanupCount}`;
-      });
-    },
+  window.HET.registerComponent('base-flow', ({ onCleanup }) => {
+    onCleanup(() => {
+      window.baseFlowCleanupCount += 1;
+      document.getElementById('cleanup-count').textContent = `Cleanup count: ${window.baseFlowCleanupCount}`;
+    });
   });
 </script>

@@ -8,14 +8,12 @@
   </div>
 </section>
 <script nonce="{{{cspNonce}}}">
-  window.HET.registerComponent('het-attrs-basic', {
-    setup: ({ signals }) => {
-      signals.status = window.HET.signals.signal('idle');
-      return {
-        setReady: () => {
-          signals.status.value = 'ready';
-        },
-      };
-    },
+  window.HET.registerComponent('het-attrs-basic', ({ signals }) => {
+    signals.status = window.HET.signals.signal('idle');
+    return {
+      setReady: () => {
+        signals.status.value = 'ready';
+      },
+    };
   });
 </script>

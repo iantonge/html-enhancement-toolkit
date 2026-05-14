@@ -10,13 +10,9 @@
   </div>
 </section>
 <script nonce="{{{cspNonce}}}">
-  window.HET.registerComponent('imports-export-missing-parent', {
-    setup: () => ({}),
-  });
+  window.HET.registerComponent('imports-export-missing-parent', () => ({}));
 
-  window.HET.registerComponent('imports-export-missing-child', {
-    setup: () => ({}),
-  });
+  window.HET.registerComponent('imports-export-missing-child', () => ({}));
 
   window.addEventListener('load', () => {
     const message = window.hetErrors.at(-1);

@@ -111,11 +111,11 @@ let onError = (error) => {
   throw error;
 };
 
-export function registerComponent(name, definition) {
+export function registerComponent(name, setup) {
   if (!name) {
     throw new Error('HET Error: Component name is required');
   }
-  components.set(name, definition || {});
+  components.set(name, setup);
 }
 
 export function init(config) {
@@ -169,11 +169,11 @@ function mountComponents(root) {
 
   for (const el of componentsToMount) {
     const name = el.getAttribute('het-component');
-    const definition = components.get(name);
-    if (!definition) continue;
+    if (!components.has(name)) continue;
+    const setup = components.get(name);
 
     try {
-      if (mountComponent(el, definition)) {
+      if (mountComponent(el, setup)) {
         mountedComponents.push(el);
       }
     } catch (error) {
@@ -184,7 +184,7 @@ function mountComponents(root) {
   removeCloakAttributes(mountedComponents);
 }
 
-function mountComponent(rootEl, def) {
+function mountComponent(rootEl, setup) {
   if (rootEl.__het_instance) return false;
 
   const rawSignals = {};
@@ -225,7 +225,7 @@ function mountComponent(rootEl, def) {
     rawSignals[binding.source] = signal(readValue(binding));
     signalMeta[binding.source] = 'local';
   }
-  const methods = (def.setup && def.setup(ctx)) || {};
+  const methods = (setup && setup(ctx)) || {};
 
   for (const binding of bindings) {
     if (binding.sourceType === SIGNAL_SOURCE_TYPE) {
@@ -544,8 +544,8 @@ function initializeObserver() {
         try {
           if (!el.isConnected) continue;
           if (!el.hasAttribute('het-component')) continue;
-          const definition = components.get(el.getAttribute('het-component'));
-          if (definition && mountComponent(el, definition)) {
+          const name = el.getAttribute('het-component');
+          if (components.has(name) && mountComponent(el, components.get(name))) {
             mountedComponents.push(el);
           }
         } catch (error) {
