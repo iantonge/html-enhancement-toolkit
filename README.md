@@ -228,7 +228,7 @@ Default: replace the matched element with an imported clone of the response elem
 This is called for the target pane, `het-select` replacements, and `het-also` replacements.
 Return the element that remains in the document after the replacement. HET uses this returned element for autofocus handling and post-load lifecycle/sync behavior.
 
-We recommend using a DOM morphing library (such as Idiomorph) for smoother updates.
+We recommend using a DOM morphing library (such as [Idiomorph](https://github.com/bigskysoftware/idiomorph)) for smoother updates.
 
 ```js
 window.HET.init({
