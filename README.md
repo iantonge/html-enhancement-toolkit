@@ -608,6 +608,7 @@ Use `het-select` to replace only specific ids inside the target pane. The value 
 ```
 
 - Without `het-select`, HET replaces the entire target pane element with the matching pane from the response.
+- If `het-select` is present, it must list at least one id.
 - `het-select` throws if any listed id is missing in the current target or in the response target.
 
 ### Additional replacements with `het-also`
@@ -627,6 +628,8 @@ Use `het-also` to replace elements outside the target pane from the same respons
 ```
 
 `het-also` throws if any listed id is missing in the current document or server response, or if an id refers to an element inside the target.
+
+If `het-also` is present, it must list at least one id.
 
 ### Navigation panes (`het-nav`)
 
