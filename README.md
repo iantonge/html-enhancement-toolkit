@@ -171,7 +171,7 @@ window.HET.init({
 
 Trusted Types policy object used to transform response HTML before parsing. Default: unset. If provided, HET calls `trustedTypesPolicy.createHTML(responseHtml)`.
 
-DOMPurify is a suitable sanitizer for this. If you use head updates, configure it to keep the document structure and allow head elements/attributes.
+[DOMPurify](https://github.com/cure53/DOMPurify) is a suitable sanitizer for this. If you use head updates, configure it to keep the document structure and allow head elements/attributes.
 
 ```js
 import DOMPurify from 'dompurify';
