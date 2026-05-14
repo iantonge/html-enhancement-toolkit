@@ -648,9 +648,9 @@ Add `het-nav` to a pane when replacements should also update browser history.
 </main>
 ```
 
-When HET performs the first navigation in a session, it replaces the initial history state. On `popstate`, HET cancels in-flight requests, re-fetches the URL from history state, and re-applies the saved pane/select/also settings.
+When HET performs the first navigation in a session, it calls `replaceState` for the initial page and then `pushState` for the loaded response URL. On `popstate`, HET cancels in-flight requests, re-fetches the URL from history state, and re-applies the saved pane/select/also settings.
 
-For `het-nav` navigations, HET also synchronizes key `<head>` elements from the response (including `<title>`), so browser history navigation restores both pane content and page metadata.
+For `het-nav` navigations, HET also synchronizes configured `<head>` elements from the response (including `<title>` by default), so browser history navigation restores both pane content and page metadata.
 
 ### Server contract
 
