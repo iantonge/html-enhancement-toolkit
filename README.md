@@ -369,7 +369,6 @@ window.HET.registerComponent('profileForm', ({ signals }) => {
   signals.name = window.HET.signals.signal('Ada');
   signals.email = window.HET.signals.signal('ada@example.com');
   signals.isSubscribed = window.HET.signals.signal(false);
-  return {};
 });
 ```
 

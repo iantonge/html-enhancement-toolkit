@@ -9,7 +9,6 @@
   window.HET.registerComponent('acquisition-signal-reassignment', ({ signals }) => {
     signals.count = window.HET.signals.signal(1);
     signals.count = window.HET.signals.signal(2);
-    return {};
   });
   window.addEventListener('load', () => {
     const message = window.hetErrors.at(-1);

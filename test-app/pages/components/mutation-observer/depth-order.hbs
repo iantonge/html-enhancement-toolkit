@@ -21,7 +21,6 @@
     onCleanup(() => {
       window.hetDepthLog.cleanups.push('parent');
     });
-    return {};
   });
 
   window.HET.registerComponent('depth-child', ({ onCleanup }) => {
@@ -29,7 +28,6 @@
     onCleanup(() => {
       window.hetDepthLog.cleanups.push('child');
     });
-    return {};
   });
 
   const renderLogs = () => {

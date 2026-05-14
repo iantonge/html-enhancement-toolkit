@@ -16,7 +16,6 @@
 <script nonce="{{{cspNonce}}}">
   window.HET.registerComponent('imports-grandparent', ({ signals }) => {
     signals.count = window.HET.signals.signal(99);
-    return {};
   });
 
   window.HET.registerComponent('imports-parent', ({ signals }) => {
@@ -32,6 +31,5 @@
     if (!signals.count) {
       throw new Error('HET test error: missing imported count');
     }
-    return {};
   });
 </script>

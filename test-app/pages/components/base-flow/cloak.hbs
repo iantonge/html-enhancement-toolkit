@@ -17,19 +17,16 @@
 <script nonce="{{{cspNonce}}}">
   window.HET.registerComponent('cloak-basic', ({ el }) => {
     el.textContent = 'Mounted';
-    return {};
   });
 
   window.HET.registerComponent('cloak-parent', ({ signals }) => {
     signals.count = window.HET.signals.signal('parent value');
-    return {};
   });
 
   window.HET.registerComponent('cloak-child', ({ signals }) => {
     if (!signals.count) {
       throw new Error('HET test error: missing imported count');
     }
-    return {};
   });
 
   window.HET.registerComponent('cloak-throwing', () => {
