@@ -718,6 +718,8 @@ Fetch events bubble from the initiator: the `a[het-target]` or `form[het-target]
 
 ## API reference
 
+This section collects the JavaScript entry points and initialization options for lookup after the core HTML attributes are familiar.
+
 ### `init(config)`
 
 Initialize HET. This mounts registered components, starts component mutation observation, installs request enhancement listeners, and connects request-driven content loads to component synchronization.
