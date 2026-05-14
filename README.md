@@ -132,9 +132,6 @@ window.HET.init();
 
 Call `window.HET.destroy()` to run cleanup for mounted components and remove request listeners.
 
-`refs` includes elements marked with `het-ref` on the component root and its descendants,
-but excludes elements inside nested `[het-component]` subtrees.
-
 ### Signals
 
 Component bindings expect Preact signal objects. See the [Preact Signals documentation](https://github.com/preactjs/signals) for details on creating and using signals.
@@ -165,6 +162,7 @@ registerComponent('counter', {
 ### `het-ref`
 
 Use `het-ref` to expose DOM element references in `setup({ refs })`.
+The `refs` object includes elements marked with `het-ref` on the component root and its descendants, but excludes elements inside nested `[het-component]` subtrees.
 
 ```html
 <div het-component="profileForm">
