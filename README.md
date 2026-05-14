@@ -268,19 +268,22 @@ Parameters:
 Register components before calling `init()`, then attach them with `het-component`.
 
 ```html
-<div het-component="counter"></div>
+<div het-component="counter">
+  <button type="button" het-on="click=increment">+</button>
+  <output het-props="textContent=count"></output>
+</div>
 ```
 
 ```js
 window.HET.registerComponent('counter', {
-  setup: ({ el, refs, signals, onCleanup }) => {
-    el.textContent = 'Mounted';
-    // refs are collected from [het-ref] within this component scope
-    console.log(refs);
+  setup: ({ signals }) => {
     signals.count = window.HET.signals.signal(0);
-    onCleanup(() => {
-      // cleanup work
-    });
+
+    return {
+      increment: () => {
+        signals.count.value += 1;
+      },
+    };
   },
 });
 
