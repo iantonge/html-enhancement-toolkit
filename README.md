@@ -71,6 +71,8 @@ The ESM build exports `init`, `destroy`, and `registerComponent`.
 
 HET enhances normal links and forms. A link with `het-target` fetches its URL and replaces the matching `het-pane` from the response.
 
+Start with a normal server-rendered page. Without JavaScript, the link still performs a full navigation.
+
 ```html
 <main het-pane="main" het-nav>
   <h1>Dashboard</h1>
@@ -78,7 +80,7 @@ HET enhances normal links and forms. A link with `het-target` fetches its URL an
 </main>
 ```
 
-The response should include the same pane:
+When HET is running, clicking the link fetches `/reports` and looks for the same pane in the response:
 
 ```html
 <main het-pane="main" het-nav>
@@ -87,7 +89,7 @@ The response should include the same pane:
 </main>
 ```
 
-Because the pane has `het-nav`, HET also updates browser history for links and forms that target it.
+HET replaces the current `main` pane with the response pane. Because the pane has `het-nav`, HET also pushes the response URL into browser history and updates configured head content such as `<title>`.
 
 ## Core concepts
 
