@@ -148,7 +148,7 @@ window.HET.init({
 
 Adds a nonce value to enhanced fetch requests using the configured nonce header name. Default: unset.
 
-This is mainly useful for nonce-protected inline `<style>` blocks in swapped HTML. Inline `<script>` tags in swapped content are inert and are not executed automatically.
+This is mainly useful for nonce-protected inline `<style>` blocks in swapped HTML. HET parses response HTML with browser APIs and does not execute scripts from swapped content.
 
 ```js
 window.HET.init({
