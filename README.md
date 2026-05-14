@@ -710,7 +710,7 @@ Fetch events bubble from the initiator: the `a[het-target]` or `form[het-target]
 
 - Components mount when `init()` runs, and new component roots inserted later auto-mount only if their component definition has already been registered.
 - Registering a component after `init()` does not retroactively mount existing matching elements; it applies to future insertions.
-- Component bindings are discovered when a component mounts. Adding or changing `het-*` bindings inside an already-mounted component does not register new bindings.
+- Component bindings are discovered once, when a component mounts. Adding or changing `het-*` bindings inside an already-mounted component does not register new bindings, even if you later dispatch `het:sync`.
 - Removing a mounted component runs cleanup callbacks registered with `onCleanup`.
 - `het-cloak` is removed after a component mount batch completes. If a component cannot mount, HET leaves `het-cloak` in place.
 
