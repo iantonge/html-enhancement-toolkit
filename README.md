@@ -431,7 +431,7 @@ Support:
 ### `het-exports` and `het-imports`
 
 Use `het-exports` on a parent component to declare which signals can be imported by descendants.
-Use `het-imports` on a child component to import from the nearest ancestor component that exports the signal.
+Use `het-imports` on a child component to import from the nearest mounted ancestor component that exports the signal name.
 
 ```html
 <div het-component="parent" het-exports="count">
@@ -449,7 +449,7 @@ Use `het-imports` on a child component to import from the nearest ancestor compo
 </div>
 ```
 
-If multiple ancestors export the same signal name, HET resolves to the nearest exporting ancestor.
+If multiple ancestors export the same signal name, HET resolves to the nearest exporting ancestor. On `het:sync`, imports are resolved again so moved components continue to use the nearest current exporter.
 
 Performance note:
 On `het:sync`, imported bindings are re-resolved against the current ancestor chain so nearest-export semantics remain correct after DOM updates. In very deep trees or pages with many imports, this can add measurable sync overhead. For those cases, consider managing shared signals explicitly outside component ancestry (for example, a module-level store) and wiring them in `setup` directly instead of relying on `het-imports`.
