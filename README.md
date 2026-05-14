@@ -716,7 +716,7 @@ HET coordinates in-flight requests by target pane so overlapping updates do not 
 
 ### Lifecycle events
 
-HET dispatches lifecycle events around fetch and content loading. These events are not awaited.
+HET dispatches lifecycle events around fetch and content loading.
 
 Fetch events bubble from the initiator: the `a[het-target]` or `form[het-target]` for enhanced interactions, and `document` for browser history (`popstate`) re-fetches. Content-load events bubble from the target pane or inserted pane.
 
