@@ -687,9 +687,8 @@ Acquisition support matrix:
 | `het-bool-attrs` | Yes | Yes | No |
 | `het-class` | Yes | Yes | No |
 | `het-model` | Yes | No | Yes (`[int]`, `[float]`, `[bool]`) |
-| `het-on` | No | No | No |
 
-`het-component`, `het-ref`, `het-cloak`, `het-exports`, and `het-imports` do not use acquisition syntax.
+`het-component`, `het-ref`, `het-cloak`, `het-on`, `het-exports`, and `het-imports` do not use acquisition syntax.
 
 ## Request enhancement
 
