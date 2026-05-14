@@ -690,7 +690,8 @@ After swapping content, HET honors the first `[autofocus]` in newly inserted con
 HET coordinates in-flight requests by target pane so overlapping updates do not race and leave the UI in an inconsistent state.
 
 - If a pane request is in flight, a new request to the same pane cancels the earlier one.
-- If a parent pane request is in flight, requests targeting panes inside it are ignored.
+- If a child pane request is in flight, a new request to an ancestor pane cancels the child request.
+- If a parent pane request is in flight, new requests targeting panes inside it are ignored.
 
 ### Lifecycle events
 
