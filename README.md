@@ -568,7 +568,7 @@ HET progressively enhances both links and forms by replacing a named target pane
 | --- | --- | --- | --- | --- |
 | `het-pane` | Replaceable pane element | Pane name | No | Current document and response must each contain exactly one matching pane. |
 | `het-nav` | `het-pane` element | Boolean attribute | No | Enables browser history and configured `<head>` synchronization for that pane. |
-| `het-target` | Same-origin links, forms, submit buttons | Pane name | No | Submitter value overrides the form value. |
+| `het-target` | Same-origin links, forms, submit buttons | Pane name | No | On forms, a submitter with `het-target` overrides the form value. |
 | `het-select` | Links, forms, submit buttons | Element id list | Yes | Replaces matching descendants inside the target pane. Submitter value overrides the form value. |
 | `het-also` | Links, forms, submit buttons | Element id list | Yes | Replaces matching elements outside the target pane. Submitter value overrides the form value. |
 | `het-background` | Forms, submit buttons | Boolean attribute | No | Skips form disabling for that submission; the target pane is still marked busy. |
