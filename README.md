@@ -260,7 +260,7 @@ Support:
 | --- | --- |
 | Multiple declarations | Yes, whitespace-separated |
 | [Acquisition](#acquisition-strategies-seed-sync) | `:seed`, `:sync` |
-| [Type hints](#type-hints) | `[int]`, `[float]`, `[bool]` |
+| [Type hints](#type-hints) | Yes |
 
 ### `het-attrs`
 
@@ -293,7 +293,7 @@ Support:
 | --- | --- |
 | Multiple declarations | Yes, whitespace-separated |
 | [Acquisition](#acquisition-strategies-seed-sync) | `:seed`, `:sync` |
-| [Type hints](#type-hints) | `[int]`, `[float]`, `[bool]` |
+| [Type hints](#type-hints) | Yes |
 
 ### `het-bool-attrs`
 
@@ -395,7 +395,7 @@ Support:
 | --- | --- |
 | Multiple declarations | No, one declaration per attribute |
 | [Acquisition](#acquisition-strategies-seed-sync) | `:seed` only (`:sync` is invalid) |
-| [Type hints](#type-hints) | `[int]`, `[float]`, `[bool]` |
+| [Type hints](#type-hints) | Yes |
 
 ### `het-on`
 
@@ -523,11 +523,11 @@ Acquisition support matrix:
 
 | Directive | `:seed` | `:sync` | Type hints |
 | --- | --- | --- | --- |
-| `het-props` | Yes | Yes | Yes (`[int]`, `[float]`, `[bool]`) |
-| `het-attrs` | Yes | Yes | Yes (`[int]`, `[float]`, `[bool]`) |
+| `het-props` | Yes | Yes | Yes |
+| `het-attrs` | Yes | Yes | Yes |
 | `het-bool-attrs` | Yes | Yes | No |
 | `het-class` | Yes | Yes | No |
-| `het-model` | Yes | No | Yes (`[int]`, `[float]`, `[bool]`) |
+| `het-model` | Yes | No | Yes |
 
 `het-component`, `het-ref`, `het-cloak`, `het-on`, `het-exports`, and `het-imports` do not use acquisition syntax.
 
