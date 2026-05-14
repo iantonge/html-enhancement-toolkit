@@ -586,7 +586,6 @@ Add `het-target="<pane-name>"` to a same-origin link to fetch the link URL and r
 - Do not put `het-target` on links to another origin; HET treats that as an error.
 - Do not put `het-target` on links with a `target` attribute; HET treats that as an error.
 - Modifier clicks (Ctrl, Cmd, Shift, or middle click) are not enhanced.
-- Clicks on nested elements inside a link still resolve to the nearest ancestor `<a het-target="...">`.
 
 ### Forms
 
