@@ -297,7 +297,9 @@ but excludes elements inside nested `[het-component]` subtrees.
 
 ### Signals
 
-Component bindings expect Preact signal objects. Signals can come from three places:
+Component bindings expect Preact signal objects. See the [Preact Signals documentation](https://github.com/preactjs/signals) for details on creating and using signals.
+
+Signals can come from three places:
 
 - Local signals you initialize in `setup`, such as `signals.count = window.HET.signals.signal(0)`.
 - Acquired signals created from DOM values with `:seed` or `:sync` before `setup` runs.
