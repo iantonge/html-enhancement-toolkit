@@ -493,7 +493,6 @@ Support:
 
 ### Acquisition Strategies (`:seed`, `:sync`)
 
-This section is the full reference for acquisition clauses and type hints.
 Signal bindings can initialize from existing DOM values using acquisition clauses for some directives (see the acquisition support matrix below):
 
 - `:seed` initializes the signal once from the bound element.
