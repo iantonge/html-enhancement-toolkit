@@ -32,7 +32,7 @@ HET is probably not the right fit when you need:
 
 ### Using HET in your app
 
-HET is designed to work in a no-build workflow, but it also ships an ESM bundle. The repository builds browser-ready files into `dist/`; serve or copy one of those files into your application.
+HET is designed to work in a no-build workflow, but it also ships an ESM bundle. The repository builds browser-ready files into `dist/`; serve or copy one of those files into your application. Until package distribution is formalized, this README assumes direct use of those built files.
 
 - IIFE build (no-build): use `dist/het.iife.js` or the minified `dist/het.iife.min.js` (with optional sourcemap).
 - ESM build: use `dist/het.js` and import from the file path you serve.
@@ -65,6 +65,28 @@ init();
 ```
 
 The ESM build exports `init`, `destroy`, and `registerComponent`.
+
+### First enhanced page
+
+HET enhances normal links and forms. A link with `het-target` fetches its URL and replaces the matching `het-pane` from the response.
+
+```html
+<main het-pane="main" het-nav>
+  <h1>Dashboard</h1>
+  <a href="/reports" het-target="main">Reports</a>
+</main>
+```
+
+The response should include the same pane:
+
+```html
+<main het-pane="main" het-nav>
+  <h1>Reports</h1>
+  <a href="/dashboard" het-target="main">Dashboard</a>
+</main>
+```
+
+Because the pane has `het-nav`, HET also updates browser history for links and forms that target it.
 
 ## API reference
 
