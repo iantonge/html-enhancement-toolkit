@@ -518,7 +518,7 @@ Do not initialize an acquired signal manually in `setup`, import a signal with t
 
 Sync trigger behavior:
 - When using the bundled HET `init()`, HET dispatches `het:sync` after request content loads. This covers the target pane and any content updated through `het-also`.
-- If you use component behavior without HET request enhancement, no automatic sync event is dispatched.
+- If DOM changes happen outside HET request enhancement, no automatic sync event is dispatched.
 - You can manually dispatch `het:sync` on the smallest container that owns the component(s).
 
 ```js
