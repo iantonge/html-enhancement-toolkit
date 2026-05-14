@@ -11,7 +11,7 @@
   window.HET.registerComponent('het-on-invokes', () => {
     let count = 0;
     return {
-      increment: () => {
+      increment() {
         count += 1;
         document.getElementById('count-value').textContent = String(count);
       },

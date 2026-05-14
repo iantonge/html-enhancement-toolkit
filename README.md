@@ -398,7 +398,7 @@ window.HET.registerComponent('counter', () => ({
 }));
 ```
 
-Handlers are methods returned from `setup`. HET invokes them with the returned methods object as `this`, so use method syntax instead of arrow functions when one handler needs to call another through `this`.
+Handlers are methods returned from `setup`. Define handlers with method syntax by default. HET invokes them with the returned methods object as `this`, so method syntax keeps sibling method calls available if a handler needs them later.
 
 ```js
 window.HET.registerComponent('searchBox', () => ({

@@ -17,7 +17,7 @@
   window.HET.registerComponent('het-props-write-error', ({ refs, signals }) => {
     Object.defineProperty(refs.target, 'customValue', {
       configurable: true,
-      set: () => {
+      set() {
         throw new Error('HET test error: write failed');
       },
     });

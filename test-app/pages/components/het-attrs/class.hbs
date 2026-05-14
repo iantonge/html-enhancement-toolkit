@@ -12,10 +12,10 @@
   window.HET.registerComponent('het-class-basic', ({ signals }) => {
     signals.isActive = window.HET.signals.signal(false);
     return {
-      activate: () => {
+      activate() {
         signals.isActive.value = true;
       },
-      deactivate: () => {
+      deactivate() {
         signals.isActive.value = false;
       },
     };

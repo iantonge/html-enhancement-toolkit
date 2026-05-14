@@ -14,7 +14,7 @@
   window.HET.registerComponent('het-model-text', ({ signals }) => {
     signals.name = window.HET.signals.signal('Alpha');
     return {
-      setName: () => {
+      setName() {
         signals.name.value = 'Bravo';
       },
     };

@@ -14,12 +14,12 @@
     let count = 0;
 
     return {
-      dispatchCustomEvent: () => {
+      dispatchCustomEvent() {
         document
           .getElementById('custom-event-root')
           .dispatchEvent(new CustomEvent('het:beforeFetch', { bubbles: true }));
       },
-      onBeforeFetch: () => {
+      onBeforeFetch() {
         count += 1;
         document.getElementById('custom-event-count').textContent = String(count);
       },

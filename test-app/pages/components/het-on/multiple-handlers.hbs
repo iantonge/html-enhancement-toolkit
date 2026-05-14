@@ -22,11 +22,11 @@
       document.getElementById('count-b').textContent = String(countB);
     };
     return {
-      incrementA: () => {
+      incrementA() {
         countA += 1;
         render();
       },
-      incrementB: () => {
+      incrementB() {
         countB += 1;
         render();
       },

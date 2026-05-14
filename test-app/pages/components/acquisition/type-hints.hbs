@@ -22,13 +22,13 @@
 <script nonce="{{{cspNonce}}}">
   window.HET.registerComponent('acquisition-type-hints', ({ signals }) => {
     return {
-      incrementInt: () => {
+      incrementInt() {
         signals.intValue.value += 1;
       },
-      incrementFloat: () => {
+      incrementFloat() {
         signals.floatValue.value += 0.5;
       },
-      toggleBool: () => {
+      toggleBool() {
         signals.boolValue.value = !signals.boolValue.value;
       },
     };

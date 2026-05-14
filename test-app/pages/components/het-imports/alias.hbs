@@ -15,7 +15,7 @@
   window.HET.registerComponent('imports-alias-parent', ({ signals }) => {
     signals.count = window.HET.signals.signal(0);
     return {
-      increment: () => {
+      increment() {
         signals.count.value += 1;
       },
     };

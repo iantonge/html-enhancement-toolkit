@@ -16,10 +16,10 @@
   window.HET.registerComponent('het-bool-attrs-basic', ({ signals }) => {
     signals.isDisabled = window.HET.signals.signal(false);
     return {
-      disable: () => {
+      disable() {
         signals.isDisabled.value = true;
       },
-      enable: () => {
+      enable() {
         signals.isDisabled.value = false;
       },
     };

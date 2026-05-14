@@ -12,7 +12,7 @@
 </section>
 <script nonce="{{{cspNonce}}}">
   window.HET.registerComponent('acquisition-model-seed', ({ signals }) => ({
-    setFromSignal: () => {
+    setFromSignal() {
       signals.name.value = 'Updated';
     },
   }));

@@ -9,7 +9,7 @@
 </section>
 <script nonce="{{{cspNonce}}}">
   window.HET.registerComponent('het-on-invalid', () => ({
-    click: () => {},
+    click() {},
   }));
   window.addEventListener('load', () => {
     const message = window.hetErrors.at(-1);

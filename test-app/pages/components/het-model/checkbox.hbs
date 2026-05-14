@@ -17,7 +17,7 @@
   window.HET.registerComponent('het-model-checkbox', ({ signals }) => {
     signals.isDone = window.HET.signals.signal(false);
     return {
-      setDone: () => {
+      setDone() {
         signals.isDone.value = true;
       },
     };

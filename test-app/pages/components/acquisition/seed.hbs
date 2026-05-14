@@ -12,7 +12,7 @@
 <script nonce="{{{cspNonce}}}">
   window.HET.registerComponent('acquisition-seed', ({ signals }) => {
     return {
-      increment: () => {
+      increment() {
         signals.count.value += 1;
       },
     };
