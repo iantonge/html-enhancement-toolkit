@@ -139,8 +139,8 @@ Component bindings expect Preact signal objects. See the [Preact Signals documen
 Signals can come from three places:
 
 - Local signals you initialize in `setup`, such as `signals.count = window.HET.signals.signal(0)`.
-- Acquired signals created from DOM values with `:seed` or `:sync` before `setup` runs.
-- Imported signals declared with `het-imports`.
+- Acquired signals created from DOM values with `:seed` or `:sync` before `setup` runs. See [Acquisition Strategies (`:seed`, `:sync`)](#acquisition-strategies-seed-sync) for details.
+- Imported signals declared with `het-imports`. See [`het-exports` and `het-imports`](#het-exports-and-het-imports) for details.
 
 Initialize only the local signals your component owns. Do not initialize signals that are acquired from the DOM or imported from an ancestor.
 
