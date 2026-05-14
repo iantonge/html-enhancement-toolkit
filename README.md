@@ -569,8 +569,8 @@ HET progressively enhances both links and forms by replacing a named target pane
 | `het-pane` | Replaceable pane element | Pane name | No | Current document and response must each contain exactly one matching pane. |
 | `het-nav` | `het-pane` element | Boolean attribute | No | Enables browser history and configured `<head>` synchronization for that pane. |
 | `het-target` | Same-origin links, forms, submit buttons | Pane name | No | On forms, a submitter with `het-target` overrides the form value. |
-| `het-select` | Links, forms, submit buttons | Element id list | Yes | Replaces matching descendants inside the target pane. Submitter value overrides the form value. |
-| `het-also` | Links, forms, submit buttons | Element id list | Yes | Replaces matching elements outside the target pane. Submitter value overrides the form value. |
+| `het-select` | Links, forms, submit buttons | Element id list | Yes | Replaces matching descendants inside the target pane. On forms, a submitter with `het-select` overrides the form's `het-select` value. |
+| `het-also` | Links, forms, submit buttons | Element id list | Yes | Replaces matching elements outside the target pane. On forms, a submitter with `het-also` overrides the form's `het-also` value. |
 | `het-background` | Forms, submit buttons | Boolean attribute | No | Skips form disabling for that submission; the target pane is still marked busy. |
 
 ### Links
@@ -700,7 +700,7 @@ When an enhanced request starts, HET marks the target pane as busy and disables 
 - Sets `aria-busy="true"` on the target pane.
 - Adds a busy CSS class (default: `het-busy`, configurable via `busyClass`).
 - Disables `input`, `button`, `select`, and `textarea` elements inside the target pane.
-- If the request is initiated by a form submission, disables inputs for that form unless the form or submitter has `het-background`.
+- If the request is initiated by a form submission, disables controls for that form unless the form or submitter has `het-background`.
 
 When the request finishes (or is aborted), HET removes the busy markers and only re-enables controls that HET disabled for that specific request.
 
