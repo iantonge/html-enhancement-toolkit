@@ -101,7 +101,7 @@ HET is built around a few small primitives:
 - `het-component` mounts a small reactive component on existing HTML instead of taking over the whole page.
 - Signals hold component state. They can be created in `setup`, acquired from the DOM with `:seed` or `:sync`, or imported from an ancestor component.
 - `:seed` reads an initial value from the DOM once; `:sync` also reads again when a `het:sync` event is dispatched.
-- In full toolkit usage, request-driven content loads dispatch `het:sync` so components can reconcile server-updated DOM back into signals.
+- When using the bundled HET `init()`, request-driven content loads dispatch `het:sync` so components can reconcile server-updated DOM back into signals.
 
 ## Components
 
@@ -517,8 +517,8 @@ Do not initialize an acquired signal manually in `setup`, import a signal with t
 ```
 
 Sync trigger behavior:
-- In full toolkit usage (`requests` + `components`), HET dispatches `het:sync` after request content loads. This covers the target pane and any content updated through `het-also`.
-- In components-only usage, no automatic sync event is dispatched.
+- When using the bundled HET `init()`, HET dispatches `het:sync` after request content loads. This covers the target pane and any content updated through `het-also`.
+- If you use component behavior without HET request enhancement, no automatic sync event is dispatched.
 - You can manually dispatch `het:sync` on the smallest container that owns the component(s).
 
 ```js
