@@ -417,9 +417,37 @@ window.HET.registerComponent('counter', {
 });
 ```
 
-For example, `het-on="click=increment focus=handleFocus"` binds two events.
-
 Handlers are methods returned from `setup`. HET invokes them with the returned methods object as `this`, so use method syntax instead of arrow functions when one handler needs to call another through `this`.
+
+```js
+window.HET.registerComponent('searchBox', {
+  setup: () => ({
+    updateQuery: () => {
+      // Invalid: The `this` keyword is not bound in an arrow function,
+      // so calling `this.logChange()` will not work.
+      this.logChange();
+    },
+    logChange() {
+      // handle change
+    },
+  }),
+});
+```
+
+```js
+window.HET.registerComponent('searchBox', {
+  setup: () => ({
+    updateQuery() {
+      // Valid: The `this` keyword is bound when using the method syntax,
+      // so calling `this.logChange()` will do what you expect.
+      this.logChange();
+    },
+    logChange() {
+      // handle change
+    },
+  }),
+});
+```
 
 Support:
 
