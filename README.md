@@ -22,6 +22,7 @@ HET is probably not the right fit when you need:
 ## Contents
 
 - [Quick start](#quick-start)
+- [Core concepts](#core-concepts)
 - [Components](#components)
 - [Request enhancement](#request-enhancement)
 - [Component lifecycle notes](#component-lifecycle-notes)
@@ -87,6 +88,18 @@ The response should include the same pane:
 ```
 
 Because the pane has `het-nav`, HET also updates browser history for links and forms that target it.
+
+## Core concepts
+
+HET is built around a few small primitives:
+
+- `het-pane` marks a server-rendered region that can be replaced from an HTML response.
+- `het-target` opts a link, form, or submit button into enhanced requests and names the pane to update.
+- `het-nav` marks a pane whose enhanced requests should also update browser history and configured head content.
+- `het-component` mounts a small reactive component on existing HTML instead of taking over the whole page.
+- Signals hold component state. They can be created in `setup`, acquired from the DOM with `:seed` or `:sync`, or imported from an ancestor component.
+- `:seed` reads an initial value from the DOM once; `:sync` also reads again when a `het:sync` event is dispatched.
+- In full toolkit usage, request-driven content loads dispatch `het:sync` so components can reconcile server-updated DOM back into signals.
 
 ## Components
 
