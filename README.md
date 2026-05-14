@@ -200,6 +200,7 @@ HET does not provide styles for cloaked elements, so bring your own CSS. To pres
 Binding attributes connect an element property, attribute, class, model value, or event to a signal or component method using `target=source` declarations.
 For example, `het-props="textContent=count"` writes the `count` signal to the element's `textContent` property.
 Some binding attributes support multiple declarations in the same attribute, separated by whitespace.
+For example, `het-props="textContent=count title=label"` binds two properties from two signals.
 Some signal bindings can add an acquisition clause, such as `:seed` or `:sync`, to initialize a signal from the DOM.
 Some acquisition clauses can also add a type hint, such as `:seed[int]`.
 Each directive has its own support limits; see [Acquisition Strategies (`:seed`, `:sync`)](#acquisition-strategies-seed-sync) for the full reference.
