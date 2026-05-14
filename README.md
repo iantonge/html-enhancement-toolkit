@@ -120,7 +120,7 @@ window.HET.registerComponent('counter', {
     signals.count = window.HET.signals.signal(0);
 
     return {
-      increment: () => {
+      increment() {
         signals.count.value += 1;
       },
     };
@@ -246,7 +246,7 @@ window.HET.registerComponent('counter', {
   setup: ({ signals }) => {
     signals.count = window.HET.signals.signal(0);
     return {
-      increment: () => {
+      increment() {
         signals.count.value += 1;
       },
     };
@@ -279,7 +279,7 @@ window.HET.registerComponent('statusCard', {
   setup: ({ signals }) => {
     signals.status = window.HET.signals.signal('idle');
     return {
-      toggle: () => {
+      toggle() {
         signals.status.value = signals.status.value === 'idle' ? 'busy' : 'idle';
       },
     };
@@ -312,7 +312,7 @@ window.HET.registerComponent('lockInput', {
   setup: ({ signals }) => {
     signals.isDisabled = window.HET.signals.signal(false);
     return {
-      toggle: () => {
+      toggle() {
         signals.isDisabled.value = !signals.isDisabled.value;
       },
     };
@@ -345,7 +345,7 @@ window.HET.registerComponent('alertBox', {
   setup: ({ signals }) => {
     signals.isActive = window.HET.signals.signal(false);
     return {
-      toggle: () => {
+      toggle() {
         signals.isActive.value = !signals.isActive.value;
       },
     };
@@ -410,7 +410,7 @@ Use `het-on` to bind DOM events to methods returned from `setup`.
 ```js
 window.HET.registerComponent('counter', {
   setup: () => ({
-    increment: () => {
+    increment() {
       // handle click
     },
   }),
