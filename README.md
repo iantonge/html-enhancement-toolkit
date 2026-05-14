@@ -378,17 +378,17 @@ target=source:sync[bool]
 
 | Attribute | Role | Value shape | Multiple declarations | Notes |
 | --- | --- | --- | --- | --- |
-| `het-component` | Component root | Component name | No | Mounts the registered component with that name. |
-| `het-ref` | DOM ref | Ref name | No | Exposed on `setup({ refs })` for the owning component scope. |
-| `het-cloak` | Mount cloak | Boolean attribute | No | Removed after the component mount batch completes. |
-| `het-props` | Property binding | `property=signal` | Yes | Supports acquisition clauses. |
-| `het-attrs` | Attribute binding | `attribute=signal` | Yes | Supports acquisition clauses. |
-| `het-bool-attrs` | Boolean attribute binding | `attribute=signal` | Yes | Supports acquisition clauses, but not type hints. |
-| `het-class` | Class toggle binding | `class=signal` | Yes | Supports acquisition clauses, but not type hints. |
-| `het-model` | Two-way form binding | `signal` or `property=signal` | No | Supports `:seed`, but not `:sync`. |
-| `het-on` | Event binding | `event=method` | Yes | Does not support acquisition clauses or type hints. |
-| `het-exports` | Signal export list | `signal` | Yes | Whitespace-separated exported signal names. |
-| `het-imports` | Signal import list | `signal` or `local=source` | Yes | Imports from the nearest exporting ancestor. |
+| [`het-component`](#components) | Component root | Component name | No | Mounts the registered component with that name. |
+| [`het-ref`](#het-ref) | DOM ref | Ref name | No | Exposed on `setup({ refs })` for the owning component scope. |
+| [`het-cloak`](#het-cloak) | Mount cloak | Boolean attribute | No | Removed after the component mount batch completes. |
+| [`het-props`](#het-props) | Property binding | `property=signal` | Yes | Supports acquisition clauses. |
+| [`het-attrs`](#het-attrs) | Attribute binding | `attribute=signal` | Yes | Supports acquisition clauses. |
+| [`het-bool-attrs`](#het-bool-attrs) | Boolean attribute binding | `attribute=signal` | Yes | Supports acquisition clauses, but not type hints. |
+| [`het-class`](#het-class) | Class toggle binding | `class=signal` | Yes | Supports acquisition clauses, but not type hints. |
+| [`het-model`](#het-model) | Two-way form binding | `signal` or `property=signal` | No | Supports `:seed`, but not `:sync`. |
+| [`het-on`](#het-on) | Event binding | `event=method` | Yes | Does not support acquisition clauses or type hints. |
+| [`het-exports`](#het-exports-and-het-imports) | Signal export list | `signal` | Yes | Whitespace-separated exported signal names. |
+| [`het-imports`](#het-exports-and-het-imports) | Signal import list | `signal` or `local=source` | Yes | Imports from the nearest exporting ancestor. |
 
 ### `het-props`
 
