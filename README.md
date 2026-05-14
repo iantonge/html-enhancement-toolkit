@@ -935,5 +935,4 @@ Common scripts:
 | --- | --- |
 | `npm run build` | Build `dist/het.js`, `dist/het.iife.js`, and `dist/het.iife.min.js`. |
 | `npm run test-app` | Build HET and start the Express test app. |
-| `npm run samples-app` | Build HET and start the sample app. |
 | `npm run test` | Run the Playwright test suite. The Playwright config starts the test app automatically. |
