@@ -105,7 +105,7 @@ HET is built around a few small primitives:
 
 ## Components
 
-Register components before calling `init()`, then attach them with `het-component`.
+Register components before calling `init()`, then attach them with `het-component`. A component starts from existing HTML and wires small behavior onto it:
 
 ```html
 <div het-component="counter">
