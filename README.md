@@ -183,7 +183,7 @@ window.HET.registerComponent('profileForm', {
 Use `het-cloak` to hide a component root until a component mount batch completes,
 then HET removes the attribute automatically. This avoids uncloaking parents before
 their nested components have mounted, which helps prevent brief visual mismatch.
-Preserve layout by using `visibility: hidden`.
+HET does not provide styles for cloaked elements, so bring your own CSS. To preserve layout while a component is cloaked, use something like:
 
 ```html
 <style>
