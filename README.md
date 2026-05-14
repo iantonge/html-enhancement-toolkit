@@ -697,16 +697,12 @@ When using `X-HET-Target-Override`, it is usually safer to also clear selection 
 
 When an enhanced request starts, HET marks the target pane as busy and disables interactive controls inside that pane:
 
-- Sets `data-het-busy="<requestId>"` on the target pane.
 - Sets `aria-busy="true"` on the target pane.
 - Adds a busy CSS class (default: `het-busy`, configurable via `busyClass`).
 - Disables `input`, `button`, `select`, and `textarea` elements inside the target pane.
+- If the request is initiated by a form submission, disables inputs for that form unless the form or submitter has `het-background`.
 
 When the request finishes (or is aborted), HET removes the busy markers and only re-enables controls that HET disabled for that specific request.
-
-Form-specific addition:
-- HET also disables/enables controls associated to the form via the `form` attribute.
-- This form-disable behavior is skipped when the active submitter or form has `het-background`.
 
 After swapping content, HET honors the first `[autofocus]` in newly inserted content (target replacements first, then `het-also` replacements) and removes the attribute so it does not trigger again.
 
