@@ -572,9 +572,10 @@ Add `het-target="<pane-name>"` to a same-origin form to submit it with `fetch` a
 ```
 
 - HET respects native form defaults and submitter overrides: `formaction`, `formmethod`, `formenctype`, default `method`/`action`, and submitter name/value pairs.
+- HET submits `GET` forms as query strings and supports `application/x-www-form-urlencoded`, `multipart/form-data`, and `text/plain` request bodies for non-GET forms.
 - `het-target` on the clicked submit button overrides `het-target` on the form.
 - `het-select` and `het-also` on the clicked submit button override the form attributes.
-- Only same-origin form submissions are enhanced.
+- Do not put `het-target` on cross-origin form submissions; HET treats that as an error.
 - If `het-background` is present on the form or submitter, HET does not disable the form while the request is in flight. The target pane is still marked busy.
 
 ### Panes
