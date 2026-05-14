@@ -420,6 +420,8 @@ window.HET.registerComponent('counter', {
 
 For example, `het-on="click=increment focus=handleFocus"` binds two events.
 
+Handlers are methods returned from `setup`. HET invokes them with the returned methods object as `this`, so use method syntax instead of arrow functions when one handler needs to call another through `this`.
+
 Support:
 
 | Feature | Support |
