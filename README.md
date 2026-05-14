@@ -226,6 +226,7 @@ Note: Firefox does not yet support Trusted Types natively. A polyfill is availab
 Function to customize how HET swaps a matched element with its replacement.
 Default: replace the matched element with an imported clone of the response element.
 This is called for the target pane, `het-select` replacements, and `het-also` replacements.
+Return the element that remains in the document after the replacement. HET uses this returned element for autofocus handling and post-load lifecycle/sync behavior.
 
 We recommend using a DOM morphing library (such as Idiomorph) for smoother updates.
 
