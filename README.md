@@ -169,7 +169,7 @@ window.HET.init({
 
 #### `trustedTypesPolicy`
 
-Trusted Types policy object used to transform response HTML before parsing. Default: unset. If provided, HET calls `trustedTypesPolicy.createHTML(responseHtml)`.
+[Trusted Types](https://developer.mozilla.org/en-US/docs/Web/API/Trusted_Types_API) policy object used to transform response HTML before parsing. Default: unset. If provided, HET calls `trustedTypesPolicy.createHTML(responseHtml)`.
 
 [DOMPurify](https://github.com/cure53/DOMPurify) is a suitable sanitizer for this. If you use head updates, configure it to keep the document structure and allow head elements/attributes.
 
@@ -219,7 +219,7 @@ window.HET.init({
 });
 ```
 
-Note: Firefox does not yet support Trusted Types natively. A polyfill is available from <https://github.com/w3c/trusted-types>
+Note: Trusted Types is broadly available in current browsers as of February 2026, but may not be supported in older browsers. A polyfill is available from <https://github.com/w3c/trusted-types>
 
 #### `replaceContent`
 
