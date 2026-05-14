@@ -258,7 +258,7 @@ Support:
 
 | Feature | Support |
 | --- | --- |
-| Multiple declarations | Yes, whitespace-separated |
+| Multiple declarations | Yes |
 | [Acquisition](#acquisition-strategies-seed-sync) | `:seed`, `:sync` |
 | [Type hints](#type-hints) | Yes |
 
@@ -291,7 +291,7 @@ Support:
 
 | Feature | Support |
 | --- | --- |
-| Multiple declarations | Yes, whitespace-separated |
+| Multiple declarations | Yes |
 | [Acquisition](#acquisition-strategies-seed-sync) | `:seed`, `:sync` |
 | [Type hints](#type-hints) | Yes |
 
@@ -324,7 +324,7 @@ Support:
 
 | Feature | Support |
 | --- | --- |
-| Multiple declarations | Yes, whitespace-separated |
+| Multiple declarations | Yes |
 | [Acquisition](#acquisition-strategies-seed-sync) | `:seed`, `:sync` |
 | [Type hints](#type-hints) | No |
 
@@ -357,7 +357,7 @@ Support:
 
 | Feature | Support |
 | --- | --- |
-| Multiple declarations | Yes, whitespace-separated |
+| Multiple declarations | Yes |
 | [Acquisition](#acquisition-strategies-seed-sync) | `:seed`, `:sync` |
 | [Type hints](#type-hints) | No |
 
@@ -425,7 +425,7 @@ Support:
 
 | Feature | Support |
 | --- | --- |
-| Multiple declarations | Yes, whitespace-separated |
+| Multiple declarations | Yes |
 | [Acquisition](#acquisition-strategies-seed-sync) | No (`:seed`/`:sync` are invalid) |
 | [Type hints](#type-hints) | No |
 
@@ -459,7 +459,7 @@ Support:
 
 | Feature | Support |
 | --- | --- |
-| Multiple declarations | Yes, whitespace-separated |
+| Multiple declarations | Yes |
 | [Acquisition](#acquisition-strategies-seed-sync) | No |
 | [Type hints](#type-hints) | No |
 
