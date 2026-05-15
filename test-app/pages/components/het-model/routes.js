@@ -38,4 +38,10 @@ router.get('/invalid-expression-extra-equals', (request, response) => {
   });
 });
 
+router.get('/invalid-negation', (request, response) => {
+  response.render('components/het-model/invalid-negation', {
+    title: 'Invalid negation',
+  });
+});
+
 export default router;

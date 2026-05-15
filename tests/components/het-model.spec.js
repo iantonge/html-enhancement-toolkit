@@ -59,4 +59,11 @@ test.describe('components het-model', () => {
       "HET Error: Invalid expression 'name=first=second'",
     );
   });
+
+  test('reports error when negation is used with het-model', async ({ page }) => {
+    await page.goto('/components/het-model/invalid-negation');
+    await expect(page.locator('#error-message')).toHaveText(
+      "HET Error: Negation unsupported for het-model: '!name'",
+    );
+  });
 });

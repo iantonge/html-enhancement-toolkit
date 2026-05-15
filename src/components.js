@@ -26,6 +26,7 @@ const DIRECTIVES = [
     allowMultiple: true,
     allowTypeHint: true,
     allowSync: true,
+    allowNegation: true,
     read: (el, key) => {
       return el[key];
     },
@@ -40,6 +41,7 @@ const DIRECTIVES = [
     allowMultiple: true,
     allowTypeHint: true,
     allowSync: true,
+    allowNegation: true,
     read: (el, key) => {
       return el.getAttribute(key);
     },
@@ -54,6 +56,7 @@ const DIRECTIVES = [
     allowMultiple: true,
     allowTypeHint: false,
     allowSync: true,
+    allowNegation: true,
     read: (el, key) => {
       return el.hasAttribute(key);
     },
@@ -72,6 +75,7 @@ const DIRECTIVES = [
     allowMultiple: true,
     allowTypeHint: false,
     allowSync: true,
+    allowNegation: true,
     read: (el, key) => {
       return el.classList.contains(key);
     },
@@ -324,10 +328,13 @@ function getParsedBindingDeclarations(directive, el) {
     } else {
       throw new Error(`HET Error: Invalid expression '${declaration}'`);
     }
+    const { negated, sourceWithAcquisition: parsedSourceWithAcquisition } =
+      getNegationAndSource(directive, declaration, sourceWithAcquisition);
     const { source, parsedAcquisition } = getSourceAndAcquisition(
       directive,
       declaration,
-      sourceWithAcquisition,
+      parsedSourceWithAcquisition,
+      negated,
     );
 
     const parsedBinding = {
@@ -335,6 +342,7 @@ function getParsedBindingDeclarations(directive, el) {
       el,
       key,
       source,
+      negated,
       sourceType: directive.sourceType,
       read: directive.read,
       write: directive.write,
@@ -346,7 +354,31 @@ function getParsedBindingDeclarations(directive, el) {
   });
 }
 
-function getSourceAndAcquisition(directive, declaration, sourceWithAcquisition) {
+function getNegationAndSource(directive, declaration, sourceWithAcquisition) {
+  if (!sourceWithAcquisition.startsWith('!')) {
+    return { negated: false, sourceWithAcquisition };
+  }
+
+  if (!directive.allowNegation) {
+    throw new Error(
+      `HET Error: Negation unsupported for ${directive.name}: '${declaration}'`,
+    );
+  }
+
+  const parsedSource = sourceWithAcquisition.slice(1);
+  if (!parsedSource) {
+    throw new Error(`HET Error: Invalid declaration '${declaration}'`);
+  }
+
+  return { negated: true, sourceWithAcquisition: parsedSource };
+}
+
+function getSourceAndAcquisition(
+  directive,
+  declaration,
+  sourceWithAcquisition,
+  negated,
+) {
   const separatorCount = (sourceWithAcquisition.match(/:/g) || []).length;
   if (separatorCount === 0) {
     return {
@@ -357,6 +389,12 @@ function getSourceAndAcquisition(directive, declaration, sourceWithAcquisition) 
 
   if (separatorCount > 1) {
     throw new Error(`HET Error: Invalid declaration '${declaration}'`);
+  }
+
+  if (negated) {
+    throw new Error(
+      `HET Error: Negation cannot be used with acquisition in '${declaration}'`,
+    );
   }
 
   const [source, acquisitionClause] = sourceWithAcquisition.split(':');
@@ -443,7 +481,11 @@ function configureSignalBinding(ctx, binding) {
           `HET Error: Attempting to bind signal ${binding.source} but it does not exist`,
         );
       }
-      binding.write(binding.el, binding.key, currentSignal.value);
+      binding.write(
+        binding.el,
+        binding.key,
+        getBindingWriteValue(binding, currentSignal),
+      );
     } catch (error) {
       onError(error);
     }
@@ -679,8 +721,16 @@ function reapplySignalBindings(instance) {
     if (!binding.el?.isConnected) continue;
     const currentSignal = instance.signals[binding.source];
     if (!currentSignal) continue;
-    binding.write(binding.el, binding.key, currentSignal.value);
+    binding.write(
+      binding.el,
+      binding.key,
+      getBindingWriteValue(binding, currentSignal),
+    );
   }
+}
+
+function getBindingWriteValue(binding, signalRef) {
+  return binding.negated ? !signalRef.value : signalRef.value;
 }
 
 function syncImportedSignals(rootEl, instance) {

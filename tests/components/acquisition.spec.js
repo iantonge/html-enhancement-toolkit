@@ -61,6 +61,13 @@ test.describe('components acquisition strategies and type hints', () => {
     );
   });
 
+  test('reports error when negation is used with acquisition', async ({ page }) => {
+    await page.goto('/components/acquisition/invalid-negation');
+    await expect(page.locator('#error-message')).toHaveText(
+      "HET Error: Negation cannot be used with acquisition in 'textContent=!isEnabled:seed[bool]'",
+    );
+  });
+
   test('reports error when type hint is unsupported for a directive', async ({ page }) => {
     await page.goto('/components/acquisition/type-hint-unsupported');
     await expect(page.locator('#error-message')).toHaveText(

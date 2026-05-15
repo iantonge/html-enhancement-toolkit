@@ -47,4 +47,11 @@ test.describe('components het-on', () => {
       "HET Error: Invalid expression 'click=increment=increment'",
     );
   });
+
+  test('reports error when negation is used with het-on', async ({ page }) => {
+    await page.goto('/components/het-on/invalid-negation');
+    await expect(page.locator('#error-message')).toHaveText(
+      "HET Error: Negation unsupported for het-on: 'click=!increment'",
+    );
+  });
 });

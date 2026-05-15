@@ -195,6 +195,8 @@ Binding attributes connect an element property, attribute, class, model value, o
 For example, `het-props="textContent=count"` writes the `count` signal to the element's `textContent` property.
 Some binding attributes support multiple declarations in the same attribute, separated by whitespace.
 For example, `het-props="textContent=count title=label"` binds two properties from two signals.
+Some signal bindings support negation with `!`, which applies JavaScript boolean negation before writing to the DOM.
+For example, `het-attrs="aria-expanded=!isCollapsed"` writes `"false"` when `isCollapsed` is truthy.
 Some signal bindings can add an acquisition clause, such as `:seed` or `:sync`, to initialize a signal from the DOM.
 Some acquisition clauses can also add a type hint, such as `:seed[int]`.
 Each directive has its own support limits; see [Acquisition Strategies (`:seed`, `:sync`)](#acquisition-strategies-seed-sync) for the full reference.
@@ -203,25 +205,28 @@ General forms:
 
 ```text
 target=source
+target=!source
 target=source:seed
 target=source:sync[bool]
 ```
 
+Negation and acquisition cannot be combined in the same declaration.
+
 ### Component attribute support
 
-| Attribute | Role | Value shape | Multiple declarations | Notes |
-| --- | --- | --- | --- | --- |
-| [`het-component`](#components) | Component root | Component name | No | Mounts the registered component with that name. |
-| [`het-ref`](#het-ref) | DOM ref | Ref name | No | Exposed on `setup({ refs })` for the owning component scope. |
-| [`het-cloak`](#het-cloak) | Mount cloak | Boolean attribute | No | Removed after the component mount batch completes. |
-| [`het-props`](#het-props) | Property binding | `property=signal` | Yes | Supports acquisition clauses. |
-| [`het-attrs`](#het-attrs) | Attribute binding | `attribute=signal` | Yes | Supports acquisition clauses. |
-| [`het-bool-attrs`](#het-bool-attrs) | Boolean attribute binding | `attribute=signal` | Yes | Supports acquisition clauses, but not type hints. |
-| [`het-class`](#het-class) | Class toggle binding | `class=signal` | Yes | Supports acquisition clauses, but not type hints. |
-| [`het-model`](#het-model) | Two-way form binding | `signal` or `property=signal` | No | Supports `:seed`, but not `:sync`. |
-| [`het-on`](#het-on) | Event binding | `event=method` | Yes | Does not support acquisition clauses or type hints. |
-| [`het-exports`](#het-exports-and-het-imports) | Signal export list | `signal` | Yes | Whitespace-separated exported signal names. |
-| [`het-imports`](#het-exports-and-het-imports) | Signal import list | `signal` or `local=source` | Yes | Imports from the nearest exporting ancestor. |
+| Attribute | Role | Value shape | Multiple declarations | Acquisition | Type hints | Negation | Notes |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| [`het-component`](#components) | Component root | Component name | No | No | No | No | Mounts the registered component with that name. |
+| [`het-ref`](#het-ref) | DOM ref | Ref name | No | No | No | No | Exposed on `setup({ refs })` for the owning component scope. |
+| [`het-cloak`](#het-cloak) | Mount cloak | Boolean attribute | No | No | No | No | Removed after the component mount batch completes. |
+| [`het-props`](#het-props) | Property binding | `property=signal` | Yes | `:seed`, `:sync` | Yes | Yes | - |
+| [`het-attrs`](#het-attrs) | Attribute binding | `attribute=signal` | Yes | `:seed`, `:sync` | Yes | Yes | - |
+| [`het-bool-attrs`](#het-bool-attrs) | Boolean attribute binding | `attribute=signal` | Yes | `:seed`, `:sync` | No | Yes | - |
+| [`het-class`](#het-class) | Class toggle binding | `class=signal` | Yes | `:seed`, `:sync` | No | Yes | - |
+| [`het-model`](#het-model) | Two-way form binding | `signal` or `property=signal` | No | `:seed` only | Yes | No | `:sync` is invalid. |
+| [`het-on`](#het-on) | Event binding | `event=method` | Yes | No | No | No | Binds methods returned from `setup`. |
+| [`het-exports`](#het-exports-and-het-imports) | Signal export list | `signal` | Yes | No | No | No | Whitespace-separated exported signal names. |
+| [`het-imports`](#het-exports-and-het-imports) | Signal import list | `signal` or `local=source` | Yes | No | No | No | Imports from the nearest exporting ancestor. |
 
 ### `het-props`
 
@@ -251,6 +256,7 @@ Support:
 | Feature | Support |
 | --- | --- |
 | Multiple declarations | Yes |
+| Negation | Yes |
 | [Acquisition](#acquisition-strategies-seed-sync) | `:seed`, `:sync` |
 | [Type hints](#type-hints) | Yes |
 
@@ -282,6 +288,7 @@ Support:
 | Feature | Support |
 | --- | --- |
 | Multiple declarations | Yes |
+| Negation | Yes |
 | [Acquisition](#acquisition-strategies-seed-sync) | `:seed`, `:sync` |
 | [Type hints](#type-hints) | Yes |
 
@@ -313,6 +320,7 @@ Support:
 | Feature | Support |
 | --- | --- |
 | Multiple declarations | Yes |
+| Negation | Yes |
 | [Acquisition](#acquisition-strategies-seed-sync) | `:seed`, `:sync` |
 | [Type hints](#type-hints) | No |
 
@@ -344,6 +352,7 @@ Support:
 | Feature | Support |
 | --- | --- |
 | Multiple declarations | Yes |
+| Negation | Yes |
 | [Acquisition](#acquisition-strategies-seed-sync) | `:seed`, `:sync` |
 | [Type hints](#type-hints) | No |
 
@@ -377,6 +386,7 @@ Support:
 | Feature | Support |
 | --- | --- |
 | Multiple declarations | No, one declaration per attribute |
+| Negation | No |
 | [Acquisition](#acquisition-strategies-seed-sync) | `:seed` only (`:sync` is invalid) |
 | [Type hints](#type-hints) | Yes |
 
@@ -431,6 +441,7 @@ Support:
 | Feature | Support |
 | --- | --- |
 | Multiple declarations | Yes |
+| Negation | No |
 | [Acquisition](#acquisition-strategies-seed-sync) | No (`:seed`/`:sync` are invalid) |
 | [Type hints](#type-hints) | No |
 
@@ -465,6 +476,7 @@ Support:
 | Feature | Support |
 | --- | --- |
 | Multiple declarations | Yes |
+| Negation | No |
 | [Acquisition](#acquisition-strategies-seed-sync) | No |
 | [Type hints](#type-hints) | No |
 
@@ -525,13 +537,13 @@ Type hints can be applied to acquisition values for some directives (see the acq
 
 Acquisition support matrix:
 
-| Directive | `:seed` | `:sync` | Type hints |
-| --- | --- | --- | --- |
-| `het-props` | Yes | Yes | Yes |
-| `het-attrs` | Yes | Yes | Yes |
-| `het-bool-attrs` | Yes | Yes | No |
-| `het-class` | Yes | Yes | No |
-| `het-model` | Yes | No | Yes |
+| Directive | `:seed` | `:sync` | Type hints | Negation |
+| --- | --- | --- | --- | --- |
+| `het-props` | Yes | Yes | Yes | Yes |
+| `het-attrs` | Yes | Yes | Yes | Yes |
+| `het-bool-attrs` | Yes | Yes | No | Yes |
+| `het-class` | Yes | Yes | No | Yes |
+| `het-model` | Yes | No | Yes | No |
 
 `het-component`, `het-ref`, `het-cloak`, `het-on`, `het-exports`, and `het-imports` do not use acquisition syntax.
 

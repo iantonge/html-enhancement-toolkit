@@ -1,0 +1,40 @@
+<section class="card shadow-sm border-0">
+  <div class="card-body">
+    <h1 class="h4 mb-3">{{title}}</h1>
+    <div het-component="het-attrs-negation">
+      <button id="expand-panel" type="button" het-on="click=expand">Expand</button>
+      <button id="disable-input" type="button" het-on="click=disable">Disable</button>
+      <button id="activate-panel" type="button" het-on="click=activate">Activate</button>
+      <p
+        id="attr-negation-target"
+        het-attrs="aria-expanded=!isCollapsed"
+        class="mb-2 text-muted">
+        Panel
+      </p>
+      <input
+        id="bool-attr-negation-target"
+        het-bool-attrs="disabled=!isEnabled"
+        class="form-control mb-2"
+        value="editable">
+      <div id="class-negation-target" het-class="active=!isInactive">Class target</div>
+    </div>
+  </div>
+</section>
+<script nonce="{{{cspNonce}}}">
+  window.HET.registerComponent('het-attrs-negation', ({ signals }) => {
+    signals.isCollapsed = window.HET.signals.signal(true);
+    signals.isEnabled = window.HET.signals.signal(true);
+    signals.isInactive = window.HET.signals.signal(true);
+    return {
+      expand() {
+        signals.isCollapsed.value = false;
+      },
+      disable() {
+        signals.isEnabled.value = false;
+      },
+      activate() {
+        signals.isInactive.value = false;
+      },
+    };
+  });
+</script>

@@ -26,4 +26,10 @@ router.get('/class', (request, response) => {
   });
 });
 
+router.get('/negation', (request, response) => {
+  response.render('components/het-attrs/negation', {
+    title: 'Negation',
+  });
+});
+
 export default router;

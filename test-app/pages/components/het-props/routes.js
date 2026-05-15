@@ -14,6 +14,12 @@ router.get('/binds-signal', (request, response) => {
   });
 });
 
+router.get('/negation', (request, response) => {
+  response.render('components/het-props/negation', {
+    title: 'Negation',
+  });
+});
+
 router.get('/missing-signal', (request, response) => {
   response.render('components/het-props/missing-signal', {
     title: 'Missing signal',

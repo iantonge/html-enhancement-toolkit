@@ -44,6 +44,12 @@ router.get('/invalid-multiple-colons', (request, response) => {
   });
 });
 
+router.get('/invalid-negation', (request, response) => {
+  response.render('components/acquisition/invalid-negation', {
+    title: 'Invalid negation',
+  });
+});
+
 router.get('/type-hint-unsupported', (request, response) => {
   response.render('components/acquisition/type-hint-unsupported', {
     title: 'Type hint unsupported',
