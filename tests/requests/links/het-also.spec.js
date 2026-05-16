@@ -25,7 +25,7 @@ test.describe('link het-also', () => {
     await page.click('#missing-current-link');
     await page.waitForFunction(() =>
       window.hetErrors.includes(
-        'HET error: Element with id missing-current not found in current document',
+        'HET Error: het-also element not found on the page',
       ),
     );
   });
@@ -35,7 +35,7 @@ test.describe('link het-also', () => {
     await page.click('#missing-response-link');
     await page.waitForFunction(() =>
       window.hetErrors.includes(
-        'HET error: Element with id sidebar not found in server response',
+        'HET Error: het-also element not found in the server response',
       ),
     );
   });
@@ -45,7 +45,7 @@ test.describe('link het-also', () => {
     await page.click('#inside-target-link');
     await page.waitForFunction(() =>
       window.hetErrors.includes(
-        'HET error: het-also id inside-target must refer to an element outside the target',
+        'HET Error: het-also element found inside the target pane on the page',
       ),
     );
   });
@@ -55,7 +55,7 @@ test.describe('link het-also', () => {
     await page.click('#inside-response-link');
     await page.waitForFunction(() =>
       window.hetErrors.includes(
-        'HET error: het-also id sidebar must refer to an element outside the target in server response',
+        'HET Error: het-also element found inside the target pane in the server response',
       ),
     );
   });

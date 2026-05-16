@@ -23,35 +23,49 @@ test.describe('components het-on', () => {
   test('reports error when method is missing', async ({ page }) => {
     await page.goto('/components/het-on/missing-method');
     await expect(page.locator('#error-message')).toHaveText(
-      'HET Error: Missing method "doesNotExist"',
+      'HET Error: Missing component method',
     );
+    const cause = await page.evaluate(() => ({
+      componentName: window.hetLastError.cause.componentName,
+      bindingAttribute: window.hetLastError.cause.bindingAttribute,
+      bindingDeclaration: window.hetLastError.cause.bindingDeclaration,
+      bindingElementId: window.hetLastError.cause.bindingElement.id,
+      methodName: window.hetLastError.cause.methodName,
+    }));
+    expect(cause).toEqual({
+      componentName: 'het-on-missing',
+      bindingAttribute: 'het-on',
+      bindingDeclaration: 'click=doesNotExist',
+      bindingElementId: 'missing-method-button',
+      methodName: 'doesNotExist',
+    });
   });
 
   test('reports error for invalid het-on expression', async ({ page }) => {
     await page.goto('/components/het-on/invalid-expression');
     await expect(page.locator('#error-message')).toHaveText(
-      "HET Error: Invalid expression 'click'",
+      'HET Error: Invalid binding expression',
     );
   });
 
   test('reports error for empty het-on method expression', async ({ page }) => {
     await page.goto('/components/het-on/invalid-expression-empty-method');
     await expect(page.locator('#error-message')).toHaveText(
-      "HET Error: Invalid expression 'click='",
+      'HET Error: Invalid binding expression',
     );
   });
 
   test('reports error for extra equals in het-on expression', async ({ page }) => {
     await page.goto('/components/het-on/invalid-expression-extra-equals');
     await expect(page.locator('#error-message')).toHaveText(
-      "HET Error: Invalid expression 'click=increment=increment'",
+      'HET Error: Invalid binding expression',
     );
   });
 
   test('reports error when negation is used with het-on', async ({ page }) => {
     await page.goto('/components/het-on/invalid-negation');
     await expect(page.locator('#error-message')).toHaveText(
-      "HET Error: Negation unsupported for het-on: 'click=!increment'",
+      'HET Error: Unsupported negation',
     );
   });
 });

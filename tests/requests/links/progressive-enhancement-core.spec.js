@@ -1,18 +1,30 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('link progressive enhancement (core)', () => {
-  test('throws on external link with het-target', async ({ page }) => {
+  test('throws on cross-origin link with het-target', async ({ page }) => {
     await page.goto('/requests/links/progressive-enhancement-core/external');
     await page.click('#link');
     await page.waitForFunction(() =>
       window.hetErrors.includes(
-        'HET error: Cannot progressively enhance external links',
+        'HET Error: Cross-origin links cannot be progressively enhanced',
       ),
     );
     const errors = await page.evaluate(() => window.hetErrors);
     expect(errors).toContain(
-      'HET error: Cannot progressively enhance external links',
+      'HET Error: Cross-origin links cannot be progressively enhanced',
     );
+    const cause = await page.evaluate(() => ({
+      linkElementId: window.hetLastError.cause.linkElement.id,
+      linkUrl: window.hetLastError.cause.linkUrl,
+      linkTargetName: window.hetLastError.cause.linkTargetName,
+      resolvedTargetName: window.hetLastError.cause.resolvedTargetName,
+    }));
+    expect(cause).toEqual({
+      linkElementId: 'link',
+      linkUrl: 'https://example.com/',
+      linkTargetName: 'main',
+      resolvedTargetName: 'main',
+    });
   });
 
   test('throws on internal link with target attribute', async ({ page }) => {
@@ -20,12 +32,12 @@ test.describe('link progressive enhancement (core)', () => {
     await page.click('#link');
     await page.waitForFunction(() =>
       window.hetErrors.includes(
-        'HET error: Cannot progressively enhance links with target attribute',
+        'HET Error: Links with a target attribute cannot be progressively enhanced',
       ),
     );
     const errors = await page.evaluate(() => window.hetErrors);
     expect(errors).toContain(
-      'HET error: Cannot progressively enhance links with target attribute',
+      'HET Error: Links with a target attribute cannot be progressively enhanced',
     );
   });
 
@@ -34,12 +46,12 @@ test.describe('link progressive enhancement (core)', () => {
     await page.click('#link');
     await page.waitForFunction(() =>
       window.hetErrors.includes(
-        'HET error: No pane named missing found in current document',
+        'HET Error: Target pane not found on the page',
       ),
     );
     const errors = await page.evaluate(() => window.hetErrors);
     expect(errors).toContain(
-      'HET error: No pane named missing found in current document',
+      'HET Error: Target pane not found on the page',
     );
   });
 
@@ -60,13 +72,29 @@ test.describe('link progressive enhancement (core)', () => {
     await page.click('#link');
     await page.waitForFunction(() =>
       window.hetErrors.includes(
-        'HET error: No pane named main found in server response',
+        'HET Error: Target pane not found in server response',
       ),
     );
     const errors = await page.evaluate(() => window.hetErrors);
     expect(errors).toContain(
-      'HET error: No pane named main found in server response',
+      'HET Error: Target pane not found in server response',
     );
+    const cause = await page.evaluate(() => ({
+      linkElementId: window.hetLastError.cause.linkElement.id,
+      linkTargetName: window.hetLastError.cause.linkTargetName,
+      resolvedTargetName: window.hetLastError.cause.resolvedTargetName,
+      targetPane: window.hetLastError.cause.targetPaneElement.getAttribute('het-pane'),
+      requestUrl: window.hetLastError.cause.requestUrl,
+      requestMethod: window.hetLastError.cause.requestMethod,
+    }));
+    expect(cause).toEqual({
+      linkElementId: 'link',
+      linkTargetName: 'main',
+      resolvedTargetName: 'main',
+      targetPane: 'main',
+      requestUrl: 'http://127.0.0.1:3000/requests/links/progressive-enhancement-core/responses/no-target',
+      requestMethod: 'GET',
+    });
   });
 
   test('throws when response includes duplicate target panes', async ({
@@ -76,12 +104,12 @@ test.describe('link progressive enhancement (core)', () => {
     await page.click('#link');
     await page.waitForFunction(() =>
       window.hetErrors.includes(
-        'HET error: Multiple panes named main found in server response',
+        'HET Error: Multiple target panes found in server response',
       ),
     );
     const errors = await page.evaluate(() => window.hetErrors);
     expect(errors).toContain(
-      'HET error: Multiple panes named main found in server response',
+      'HET Error: Multiple target panes found in server response',
     );
   });
 
@@ -140,12 +168,12 @@ test.describe('link progressive enhancement (core)', () => {
     await page.click('#link');
     await page.waitForFunction(() =>
       window.hetErrors.includes(
-        'HET error: Multiple panes named main found in current document',
+        'HET Error: Multiple target panes found on the page',
       ),
     );
     const errors = await page.evaluate(() => window.hetErrors);
     expect(errors).toContain(
-      'HET error: Multiple panes named main found in current document',
+      'HET Error: Multiple target panes found on the page',
     );
   });
 });

@@ -50,6 +50,18 @@ router.get('/invalid-negation', (request, response) => {
   });
 });
 
+router.get('/empty-negation', (request, response) => {
+  response.render('components/acquisition/empty-negation', {
+    title: 'Empty negation',
+  });
+});
+
+router.get('/incomplete-acquisition', (request, response) => {
+  response.render('components/acquisition/incomplete-acquisition', {
+    title: 'Incomplete acquisition',
+  });
+});
+
 router.get('/type-hint-unsupported', (request, response) => {
   response.render('components/acquisition/type-hint-unsupported', {
     title: 'Type hint unsupported',

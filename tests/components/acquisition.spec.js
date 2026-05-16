@@ -43,63 +43,121 @@ test.describe('components acquisition strategies and type hints', () => {
   test('reports error when :sync is used on het-model', async ({ page }) => {
     await page.goto('/components/acquisition/invalid-sync-model');
     await expect(page.locator('#error-message')).toHaveText(
-      "HET error: 'het-model' does not support :sync in 'count:sync'",
+      'HET Error: Directive does not support sync acquisition',
     );
   });
 
   test('reports error when the same seeded signal is declared twice', async ({ page }) => {
     await page.goto('/components/acquisition/duplicate-seed-signal');
     await expect(page.locator('#error-message')).toHaveText(
-      'HET Error: Attempting to seed initial value for signal count but it already exists',
+      'HET Error: Duplicate signal initialization',
     );
+    const cause = await page.evaluate(() => ({
+      componentName: window.hetLastError.cause.componentName,
+      signalName: window.hetLastError.cause.signalName,
+      bindingAttribute: window.hetLastError.cause.bindingAttribute,
+      bindingDeclaration: window.hetLastError.cause.bindingDeclaration,
+      bindingElementText: window.hetLastError.cause.bindingElement.textContent.trim(),
+      existingBindingAttribute: window.hetLastError.cause.existingBindingAttribute,
+      existingBindingDeclaration: window.hetLastError.cause.existingBindingDeclaration,
+      existingBindingElementText: window.hetLastError.cause.existingBindingElement.textContent.trim(),
+    }));
+    expect(cause).toEqual({
+      componentName: 'acquisition-duplicate-seed',
+      signalName: 'count',
+      bindingAttribute: 'het-props',
+      bindingDeclaration: 'textContent=count:seed[int]',
+      bindingElementText: '2',
+      existingBindingAttribute: 'het-props',
+      existingBindingDeclaration: 'textContent=count:seed[int]',
+      existingBindingElementText: '1',
+    });
   });
 
   test('reports error for declarations with multiple colons', async ({ page }) => {
     await page.goto('/components/acquisition/invalid-multiple-colons');
     await expect(page.locator('#error-message')).toHaveText(
-      "HET Error: Invalid declaration 'textContent=count:seed:int'",
+      'HET Error: Binding declaration has too many ":" characters',
     );
   });
 
   test('reports error when negation is used with acquisition', async ({ page }) => {
     await page.goto('/components/acquisition/invalid-negation');
     await expect(page.locator('#error-message')).toHaveText(
-      "HET Error: Negation cannot be used with acquisition in 'textContent=!isEnabled:seed[bool]'",
+      'HET Error: Negation cannot be used with acquisition',
     );
+  });
+
+  test('reports error when negation has no signal name', async ({ page }) => {
+    await page.goto('/components/acquisition/empty-negation');
+    await expect(page.locator('#error-message')).toHaveText(
+      'HET Error: Negation requires a signal name',
+    );
+    const cause = await page.evaluate(() => ({
+      componentName: window.hetLastError.cause.componentName,
+      bindingAttribute: window.hetLastError.cause.bindingAttribute,
+      bindingDeclaration: window.hetLastError.cause.bindingDeclaration,
+      bindingElementId: window.hetLastError.cause.bindingElement.id,
+    }));
+    expect(cause).toEqual({
+      componentName: 'acquisition-empty-negation',
+      bindingAttribute: 'het-props',
+      bindingDeclaration: 'hidden=!',
+      bindingElementId: 'empty-negation-value',
+    });
+  });
+
+  test('reports error for incomplete acquisition clauses', async ({ page }) => {
+    await page.goto('/components/acquisition/incomplete-acquisition');
+    await expect(page.locator('#error-message')).toHaveText(
+      'HET Error: Binding declaration has an incomplete acquisition clause',
+    );
+    const cause = await page.evaluate(() => ({
+      componentName: window.hetLastError.cause.componentName,
+      bindingAttribute: window.hetLastError.cause.bindingAttribute,
+      bindingDeclaration: window.hetLastError.cause.bindingDeclaration,
+      bindingElementId: window.hetLastError.cause.bindingElement.id,
+    }));
+    expect(cause).toEqual({
+      componentName: 'acquisition-incomplete',
+      bindingAttribute: 'het-props',
+      bindingDeclaration: 'textContent=count:',
+      bindingElementId: 'incomplete-acquisition-value',
+    });
   });
 
   test('reports error when type hint is unsupported for a directive', async ({ page }) => {
     await page.goto('/components/acquisition/type-hint-unsupported');
     await expect(page.locator('#error-message')).toHaveText(
-      "HET Error: Type hints unsupported for het-class: 'active=isActive:seed[int]'",
+      'HET Error: Directive does not support type hints',
     );
   });
 
   test('reports error for unknown type hint', async ({ page }) => {
     await page.goto('/components/acquisition/unknown-type-hint');
     await expect(page.locator('#error-message')).toHaveText(
-      "HET Error: Type hint 'string' not recognised in 'textContent=name:seed[string]'",
+      'HET Error: Type hint is not recognised. Expected type hints are "int", "bool" or "float"',
     );
   });
 
   test('reports error for unknown acquisition strategy', async ({ page }) => {
     await page.goto('/components/acquisition/unknown-strategy');
     await expect(page.locator('#error-message')).toHaveText(
-      "HET Error: Acquisition strategy 'synchronize' not recognised in 'textContent=name:synchronize[int]'",
+      'HET Error: Acquisition strategy is not recognised. Expected acquisition strategies are "seed" or "sync"',
     );
   });
 
   test('reports error when acquisition clause is used on non-readable directive', async ({ page }) => {
     await page.goto('/components/acquisition/acquisition-not-supported');
     await expect(page.locator('#error-message')).toHaveText(
-      "HET Error: Acquisition clause not supported in binding declaration 'click=increment:seed'",
+      'HET Error: Directive does not support acquisition clauses',
     );
   });
 
   test('reports error when a signal is reassigned after initialization', async ({ page }) => {
     await page.goto('/components/acquisition/signal-reassignment');
     await expect(page.locator('#error-message')).toHaveText(
-      "HET error: Attempting to override signal 'count' after initialization",
+      'HET Error: Signal override after initialization',
     );
   });
 

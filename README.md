@@ -24,7 +24,9 @@ HET is probably not the right fit when you need:
 - [Quick start](#quick-start)
 - [Core concepts](#core-concepts)
 - [Components](#components)
+  - [Component errors](#component-errors)
 - [Request enhancement](#request-enhancement)
+  - [Request errors](#request-errors)
 - [Component lifecycle notes](#component-lifecycle-notes)
 - [API reference](#api-reference)
 - [Development](#development)
@@ -547,6 +549,430 @@ Acquisition support matrix:
 
 `het-component`, `het-ref`, `het-cloak`, `het-on`, `het-exports`, and `het-imports` do not use acquisition syntax.
 
+### Component errors
+
+Component errors are delivered to `init({ onError })`, except `registerComponent()` errors, which are thrown directly from the API call. HET-created errors use the `HET Error:` prefix and may include structured data on `error.cause`.
+
+#### `HET Error: Component name is required`
+
+Thrown when `registerComponent()` is called without a component name.
+
+```js
+window.HET.registerComponent('', () => ({}));
+```
+
+This error does not include a structured `cause`.
+
+#### `HET Error: Invalid binding expression`
+
+Thrown when a binding declaration does not match the directive's value shape. This includes missing `=` in keyed directives and empty names around `=`.
+
+```html
+<div het-component="counter">
+  <p het-props="textContent="></p>
+</div>
+```
+
+| `cause` property | Meaning |
+| --- | --- |
+| `componentName` | Value of the owning `het-component` attribute. |
+| `componentElement` | Component root element that was mounting. |
+| `bindingAttribute` | Binding attribute being parsed. |
+| `bindingDeclaration` | Raw binding declaration that failed. |
+| `bindingElement` | Element containing the binding declaration. |
+
+#### `HET Error: Unsupported negation`
+
+Thrown when `!` is used with a directive that does not support negation, such as `het-on`.
+
+```html
+<div het-component="counter">
+  <button type="button" het-on="click=!increment">+</button>
+</div>
+```
+
+| `cause` property | Meaning |
+| --- | --- |
+| `componentName` | Value of the owning `het-component` attribute. |
+| `componentElement` | Component root element that was mounting. |
+| `bindingAttribute` | Binding attribute being parsed. |
+| `bindingDeclaration` | Raw binding declaration that failed. |
+| `bindingElement` | Element containing the binding declaration. |
+
+#### `HET Error: Negation requires a signal name`
+
+Thrown when a negated binding uses `!` without a following signal name.
+
+```html
+<div het-component="panel">
+  <section het-class="is-hidden=!"></section>
+</div>
+```
+
+| `cause` property | Meaning |
+| --- | --- |
+| `componentName` | Value of the owning `het-component` attribute. |
+| `componentElement` | Component root element that was mounting. |
+| `bindingAttribute` | Binding attribute being parsed. |
+| `bindingDeclaration` | Raw binding declaration that failed. |
+| `bindingElement` | Element containing the binding declaration. |
+
+#### `HET Error: Binding declaration has too many ":" characters`
+
+Thrown when a binding contains more than one acquisition separator.
+
+```html
+<div het-component="counter">
+  <output het-props="textContent=count:seed:int"></output>
+</div>
+```
+
+| `cause` property | Meaning |
+| --- | --- |
+| `componentName` | Value of the owning `het-component` attribute. |
+| `componentElement` | Component root element that was mounting. |
+| `bindingAttribute` | Binding attribute being parsed. |
+| `bindingDeclaration` | Raw binding declaration that failed. |
+| `bindingElement` | Element containing the binding declaration. |
+
+#### `HET Error: Negation cannot be used with acquisition`
+
+Thrown when one declaration combines `!` with `:seed` or `:sync`.
+
+```html
+<div het-component="panel">
+  <section het-class="is-hidden=!collapsed:seed"></section>
+</div>
+```
+
+| `cause` property | Meaning |
+| --- | --- |
+| `componentName` | Value of the owning `het-component` attribute. |
+| `componentElement` | Component root element that was mounting. |
+| `bindingAttribute` | Binding attribute being parsed. |
+| `bindingDeclaration` | Raw binding declaration that failed. |
+| `bindingElement` | Element containing the binding declaration. |
+
+#### `HET Error: Binding declaration has an incomplete acquisition clause`
+
+Thrown when the signal name or acquisition strategy is missing around `:`.
+
+```html
+<div het-component="counter">
+  <output het-props="textContent=count:"></output>
+</div>
+```
+
+| `cause` property | Meaning |
+| --- | --- |
+| `componentName` | Value of the owning `het-component` attribute. |
+| `componentElement` | Component root element that was mounting. |
+| `bindingAttribute` | Binding attribute being parsed. |
+| `bindingDeclaration` | Raw binding declaration that failed. |
+| `bindingElement` | Element containing the binding declaration. |
+
+#### `HET Error: Directive does not support acquisition clauses`
+
+Thrown when `:seed` or `:sync` is used with a directive that cannot read from the DOM, such as `het-on`.
+
+```html
+<div het-component="counter">
+  <button type="button" het-on="click=increment:seed">+</button>
+</div>
+```
+
+| `cause` property | Meaning |
+| --- | --- |
+| `componentName` | Value of the owning `het-component` attribute. |
+| `componentElement` | Component root element that was mounting. |
+| `bindingAttribute` | Binding attribute being parsed. |
+| `bindingDeclaration` | Raw binding declaration that failed. |
+| `bindingElement` | Element containing the binding declaration. |
+
+#### `HET Error: Directive does not support type hints`
+
+Thrown when a type hint is used with a directive that does not support type hints.
+
+```html
+<div het-component="panel">
+  <section het-class="active=isActive:seed[bool]"></section>
+</div>
+```
+
+| `cause` property | Meaning |
+| --- | --- |
+| `componentName` | Value of the owning `het-component` attribute. |
+| `componentElement` | Component root element that was mounting. |
+| `bindingAttribute` | Binding attribute being parsed. |
+| `bindingDeclaration` | Raw binding declaration that failed. |
+| `bindingElement` | Element containing the binding declaration. |
+
+#### `HET Error: Type hint is not recognised. Expected type hints are "int", "bool" or "float"`
+
+Thrown when an acquisition clause uses an unsupported type hint.
+
+```html
+<div het-component="counter">
+  <output het-props="textContent=count:seed[number]">1</output>
+</div>
+```
+
+| `cause` property | Meaning |
+| --- | --- |
+| `componentName` | Value of the owning `het-component` attribute. |
+| `componentElement` | Component root element that was mounting. |
+| `bindingAttribute` | Binding attribute being parsed. |
+| `bindingDeclaration` | Raw binding declaration that failed. |
+| `bindingElement` | Element containing the binding declaration. |
+| `bindingTypeHint` | Unsupported type hint that was parsed from the declaration. |
+
+#### `HET Error: Acquisition strategy is not recognised. Expected acquisition strategies are "seed" or "sync"`
+
+Thrown when an acquisition clause uses an unsupported strategy.
+
+```html
+<div het-component="counter">
+  <output het-props="textContent=count:load">1</output>
+</div>
+```
+
+| `cause` property | Meaning |
+| --- | --- |
+| `componentName` | Value of the owning `het-component` attribute. |
+| `componentElement` | Component root element that was mounting. |
+| `bindingAttribute` | Binding attribute being parsed. |
+| `bindingDeclaration` | Raw binding declaration that failed. |
+| `bindingElement` | Element containing the binding declaration. |
+| `bindingAcquisitionStrategy` | Unsupported strategy parsed from the declaration. |
+
+#### `HET Error: Directive does not support sync acquisition`
+
+Thrown when `:sync` is used with a directive that only supports `:seed`, such as `het-model`.
+
+```html
+<div het-component="profileForm">
+  <input het-model="name:sync" value="Ada">
+</div>
+```
+
+| `cause` property | Meaning |
+| --- | --- |
+| `componentName` | Value of the owning `het-component` attribute. |
+| `componentElement` | Component root element that was mounting. |
+| `bindingAttribute` | Binding attribute being parsed. |
+| `bindingDeclaration` | Raw binding declaration that failed. |
+| `bindingElement` | Element containing the binding declaration. |
+
+#### `HET Error: Invalid import declaration`
+
+Thrown when a `het-imports` item is neither `signal` nor `local=source`.
+
+```html
+<div het-component="child" het-imports="local="></div>
+```
+
+| `cause` property | Meaning |
+| --- | --- |
+| `componentName` | Value of the owning `het-component` attribute. |
+| `componentElement` | Component root element that was mounting. |
+| `bindingAttribute` | Always `het-imports`. |
+| `bindingDeclaration` | Raw import declaration that failed. |
+
+#### `HET Error: Imported signal has no exporting ancestor`
+
+Thrown when `het-imports` asks for a signal that no ancestor component exports.
+
+```html
+<div het-component="child" het-imports="count"></div>
+```
+
+| `cause` property | Meaning |
+| --- | --- |
+| `componentName` | Value of the importing component's `het-component` attribute. |
+| `componentElement` | Importing component root element. |
+| `bindingAttribute` | Always `het-imports`. |
+| `importLocalSignalName` | Local signal name requested by the importing component. |
+| `importSourceSignalName` | Exported signal name HET looked for on ancestors. |
+
+#### `HET Error: Exporting ancestor component is not mounted`
+
+Thrown when an ancestor declares the requested export but does not have a mounted component instance.
+
+```html
+<div het-component="parent" het-exports="count">
+  <div het-component="child" het-imports="count"></div>
+</div>
+```
+
+```js
+window.HET.registerComponent('child', () => ({}));
+window.HET.init();
+```
+
+| `cause` property | Meaning |
+| --- | --- |
+| `componentName` | Value of the importing component's `het-component` attribute. |
+| `componentElement` | Importing component root element. |
+| `bindingAttribute` | Always `het-imports`. |
+| `exportingComponentElement` | Ancestor element that declared the export. |
+| `exportingComponentName` | Value of the ancestor's `het-component` attribute. |
+| `importLocalSignalName` | Local signal name requested by the importing component. |
+| `importSourceSignalName` | Exported signal name HET looked for on the ancestor. |
+
+#### `HET Error: Exporting ancestor does not provide imported signal`
+
+Thrown when the nearest exporting ancestor is mounted but its setup did not initialize the exported signal.
+
+```html
+<div het-component="parent" het-exports="count">
+  <div het-component="child" het-imports="count"></div>
+</div>
+```
+
+```js
+window.HET.registerComponent('parent', () => ({}));
+window.HET.registerComponent('child', () => ({}));
+window.HET.init();
+```
+
+| `cause` property | Meaning |
+| --- | --- |
+| `componentName` | Value of the importing component's `het-component` attribute. |
+| `componentElement` | Importing component root element. |
+| `bindingAttribute` | Always `het-imports`. |
+| `exportingComponentElement` | Ancestor element that declared the export. |
+| `exportingComponentName` | Value of the ancestor's `het-component` attribute. |
+| `importLocalSignalName` | Local signal name requested by the importing component. |
+| `importSourceSignalName` | Exported signal name HET looked for on the ancestor. |
+
+#### `HET Error: Imported signal conflicts with local initialization`
+
+Thrown when a component imports a signal and also tries to initialize the same signal from the DOM with `:seed` or `:sync`.
+
+```html
+<div het-component="parent" het-exports="count">
+  <div het-component="child" het-imports="count">
+    <output het-props="textContent=count:seed">1</output>
+  </div>
+</div>
+```
+
+| `cause` property | Meaning |
+| --- | --- |
+| `componentName` | Value of the owning `het-component` attribute. |
+| `componentElement` | Component root element that was mounting. |
+| `bindingAttribute` | Binding attribute that tried to initialize the imported signal. |
+| `bindingDeclaration` | Raw binding declaration that tried to initialize the signal. |
+| `bindingElement` | Element containing that binding declaration. |
+| `signalName` | Signal name with conflicting import and initialization. |
+
+#### `HET Error: Duplicate signal initialization`
+
+Thrown when more than one `:seed` or `:sync` binding tries to initialize the same local signal.
+
+```html
+<div het-component="counter">
+  <input het-props="value=count:seed[int]" value="1">
+  <output het-props="textContent=count:seed[int]">1</output>
+</div>
+```
+
+| `cause` property | Meaning |
+| --- | --- |
+| `componentName` | Value of the owning `het-component` attribute. |
+| `componentElement` | Component root element that was mounting. |
+| `bindingAttribute` | Binding attribute that tried to initialize the signal again. |
+| `bindingDeclaration` | Raw duplicate initialization declaration. |
+| `bindingElement` | Element containing the duplicate declaration. |
+| `signalName` | Signal name initialized more than once. |
+| `existingBindingAttribute` | Binding attribute that already initialized the signal. |
+| `existingBindingDeclaration` | Earlier declaration that initialized the signal. |
+| `existingBindingElement` | Element containing the earlier declaration. |
+
+#### `HET Error: Signal override after initialization`
+
+Thrown when `setup()` assigns a signal name that already exists because it was acquired or imported.
+
+```html
+<div het-component="counter">
+  <output het-props="textContent=count:seed[int]">1</output>
+</div>
+```
+
+```js
+window.HET.registerComponent('counter', ({ signals }) => {
+  signals.count = window.HET.signals.signal(0);
+});
+```
+
+| `cause` property | Meaning |
+| --- | --- |
+| `componentName` | Value of the owning `het-component` attribute. |
+| `componentElement` | Component root element that was mounting. |
+| `signalName` | Signal name that `setup()` tried to replace. |
+
+#### `HET Error: Signal initialized with a non-signal value`
+
+Thrown when `setup()` assigns a value that is not a Preact signal object.
+
+```js
+window.HET.registerComponent('counter', ({ signals }) => {
+  signals.count = 0;
+});
+```
+
+| `cause` property | Meaning |
+| --- | --- |
+| `componentName` | Value of the owning `het-component` attribute. |
+| `componentElement` | Component root element that was mounting. |
+| `signalName` | Signal name that received a non-signal value. |
+
+#### `HET Error: Missing component method`
+
+Thrown when `het-on` references a method that was not returned from `setup()`.
+
+```html
+<div het-component="counter">
+  <button type="button" het-on="click=increment">+</button>
+</div>
+```
+
+```js
+window.HET.registerComponent('counter', () => ({}));
+```
+
+| `cause` property | Meaning |
+| --- | --- |
+| `componentName` | Value of the owning `het-component` attribute. |
+| `componentElement` | Component root element that was mounting. |
+| `bindingAttribute` | Binding attribute that referenced the method. |
+| `bindingDeclaration` | Raw event binding declaration. |
+| `bindingElement` | Element containing the event binding. |
+| `methodName` | Missing method name. |
+
+#### `HET Error: Bound signal does not exist`
+
+Thrown when a signal binding references a signal that was not acquired, imported, or initialized in `setup()`.
+
+```html
+<div het-component="counter">
+  <output het-props="textContent=count"></output>
+</div>
+```
+
+```js
+window.HET.registerComponent('counter', () => ({}));
+```
+
+| `cause` property | Meaning |
+| --- | --- |
+| `componentName` | Value of the owning `het-component` attribute. |
+| `componentElement` | Component root element that was mounting. |
+| `bindingAttribute` | Binding attribute that referenced the signal. |
+| `bindingDeclaration` | Raw signal binding declaration. |
+| `bindingElement` | Element containing the signal binding. |
+| `signalName` | Missing signal name. |
+
 ## Request enhancement
 
 HET progressively enhances both links and forms by replacing a named target pane from server-rendered HTML responses.
@@ -716,6 +1142,462 @@ Fetch events bubble from the initiator: the `a[het-target]` or `form[het-target]
 | `het:beforeLoadContent` | Yes | `newContent` | Listeners may replace `detail.newContent` before HET swaps content. |
 | `het:afterLoadContent` | No | `alsoElements` | Dispatched after target/select/also replacements and autofocus handling. |
 
+### Request errors
+
+Request errors are delivered to `init({ onError })`. HET-created errors use the `HET Error:` prefix and include structured request data on `error.cause`. The `Applies when` column shows which interaction type (link navigation, form submission, or browser forward/back navigation) or response feature adds each field. Form submission causes keep source-specific values such as `formAction` and `submitterAction` separate from resolved values such as `resolvedActionUrl`.
+
+#### `HET Error: Cross-origin links cannot be progressively enhanced`
+
+Thrown when an enhanced link points to a different origin.
+
+```html
+<main het-pane="main">
+  <a href="https://example.com/page" het-target="main">External page</a>
+</main>
+```
+
+| `cause` property | Applies when | Meaning |
+| --- | --- | --- |
+| `linkElement` | Always | Link element that initiated the request. |
+| `linkUrl` | Always | Fully resolved link URL. |
+| `linkTargetName` | Always | Pane name from the link `het-target`. |
+| `resolvedTargetName` | Always | Final pane name selected from the link. |
+
+#### `HET Error: Links with a target attribute cannot be progressively enhanced`
+
+Thrown when an enhanced link also has a native `target` attribute.
+
+```html
+<main het-pane="main">
+  <a href="/next" target="_blank" het-target="main">Next page</a>
+</main>
+```
+
+| `cause` property | Applies when | Meaning |
+| --- | --- | --- |
+| `linkElement` | Always | Link element that initiated the request. |
+| `linkUrl` | Always | Fully resolved link URL. |
+| `linkTargetName` | Always | Pane name from the link `het-target`. |
+| `resolvedTargetName` | Always | Final pane name selected from the link. |
+
+#### `HET Error: Cross-origin form submissions cannot be progressively enhanced`
+
+Thrown when an enhanced form or submitter resolves to a different origin.
+
+```html
+<form action="https://example.com/search" het-target="main">
+  <button type="submit">Search</button>
+</form>
+```
+
+| `cause` property | Applies when | Meaning |
+| --- | --- | --- |
+| `formElement` | Always | Form element that initiated the request. |
+| `submitterElement` | Always | Form control used for the submission, if available. |
+| `formTargetName` | Always | Pane name from the form `het-target`, if present. |
+| `submitterTargetName` | Submitter has `het-target` | Pane name from the submitter `het-target`. |
+| `resolvedTargetName` | Always | Final pane name after submitter target overrides. |
+| `formAction` | Always | Form `action` value, or the current URL when omitted. |
+| `submitterAction` | Submitter has `formaction` | Submitter `formaction` value. |
+| `formMethod` | Always | Form `method` value, or `GET` when omitted. |
+| `submitterMethod` | Submitter has `formmethod` | Submitter `formmethod` value. |
+| `formEnctype` | Always | Form `enctype` value, or the default URL-encoded enctype when omitted. |
+| `submitterEnctype` | Submitter has `formenctype` | Submitter `formenctype` value. |
+| `resolvedMethod` | Always | Final HTTP method after submitter overrides and defaults. |
+| `resolvedActionUrl` | Always | Final action URL after submitter overrides and defaults. |
+| `resolvedEnctype` | Always | Final enctype after submitter overrides and defaults. |
+
+#### `HET Error: Target pane not found on the page`
+
+Thrown when the current document does not contain a pane for the resolved target name.
+
+```html
+<a href="/next" het-target="main">Next page</a>
+```
+
+| `cause` property | Applies when | Meaning |
+| --- | --- | --- |
+| `linkElement` | Link navigation | Link element that initiated the request. |
+| `formElement` | Form submission | Form element that initiated the request. |
+| `linkUrl` | Link navigation | Link URL. |
+| `linkTargetName` | Link navigation | Pane name from the link `het-target`. |
+| `submitterElement` | Form submission | Form control used for the submission, if available. |
+| `formTargetName` | Form submission | Pane name from the form `het-target`, if present. |
+| `submitterTargetName` | Submitter has `het-target` | Pane name from the submitter `het-target`. |
+| `resolvedMethod` | Form submission | Resolved form method. |
+| `resolvedActionUrl` | Form submission | Resolved form action. |
+| `navigationFromUrl` | Browser navigation | Previous history URL. |
+| `navigationToUrl` | Browser navigation | New history URL. |
+| `navigationTargetName` | Browser navigation | Pane name from the history state. |
+| `targetLookupName` | Target lookup errors | Pane name used for the current document lookup. |
+| `resolvedTargetName` | Always | Final pane name HET looked for in the current document. |
+
+#### `HET Error: Multiple target panes found on the page`
+
+Thrown when the current document contains more than one pane for the resolved target name.
+
+```html
+<main het-pane="main"></main>
+<section het-pane="main"></section>
+<a href="/next" het-target="main">Next page</a>
+```
+
+| `cause` property | Applies when | Meaning |
+| --- | --- | --- |
+| `linkElement` | Link navigation | Link element that initiated the request. |
+| `formElement` | Form submission | Form element that initiated the request. |
+| `linkUrl` | Link navigation | Link URL. |
+| `linkTargetName` | Link navigation | Pane name from the link `het-target`. |
+| `submitterElement` | Form submission | Form control used for the submission, if available. |
+| `formTargetName` | Form submission | Pane name from the form `het-target`, if present. |
+| `submitterTargetName` | Submitter has `het-target` | Pane name from the submitter `het-target`. |
+| `resolvedMethod` | Form submission | Resolved form method. |
+| `resolvedActionUrl` | Form submission | Resolved form action. |
+| `navigationFromUrl` | Browser navigation | Previous history URL. |
+| `navigationToUrl` | Browser navigation | New history URL. |
+| `navigationTargetName` | Browser navigation | Pane name from the history state. |
+| `targetLookupName` | Target lookup errors | Pane name used for the current document lookup. |
+| `resolvedTargetName` | Always | Final pane name HET looked for in the current document. |
+| `targetPaneElements` | Always | Array of matching pane elements found on the page. |
+
+#### `HET Error: Target pane not found in server response`
+
+Thrown when the response HTML does not contain the resolved target pane.
+
+```html
+<!-- Current page -->
+<main het-pane="main">
+  <a href="/next" het-target="main">Next page</a>
+</main>
+
+<!-- Response from /next -->
+<section>No main pane</section>
+```
+
+| `cause` property | Applies when | Meaning |
+| --- | --- | --- |
+| `linkElement` | Link navigation | Link element that initiated the request. |
+| `formElement` | Form submission | Form element that initiated the request. |
+| `linkUrl` | Link navigation | Link URL. |
+| `linkTargetName` | Link navigation | Pane name from the link `het-target`. |
+| `submitterElement` | Form submission | Form control used for the submission, if available. |
+| `formTargetName` | Form submission | Pane name from the form `het-target`, if present. |
+| `submitterTargetName` | Submitter has `het-target` | Pane name from the submitter `het-target`. |
+| `resolvedMethod` | Form submission | Resolved form method. |
+| `resolvedActionUrl` | Form submission | Resolved form action. |
+| `navigationFromUrl` | Browser navigation | Previous history URL. |
+| `navigationToUrl` | Browser navigation | New history URL. |
+| `requestUrl` | Always | Final URL passed to `fetch`, after `het:beforeFetch`. |
+| `requestMethod` | Always | Final request method passed to `fetch`. |
+| `resolvedTargetName` | Always | Final pane name selected before response target overrides. |
+| `targetPaneElement` | Always | Original target pane element on the page. |
+| `responseTargetHeader` | Response included `X-HET-Target-Override` | Value of `X-HET-Target-Override`. |
+| `effectiveTargetPaneName` | Target changed by `X-HET-Target-Override` | Pane name HET expected in the response. |
+| `effectiveTargetPaneElement` | Target changed by `X-HET-Target-Override` | Current-page pane element selected by the target override. |
+
+#### `HET Error: Multiple target panes found in server response`
+
+Thrown when the response HTML contains more than one pane for the resolved target name.
+
+```html
+<!-- Response from /next -->
+<main het-pane="main"></main>
+<section het-pane="main"></section>
+```
+
+| `cause` property | Applies when | Meaning |
+| --- | --- | --- |
+| `linkElement` | Link navigation | Link element that initiated the request. |
+| `formElement` | Form submission | Form element that initiated the request. |
+| `linkUrl` | Link navigation | Link URL. |
+| `linkTargetName` | Link navigation | Pane name from the link `het-target`. |
+| `submitterElement` | Form submission | Form control used for the submission, if available. |
+| `formTargetName` | Form submission | Pane name from the form `het-target`, if present. |
+| `submitterTargetName` | Submitter has `het-target` | Pane name from the submitter `het-target`. |
+| `resolvedMethod` | Form submission | Resolved form method. |
+| `resolvedActionUrl` | Form submission | Resolved form action. |
+| `navigationFromUrl` | Browser navigation | Previous history URL. |
+| `navigationToUrl` | Browser navigation | New history URL. |
+| `requestUrl` | Always | Final URL passed to `fetch`, after `het:beforeFetch`. |
+| `requestMethod` | Always | Final request method passed to `fetch`. |
+| `resolvedTargetName` | Always | Final pane name selected before response target overrides. |
+| `targetPaneElement` | Always | Original target pane element on the page. |
+| `responseTargetHeader` | Response included `X-HET-Target-Override` | Value of `X-HET-Target-Override`. |
+| `effectiveTargetPaneName` | Target changed by `X-HET-Target-Override` | Pane name HET expected in the response. |
+| `effectiveTargetPaneElement` | Target changed by `X-HET-Target-Override` | Current-page pane element selected by the target override. |
+| `responseTargetPaneCount` | Always | Number of matching panes found in the response. |
+
+#### `HET Error: Select directive must list at least one id`
+
+Thrown when `het-select` is present but contains only whitespace.
+
+```html
+<main het-pane="main">
+  <a href="/next" het-target="main" het-select=" ">Next page</a>
+</main>
+```
+
+| `cause` property | Applies when | Meaning |
+| --- | --- | --- |
+| `linkElement` | Link navigation | Link element that initiated the request. |
+| `formElement` | Form submission | Form element that initiated the request. |
+| `linkUrl` | Link navigation | Link URL. |
+| `linkTargetName` | Link navigation | Pane name from the link `het-target`. |
+| `submitterElement` | Form submission | Form control used for the submission, if available. |
+| `resolvedTargetName` | Always | Final pane name selected from the initiator. |
+| `requestDirectiveAttribute` | Always | `het-select`. |
+| `requestDirectiveDeclaration` | Always | Raw whitespace-only value. |
+
+#### `HET Error: Selected element not found in the target pane on the page`
+
+Thrown when a selected id is missing inside the current target pane.
+
+```html
+<main het-pane="main">
+  <p id="summary">Summary</p>
+  <a href="/next" het-target="main" het-select="details">Next page</a>
+</main>
+```
+
+| `cause` property | Applies when | Meaning |
+| --- | --- | --- |
+| `linkElement` | Link navigation | Link element that initiated the request. |
+| `formElement` | Form submission | Form element that initiated the request. |
+| `linkUrl` | Link navigation | Link URL. |
+| `linkTargetName` | Link navigation | Pane name from the link `het-target`. |
+| `submitterElement` | Form submission | Form control used for the submission, if available. |
+| `formTargetName` | Form submission | Pane name from the form `het-target`, if present. |
+| `submitterTargetName` | Submitter has `het-target` | Pane name from the submitter `het-target`. |
+| `resolvedMethod` | Form submission | Resolved form method. |
+| `resolvedActionUrl` | Form submission | Resolved form action. |
+| `navigationFromUrl` | Browser navigation | Previous history URL. |
+| `navigationToUrl` | Browser navigation | New history URL. |
+| `requestUrl` | Always | Final URL passed to `fetch`, after `het:beforeFetch`. |
+| `requestMethod` | Always | Final request method passed to `fetch`. |
+| `resolvedTargetName` | Always | Final pane name selected before response target overrides. |
+| `targetPaneElement` | Always | Current target pane element searched for the selected id. |
+| `responseTargetHeader` | Response included `X-HET-Target-Override` | Value of `X-HET-Target-Override`. |
+| `effectiveTargetPaneName` | Target changed by `X-HET-Target-Override` | Pane name selected by the target override. |
+| `effectiveTargetPaneElement` | Target changed by `X-HET-Target-Override` | Current-page pane element selected by the target override. |
+| `requestDirectiveAttribute` | Always | `het-select`, or an empty string when no `het-select` attribute supplied the selected ids. |
+| `responseSelectHeader` | Response included `X-HET-Select-Override` | Value of `X-HET-Select-Override`. |
+| `selectId` | Always | Missing id from the select list. |
+
+#### `HET Error: Selected element not found in the target pane in the server response`
+
+Thrown when a selected id exists in the current target pane but is missing from the response target pane.
+
+```html
+<!-- Current page -->
+<main het-pane="main">
+  <p id="summary">Old summary</p>
+  <a href="/next" het-target="main" het-select="summary">Next page</a>
+</main>
+
+<!-- Response from /next -->
+<main het-pane="main">
+  <p>No summary id</p>
+</main>
+```
+
+| `cause` property | Applies when | Meaning |
+| --- | --- | --- |
+| `linkElement` | Link navigation | Link element that initiated the request. |
+| `formElement` | Form submission | Form element that initiated the request. |
+| `linkUrl` | Link navigation | Link URL. |
+| `linkTargetName` | Link navigation | Pane name from the link `het-target`. |
+| `submitterElement` | Form submission | Form control used for the submission, if available. |
+| `formTargetName` | Form submission | Pane name from the form `het-target`, if present. |
+| `submitterTargetName` | Submitter has `het-target` | Pane name from the submitter `het-target`. |
+| `resolvedMethod` | Form submission | Resolved form method. |
+| `resolvedActionUrl` | Form submission | Resolved form action. |
+| `navigationFromUrl` | Browser navigation | Previous history URL. |
+| `navigationToUrl` | Browser navigation | New history URL. |
+| `requestUrl` | Always | Final URL passed to `fetch`, after `het:beforeFetch`. |
+| `requestMethod` | Always | Final request method passed to `fetch`. |
+| `resolvedTargetName` | Always | Final pane name selected before response target overrides. |
+| `targetPaneElement` | Always | Current target pane element. |
+| `responseTargetHeader` | Response included `X-HET-Target-Override` | Value of `X-HET-Target-Override`. |
+| `effectiveTargetPaneName` | Target changed by `X-HET-Target-Override` | Pane name selected by the target override. |
+| `effectiveTargetPaneElement` | Target changed by `X-HET-Target-Override` | Current-page pane element selected by the target override. |
+| `requestDirectiveAttribute` | Always | `het-select`, or an empty string when no `het-select` attribute supplied the selected ids. |
+| `responseSelectHeader` | Response included `X-HET-Select-Override` | Value of `X-HET-Select-Override`. |
+| `selectId` | Always | Missing id from the select list. |
+| `currentElement` | Always | Current-page element found for `selectId`. |
+
+#### `HET Error: Also directive must list at least one id`
+
+Thrown when `het-also` is present but contains only whitespace. A whitespace-only `X-HET-Also-Override` response header clears additional replacements instead of throwing this error.
+
+```html
+<main het-pane="main">
+  <a href="/next" het-target="main" het-also=" ">Next page</a>
+</main>
+```
+
+| `cause` property | Applies when | Meaning |
+| --- | --- | --- |
+| `linkElement` | Link navigation | Link element that initiated the request. |
+| `formElement` | Form submission | Form element that initiated the request. |
+| `linkUrl` | Link navigation | Link URL. |
+| `linkTargetName` | Link navigation | Pane name from the link `het-target`. |
+| `submitterElement` | Form submission | Form control used for the submission, if available. |
+| `resolvedTargetName` | Always | Final pane name selected from the initiator. |
+| `requestDirectiveAttribute` | Always | `het-also`. |
+| `requestDirectiveDeclaration` | Always | Raw whitespace-only value. |
+
+#### `HET Error: het-also element not found on the page`
+
+Thrown when a `het-also` id is missing from the current document.
+
+```html
+<main het-pane="main">
+  <a href="/next" het-target="main" het-also="sidebar">Next page</a>
+</main>
+```
+
+| `cause` property | Applies when | Meaning |
+| --- | --- | --- |
+| `linkElement` | Link navigation | Link element that initiated the request. |
+| `formElement` | Form submission | Form element that initiated the request. |
+| `linkUrl` | Link navigation | Link URL. |
+| `linkTargetName` | Link navigation | Pane name from the link `het-target`. |
+| `submitterElement` | Form submission | Form control used for the submission, if available. |
+| `formTargetName` | Form submission | Pane name from the form `het-target`, if present. |
+| `submitterTargetName` | Submitter has `het-target` | Pane name from the submitter `het-target`. |
+| `resolvedMethod` | Form submission | Resolved form method. |
+| `resolvedActionUrl` | Form submission | Resolved form action. |
+| `navigationFromUrl` | Browser navigation | Previous history URL. |
+| `navigationToUrl` | Browser navigation | New history URL. |
+| `requestUrl` | Always | Final URL passed to `fetch`, after `het:beforeFetch`. |
+| `requestMethod` | Always | Final request method passed to `fetch`. |
+| `resolvedTargetName` | Always | Final pane name selected before response target overrides. |
+| `targetPaneElement` | Always | Current target pane element. |
+| `responseTargetHeader` | Response included `X-HET-Target-Override` | Value of `X-HET-Target-Override`. |
+| `effectiveTargetPaneName` | Target changed by `X-HET-Target-Override` | Pane name selected by the target override. |
+| `effectiveTargetPaneElement` | Target changed by `X-HET-Target-Override` | Current-page pane element selected by the target override. |
+| `requestDirectiveAttribute` | Always | `het-also`, or an empty string when no `het-also` attribute supplied the additional replacement ids. |
+| `responseAlsoHeader` | Response included `X-HET-Also-Override` | Value of `X-HET-Also-Override`. |
+| `alsoId` | Always | Missing id from the also list. |
+
+#### `HET Error: het-also element found inside the target pane on the page`
+
+Thrown when a `het-also` id resolves to an element inside the target pane in the current document.
+
+```html
+<main het-pane="main">
+  <p id="summary">Summary</p>
+  <a href="/next" het-target="main" het-also="summary">Next page</a>
+</main>
+```
+
+| `cause` property | Applies when | Meaning |
+| --- | --- | --- |
+| `linkElement` | Link navigation | Link element that initiated the request. |
+| `formElement` | Form submission | Form element that initiated the request. |
+| `linkUrl` | Link navigation | Link URL. |
+| `linkTargetName` | Link navigation | Pane name from the link `het-target`. |
+| `submitterElement` | Form submission | Form control used for the submission, if available. |
+| `formTargetName` | Form submission | Pane name from the form `het-target`, if present. |
+| `submitterTargetName` | Submitter has `het-target` | Pane name from the submitter `het-target`. |
+| `resolvedMethod` | Form submission | Resolved form method. |
+| `resolvedActionUrl` | Form submission | Resolved form action. |
+| `navigationFromUrl` | Browser navigation | Previous history URL. |
+| `navigationToUrl` | Browser navigation | New history URL. |
+| `requestUrl` | Always | Final URL passed to `fetch`, after `het:beforeFetch`. |
+| `requestMethod` | Always | Final request method passed to `fetch`. |
+| `resolvedTargetName` | Always | Final pane name selected before response target overrides. |
+| `targetPaneElement` | Always | Current target pane element. |
+| `responseTargetHeader` | Response included `X-HET-Target-Override` | Value of `X-HET-Target-Override`. |
+| `effectiveTargetPaneName` | Target changed by `X-HET-Target-Override` | Pane name selected by the target override. |
+| `effectiveTargetPaneElement` | Target changed by `X-HET-Target-Override` | Current-page pane element selected by the target override. |
+| `requestDirectiveAttribute` | Always | `het-also`, or an empty string when no `het-also` attribute supplied the additional replacement ids. |
+| `responseAlsoHeader` | Response included `X-HET-Also-Override` | Value of `X-HET-Also-Override`. |
+| `alsoId` | Always | Id from the also list. |
+| `currentElement` | Always | Current-page element found for `alsoId`. |
+
+#### `HET Error: het-also element not found in the server response`
+
+Thrown when a `het-also` id exists in the current document but is missing from the response document.
+
+```html
+<!-- Current page -->
+<main het-pane="main">
+  <a href="/next" het-target="main" het-also="sidebar">Next page</a>
+</main>
+<aside id="sidebar">Old sidebar</aside>
+
+<!-- Response from /next -->
+<main het-pane="main">Updated main</main>
+```
+
+| `cause` property | Applies when | Meaning |
+| --- | --- | --- |
+| `linkElement` | Link navigation | Link element that initiated the request. |
+| `formElement` | Form submission | Form element that initiated the request. |
+| `linkUrl` | Link navigation | Link URL. |
+| `linkTargetName` | Link navigation | Pane name from the link `het-target`. |
+| `submitterElement` | Form submission | Form control used for the submission, if available. |
+| `formTargetName` | Form submission | Pane name from the form `het-target`, if present. |
+| `submitterTargetName` | Submitter has `het-target` | Pane name from the submitter `het-target`. |
+| `resolvedMethod` | Form submission | Resolved form method. |
+| `resolvedActionUrl` | Form submission | Resolved form action. |
+| `navigationFromUrl` | Browser navigation | Previous history URL. |
+| `navigationToUrl` | Browser navigation | New history URL. |
+| `requestUrl` | Always | Final URL passed to `fetch`, after `het:beforeFetch`. |
+| `requestMethod` | Always | Final request method passed to `fetch`. |
+| `resolvedTargetName` | Always | Final pane name selected before response target overrides. |
+| `targetPaneElement` | Always | Current target pane element. |
+| `responseTargetHeader` | Response included `X-HET-Target-Override` | Value of `X-HET-Target-Override`. |
+| `effectiveTargetPaneName` | Target changed by `X-HET-Target-Override` | Pane name selected by the target override. |
+| `effectiveTargetPaneElement` | Target changed by `X-HET-Target-Override` | Current-page pane element selected by the target override. |
+| `requestDirectiveAttribute` | Always | `het-also`, or an empty string when no `het-also` attribute supplied the additional replacement ids. |
+| `responseAlsoHeader` | Response included `X-HET-Also-Override` | Value of `X-HET-Also-Override`. |
+| `alsoId` | Always | Id from the also list. |
+| `currentElement` | Always | Current-page element found for `alsoId`. |
+
+#### `HET Error: het-also element found inside the target pane in the server response`
+
+Thrown when a `het-also` id resolves to an element inside the response target pane.
+
+```html
+<!-- Current page -->
+<main het-pane="main">
+  <a href="/next" het-target="main" het-also="sidebar">Next page</a>
+</main>
+<aside id="sidebar">Old sidebar</aside>
+
+<!-- Response from /next -->
+<main het-pane="main">
+  <aside id="sidebar">Sidebar inside target</aside>
+</main>
+```
+
+| `cause` property | Applies when | Meaning |
+| --- | --- | --- |
+| `linkElement` | Link navigation | Link element that initiated the request. |
+| `formElement` | Form submission | Form element that initiated the request. |
+| `linkUrl` | Link navigation | Link URL. |
+| `linkTargetName` | Link navigation | Pane name from the link `het-target`. |
+| `submitterElement` | Form submission | Form control used for the submission, if available. |
+| `formTargetName` | Form submission | Pane name from the form `het-target`, if present. |
+| `submitterTargetName` | Submitter has `het-target` | Pane name from the submitter `het-target`. |
+| `resolvedMethod` | Form submission | Resolved form method. |
+| `resolvedActionUrl` | Form submission | Resolved form action. |
+| `navigationFromUrl` | Browser navigation | Previous history URL. |
+| `navigationToUrl` | Browser navigation | New history URL. |
+| `requestUrl` | Always | Final URL passed to `fetch`, after `het:beforeFetch`. |
+| `requestMethod` | Always | Final request method passed to `fetch`. |
+| `resolvedTargetName` | Always | Final pane name selected before response target overrides. |
+| `targetPaneElement` | Always | Current target pane element. |
+| `responseTargetHeader` | Response included `X-HET-Target-Override` | Value of `X-HET-Target-Override`. |
+| `effectiveTargetPaneName` | Target changed by `X-HET-Target-Override` | Pane name selected by the target override. |
+| `effectiveTargetPaneElement` | Target changed by `X-HET-Target-Override` | Current-page pane element selected by the target override. |
+| `requestDirectiveAttribute` | Always | `het-also`, or an empty string when no `het-also` attribute supplied the additional replacement ids. |
+| `responseAlsoHeader` | Response included `X-HET-Also-Override` | Value of `X-HET-Also-Override`. |
+| `alsoId` | Always | Id from the also list. |
+| `currentElement` | Always | Current-page element found for `alsoId`. |
+
 ## Component lifecycle notes
 
 - Components mount when `init()` runs, and new component roots inserted later auto-mount only if their setup function has already been registered.
@@ -738,12 +1620,14 @@ Initialize HET. This mounts registered components, starts component mutation obs
 
 #### `onError(error)`
 
-Handle internal errors with your own logging/reporting. Signature: `(error: Error | DOMException | unknown) => void`. Default: rethrow. Return value is ignored.
+Handle internal errors with your own logging/reporting. Signature: `(error: Error | DOMException | unknown) => void`. Default: log and continue. Return value is ignored.
+
+HET-created errors use the message prefix `HET Error:` and may include structured diagnostic data on `error.cause`, such as the component, directive declaration, initiating link or form, submitter, and target pane elements. See [Component errors](#component-errors) and [Request errors](#request-errors) for the full list.
 
 ```js
 window.HET.init({
   onError: (error) => {
-    console.error("HET caught error", error);
+    console.error(error, error.cause);
     // Forward to your telemetry here
   },
 });

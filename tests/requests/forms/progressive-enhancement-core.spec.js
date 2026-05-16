@@ -159,13 +159,33 @@ test.describe('form progressive enhancement (core)', () => {
     await page.click('#external-submit');
     await page.waitForFunction(() =>
       window.hetErrors.includes(
-        'HET error: Cannot progressively enhance cross-origin form submissions',
+        'HET Error: Cross-origin form submissions cannot be progressively enhanced',
       ),
     );
     const errors = await page.evaluate(() => window.hetErrors);
     expect(errors).toContain(
-      'HET error: Cannot progressively enhance cross-origin form submissions',
+      'HET Error: Cross-origin form submissions cannot be progressively enhanced',
     );
+    const cause = await page.evaluate(() => ({
+      formElementId: window.hetLastError.cause.formElement.id,
+      submitterElementId: window.hetLastError.cause.submitterElement.id,
+      formAction: window.hetLastError.cause.formAction,
+      submitterAction: window.hetLastError.cause.submitterAction,
+      formTargetName: window.hetLastError.cause.formTargetName,
+      submitterTargetName: window.hetLastError.cause.submitterTargetName,
+      resolvedTargetName: window.hetLastError.cause.resolvedTargetName,
+      resolvedActionUrl: window.hetLastError.cause.resolvedActionUrl,
+    }));
+    expect(cause).toEqual({
+      formElementId: 'form',
+      submitterElementId: 'external-submit',
+      formAction: '/requests/forms/progressive-enhancement-core/get-form',
+      submitterAction: 'https://example.com/submit',
+      formTargetName: 'main',
+      submitterTargetName: 'main',
+      resolvedTargetName: 'main',
+      resolvedActionUrl: 'https://example.com/submit',
+    });
   });
 
   test('throws when response does not include the target pane', async ({
@@ -175,12 +195,12 @@ test.describe('form progressive enhancement (core)', () => {
     await page.click('#submit');
     await page.waitForFunction(() =>
       window.hetErrors.includes(
-        'HET error: No pane named main found in server response',
+        'HET Error: Target pane not found in server response',
       ),
     );
     const errors = await page.evaluate(() => window.hetErrors);
     expect(errors).toContain(
-      'HET error: No pane named main found in server response',
+      'HET Error: Target pane not found in server response',
     );
   });
 
@@ -191,12 +211,12 @@ test.describe('form progressive enhancement (core)', () => {
     await page.click('#submit');
     await page.waitForFunction(() =>
       window.hetErrors.includes(
-        'HET error: Multiple panes named main found in server response',
+        'HET Error: Multiple target panes found in server response',
       ),
     );
     const errors = await page.evaluate(() => window.hetErrors);
     expect(errors).toContain(
-      'HET error: Multiple panes named main found in server response',
+      'HET Error: Multiple target panes found in server response',
     );
   });
 
@@ -205,12 +225,12 @@ test.describe('form progressive enhancement (core)', () => {
     await page.click('#submit');
     await page.waitForFunction(() =>
       window.hetErrors.includes(
-        'HET error: Multiple panes named main found in current document',
+        'HET Error: Multiple target panes found on the page',
       ),
     );
     const errors = await page.evaluate(() => window.hetErrors);
     expect(errors).toContain(
-      'HET error: Multiple panes named main found in current document',
+      'HET Error: Multiple target panes found on the page',
     );
   });
 });

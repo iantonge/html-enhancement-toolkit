@@ -112,7 +112,7 @@ let observer;
 let syncListener;
 
 let onError = (error) => {
-  throw error;
+  console.error(error, error.cause);
 };
 
 export function registerComponent(name, setup) {
@@ -193,8 +193,10 @@ function mountComponent(rootEl, setup) {
 
   const rawSignals = {};
   const signalMeta = Object.create(null);
-  const signals = createSignalsProxy(rawSignals);
-  const importDeclarations = getImportDeclarations(rootEl);
+  const signalInitBindings = Object.create(null);
+  const componentLoggingContext = getComponentCause(rootEl);
+  const signals = createSignalsProxy(rawSignals, componentLoggingContext);
+  const importDeclarations = getImportDeclarations(rootEl, componentLoggingContext);
   const refs = Object.fromEntries(
     scopedQuerySelectorAll(rootEl, '[het-ref]').map((refEl) => [
       refEl.getAttribute('het-ref'),
@@ -209,25 +211,42 @@ function mountComponent(rootEl, setup) {
   };
   const ctx = { el: rootEl, refs, signals, onCleanup };
   const boundEls = scopedQuerySelectorAll(rootEl, DIRECTIVES_SELECTOR);
-  const bindings = getBindings(boundEls);
+  const bindings = getBindings(boundEls, componentLoggingContext);
   const syncBindings = bindings.filter((binding) => binding.acquisitionStrategy === 'sync');
   const bindingsToInit = bindings.filter((binding) => binding.acquisitionStrategy);
 
-  resolveImports(rootEl, importDeclarations, rawSignals, signalMeta);
+  resolveImports(
+    rootEl,
+    importDeclarations,
+    rawSignals,
+    signalMeta,
+    componentLoggingContext,
+  );
 
   for (const binding of bindingsToInit) {
     if (signalMeta[binding.source] === 'imported') {
       throw new Error(
-        `HET Error: Signal name conflict for '${binding.source}' (import vs local)`,
+        'HET Error: Imported signal conflicts with local initialization',
+        { cause: getBindingCause(binding, { signalName: binding.source }) },
       );
     }
     if (rawSignals[binding.source]) {
+      const existingBinding = signalInitBindings[binding.source];
       throw new Error(
-        `HET Error: Attempting to seed initial value for signal ${binding.source} but it already exists`,
+        'HET Error: Duplicate signal initialization',
+        {
+          cause: getBindingCause(binding, {
+            signalName: binding.source,
+            existingBindingAttribute: existingBinding.dirName,
+            existingBindingDeclaration: existingBinding.exp,
+            existingBindingElement: existingBinding.el,
+          }),
+        },
       );
     }
     rawSignals[binding.source] = signal(readValue(binding));
     signalMeta[binding.source] = 'local';
+    signalInitBindings[binding.source] = binding;
   }
   const methods = (setup && setup(ctx)) || {};
 
@@ -261,6 +280,24 @@ function removeCloakAttributes(components) {
   }
 }
 
+function getComponentCause(componentElement) {
+  return {
+    componentName: componentElement.getAttribute('het-component'),
+    componentElement,
+  };
+}
+
+function getBindingCause(binding, extra = {}) {
+  return {
+    componentName: binding.componentName,
+    componentElement: binding.componentElement,
+    bindingAttribute: binding.dirName,
+    bindingDeclaration: binding.exp,
+    bindingElement: binding.el,
+    ...extra,
+  };
+}
+
 function getDeclaredExports(el) {
   const rawAttr = el.getAttribute(EXPORTS_ATTR) || '';
 
@@ -274,7 +311,7 @@ function getDeclaredExports(el) {
   return exportsSet;
 }
 
-function getImportDeclarations(el) {
+function getImportDeclarations(el, componentLoggingContext) {
   const rawAttr = el.getAttribute(IMPORTS_ATTR) || '';
   const declarations = rawAttr.split(/\s+/).filter(Boolean);
 
@@ -288,36 +325,56 @@ function getImportDeclarations(el) {
     }
 
     throw new Error(
-      `HET Error: Invalid ${IMPORTS_ATTR} declaration '${declaration}'`,
+      'HET Error: Invalid import declaration',
+      {
+        cause: {
+          ...componentLoggingContext,
+          bindingAttribute: IMPORTS_ATTR,
+          bindingDeclaration: declaration,
+        },
+      },
     );
   });
 }
 
-function getBindings(boundEls) {
+function getBindings(boundEls, componentLoggingContext) {
   const bindings = [];
   for (const el of boundEls) {
     for (const directive of DIRECTIVES) {
       if (!el.hasAttribute(directive.name)) continue;
-      bindings.push(...getParsedBindingDeclarations(directive, el));
+      bindings.push(...getParsedBindingDeclarations(
+        directive,
+        el,
+        componentLoggingContext,
+      ));
     }
   }
   return bindings;
 }
 
-function getParsedBindingDeclarations(directive, el) {
+function getParsedBindingDeclarations(directive, el, componentLoggingContext) {
   const rawAttr = el.getAttribute(directive.name) || '';
   const declarations = directive.allowMultiple
     ? rawAttr.split(/\s+/).filter(Boolean)
     : [rawAttr];
 
   return declarations.map((declaration) => {
+    const bindingLoggingContext = {
+      ...componentLoggingContext,
+      bindingAttribute: directive.name,
+      bindingDeclaration: declaration,
+      bindingElement: el,
+    };
     const parts = declaration.split('=');
     let key;
     let sourceWithAcquisition;
 
     if (directive.keyRequired) {
       if (parts.length !== 2 || parts.some((part) => part.length === 0)) {
-        throw new Error(`HET Error: Invalid expression '${declaration}'`);
+        throw new Error(
+          'HET Error: Invalid binding expression',
+          { cause: { ...bindingLoggingContext } },
+        );
       }
       [key, sourceWithAcquisition] = parts;
     } else if (parts.length === 1 && parts[0].length > 0) {
@@ -326,20 +383,29 @@ function getParsedBindingDeclarations(directive, el) {
     } else if (parts.length === 2 && parts.every((part) => part.length > 0)) {
       [key, sourceWithAcquisition] = parts;
     } else {
-      throw new Error(`HET Error: Invalid expression '${declaration}'`);
+      throw new Error(
+        'HET Error: Invalid binding expression',
+        { cause: { ...bindingLoggingContext } },
+      );
     }
     const { negated, sourceWithAcquisition: parsedSourceWithAcquisition } =
-      getNegationAndSource(directive, declaration, sourceWithAcquisition);
+      getNegationAndSource(
+        directive,
+        sourceWithAcquisition,
+        bindingLoggingContext,
+      );
     const { source, parsedAcquisition } = getSourceAndAcquisition(
       directive,
-      declaration,
       parsedSourceWithAcquisition,
       negated,
+      bindingLoggingContext,
     );
 
     const parsedBinding = {
       dirName: directive.name,
       el,
+      componentElement: componentLoggingContext.componentElement,
+      componentName: componentLoggingContext.componentName,
       key,
       source,
       negated,
@@ -354,20 +420,28 @@ function getParsedBindingDeclarations(directive, el) {
   });
 }
 
-function getNegationAndSource(directive, declaration, sourceWithAcquisition) {
+function getNegationAndSource(
+  directive,
+  sourceWithAcquisition,
+  bindingLoggingContext,
+) {
   if (!sourceWithAcquisition.startsWith('!')) {
     return { negated: false, sourceWithAcquisition };
   }
 
   if (!directive.allowNegation) {
     throw new Error(
-      `HET Error: Negation unsupported for ${directive.name}: '${declaration}'`,
+      'HET Error: Unsupported negation',
+      { cause: { ...bindingLoggingContext } },
     );
   }
 
   const parsedSource = sourceWithAcquisition.slice(1);
   if (!parsedSource) {
-    throw new Error(`HET Error: Invalid declaration '${declaration}'`);
+    throw new Error(
+      'HET Error: Negation requires a signal name',
+      { cause: { ...bindingLoggingContext } },
+    );
   }
 
   return { negated: true, sourceWithAcquisition: parsedSource };
@@ -375,9 +449,9 @@ function getNegationAndSource(directive, declaration, sourceWithAcquisition) {
 
 function getSourceAndAcquisition(
   directive,
-  declaration,
   sourceWithAcquisition,
   negated,
+  bindingLoggingContext,
 ) {
   const separatorCount = (sourceWithAcquisition.match(/:/g) || []).length;
   if (separatorCount === 0) {
@@ -388,68 +462,112 @@ function getSourceAndAcquisition(
   }
 
   if (separatorCount > 1) {
-    throw new Error(`HET Error: Invalid declaration '${declaration}'`);
+    throw new Error(
+      'HET Error: Binding declaration has too many ":" characters',
+      { cause: { ...bindingLoggingContext } },
+    );
   }
 
   if (negated) {
     throw new Error(
-      `HET Error: Negation cannot be used with acquisition in '${declaration}'`,
+      'HET Error: Negation cannot be used with acquisition',
+      { cause: { ...bindingLoggingContext } },
     );
   }
 
   const [source, acquisitionClause] = sourceWithAcquisition.split(':');
   if (!source || !acquisitionClause) {
-    throw new Error(`HET Error: Invalid declaration '${declaration}'`);
+    throw new Error(
+      'HET Error: Binding declaration has an incomplete acquisition clause',
+      { cause: { ...bindingLoggingContext } },
+    );
   }
 
   if (!directive.read) {
     throw new Error(
-      `HET Error: Acquisition clause not supported in binding declaration '${declaration}'`,
+      'HET Error: Directive does not support acquisition clauses',
+      { cause: { ...bindingLoggingContext } },
     );
   }
 
   return {
     source,
-    parsedAcquisition: getParsedAcquisition(directive, declaration, acquisitionClause),
+    parsedAcquisition: getParsedAcquisition(
+      directive,
+      acquisitionClause,
+      bindingLoggingContext,
+    ),
   };
 }
 
-function getParsedAcquisition(directive, declaration, acquisitionClause) {
+function getParsedAcquisition(
+  directive,
+  acquisitionClause,
+  bindingLoggingContext,
+) {
   const typeHintStart = acquisitionClause.indexOf('[');
   if (typeHintStart === -1) {
     return {
-      strategy: getValidatedAcquisitionStrategy(directive, declaration, acquisitionClause),
+      strategy: getValidatedAcquisitionStrategy(
+        directive,
+        acquisitionClause,
+        bindingLoggingContext,
+      ),
     };
   }
 
   if (!directive.allowTypeHint) {
     throw new Error(
-      `HET Error: Type hints unsupported for ${directive.name}: '${declaration}'`,
+      'HET Error: Directive does not support type hints',
+      { cause: { ...bindingLoggingContext } },
     );
   }
 
   const typeHint = acquisitionClause.slice(typeHintStart + 1, -1);
   if (!TYPE_HINTS.includes(typeHint)) {
-    throw new Error(`HET Error: Type hint '${typeHint}' not recognised in '${declaration}'`);
+    throw new Error(
+      'HET Error: Type hint is not recognised. Expected type hints are "int", "bool" or "float"',
+      {
+        cause: {
+          ...bindingLoggingContext,
+          bindingTypeHint: typeHint,
+        },
+      },
+    );
   }
 
   const strategy = acquisitionClause.slice(0, typeHintStart);
   return {
-    strategy: getValidatedAcquisitionStrategy(directive, declaration, strategy),
+    strategy: getValidatedAcquisitionStrategy(
+      directive,
+      strategy,
+      bindingLoggingContext,
+    ),
     typeHint,
   };
 }
 
-function getValidatedAcquisitionStrategy(directive, declaration, strategy) {
+function getValidatedAcquisitionStrategy(
+  directive,
+  strategy,
+  bindingLoggingContext,
+) {
   if (strategy !== 'seed' && strategy !== 'sync') {
     throw new Error(
-      `HET Error: Acquisition strategy '${strategy}' not recognised in '${declaration}'`,
+      'HET Error: Acquisition strategy is not recognised. Expected acquisition strategies are "seed" or "sync"',
+      {
+        cause: {
+          ...bindingLoggingContext,
+          bindingAcquisitionStrategy: strategy,
+        },
+      },
     );
   }
 
   if (strategy === 'sync' && directive.allowSync === false) {
     throw new Error(
-      `HET error: '${directive.name}' does not support :sync in '${declaration}'`,
+      'HET Error: Directive does not support sync acquisition',
+      { cause: { ...bindingLoggingContext } },
     );
   }
 
@@ -459,7 +577,10 @@ function getValidatedAcquisitionStrategy(directive, declaration, strategy) {
 function configureEventBinding(methods, binding, onCleanup) {
   const handler = methods?.[binding.source];
   if (typeof handler !== 'function') {
-    throw new Error(`HET Error: Missing method "${binding.source}"`);
+    throw new Error(
+      'HET Error: Missing component method',
+      { cause: getBindingCause(binding, { methodName: binding.source }) },
+    );
   }
   const listener = handler.bind(methods);
   binding.el.addEventListener(binding.key, listener);
@@ -470,21 +591,16 @@ function configureSignalBinding(ctx, binding) {
   const signalRef = ctx.signals[binding.source];
   if (!signalRef) {
     throw new Error(
-      `HET Error: Attempting to bind signal ${binding.source} but it does not exist`,
+      'HET Error: Bound signal does not exist',
+      { cause: getBindingCause(binding, { signalName: binding.source }) },
     );
   }
   const dispose = effect(() => {
     try {
-      const currentSignal = ctx.signals[binding.source];
-      if (!currentSignal) {
-        throw new Error(
-          `HET Error: Attempting to bind signal ${binding.source} but it does not exist`,
-        );
-      }
       binding.write(
         binding.el,
         binding.key,
-        getBindingWriteValue(binding, currentSignal),
+        getBindingWriteValue(binding, signalRef),
       );
     } catch (error) {
       onError(error);
@@ -495,16 +611,9 @@ function configureSignalBinding(ctx, binding) {
   if (binding.dirName === 'het-model') {
     const updateFromEl = () => {
       try {
-        const currentSignal = ctx.signals[binding.source];
-        if (!currentSignal) {
-          throw new Error(
-            `HET Error: Attempting to bind signal ${binding.source} but it does not exist`,
-          );
-        }
-
         const nextValue = readValue(binding);
-        if (currentSignal.value !== nextValue) {
-          currentSignal.value = nextValue;
+        if (signalRef.value !== nextValue) {
+          signalRef.value = nextValue;
         }
       } catch (error) {
         onError(error);
@@ -741,39 +850,68 @@ function syncImportedSignals(rootEl, instance) {
     instance.importDeclarations,
     instance.rawSignals,
     instance.signalMeta,
+    getComponentCause(rootEl),
   );
 }
 
-function resolveImports(rootEl, importDeclarations, rawSignals, signalMeta) {
+function resolveImports(
+  rootEl,
+  importDeclarations,
+  rawSignals,
+  signalMeta,
+  componentLoggingContext,
+) {
   if (!importDeclarations.length) return false;
 
   let updated = false;
 
   for (const { local, source } of importDeclarations) {
-    if (signalMeta[local] === 'local') {
-      throw new Error(
-        `HET Error: Signal name conflict for '${local}' (import vs local)`,
-      );
-    }
-
     const parentEl = findNearestExportingAncestor(rootEl, source);
     if (!parentEl) {
       throw new Error(
-        `HET Error: Unable to resolve import '${source}' for '${local}' (no exporting parent found)`,
+        'HET Error: Imported signal has no exporting ancestor',
+        {
+          cause: {
+            ...componentLoggingContext,
+            bindingAttribute: IMPORTS_ATTR,
+            importLocalSignalName: local,
+            importSourceSignalName: source,
+          },
+        },
       );
     }
 
     const parentInstance = parentEl.__het_instance;
     if (!parentInstance) {
       throw new Error(
-        `HET Error: Exported signal '${source}' is unavailable because the parent component is not mounted`,
+        'HET Error: Exporting ancestor component is not mounted',
+        {
+          cause: {
+            ...componentLoggingContext,
+            bindingAttribute: IMPORTS_ATTR,
+            exportingComponentElement: parentEl,
+            exportingComponentName: parentEl.getAttribute('het-component'),
+            importLocalSignalName: local,
+            importSourceSignalName: source,
+          },
+        },
       );
     }
 
     const parentSignal = parentInstance.signals?.[source];
     if (!parentSignal) {
       throw new Error(
-        `HET Error: Exported signal '${source}' not found on nearest parent component`,
+        'HET Error: Exporting ancestor does not provide imported signal',
+        {
+          cause: {
+            ...componentLoggingContext,
+            bindingAttribute: IMPORTS_ATTR,
+            exportingComponentElement: parentEl,
+            exportingComponentName: parentEl.getAttribute('het-component'),
+            importLocalSignalName: local,
+            importSourceSignalName: source,
+          },
+        },
       );
     }
 
@@ -832,7 +970,7 @@ function findNearestExportingAncestor(rootEl, signalName) {
   return null;
 }
 
-function createSignalsProxy(target) {
+function createSignalsProxy(target, componentLoggingContext) {
   return new Proxy(target, {
     set(obj, prop, value) {
       if (
@@ -840,12 +978,24 @@ function createSignalsProxy(target) {
         Object.prototype.hasOwnProperty.call(obj, prop)
       ) {
         throw new Error(
-          `HET error: Attempting to override signal '${prop}' after initialization`,
+          'HET Error: Signal override after initialization',
+          {
+            cause: {
+              ...componentLoggingContext,
+              signalName: prop,
+            },
+          },
         );
       }
       if (value?.brand !== PREACT_SIGNAL_BRAND) {
         throw new Error(
-          `HET Error: Signal '${String(prop)}' must be initialized with signal(...)`,
+          'HET Error: Signal initialized with a non-signal value',
+          {
+            cause: {
+              ...componentLoggingContext,
+              signalName: String(prop),
+            },
+          },
         );
       }
       obj[prop] = value;

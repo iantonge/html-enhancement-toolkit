@@ -25,7 +25,7 @@ test.describe('form het-select', () => {
     await page.click('#submit');
     await page.waitForFunction(() =>
       window.hetErrors.includes(
-        'HET error: Element with id missing-current not found in current target',
+        'HET Error: Selected element not found in the target pane on the page',
       ),
     );
   });
@@ -35,7 +35,7 @@ test.describe('form het-select', () => {
     await page.click('#submit');
     await page.waitForFunction(() =>
       window.hetErrors.includes(
-        'HET error: Element with id missing-response not found in server response',
+        'HET Error: Selected element not found in the target pane in the server response',
       ),
     );
   });

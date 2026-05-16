@@ -1,5 +1,6 @@
 window.hetInitConfig = window.hetInitConfig || {};
 window.hetErrors = window.hetErrors || [];
+window.hetErrorCauses = window.hetErrorCauses || [];
 const trustedTypesPolicy = trustedTypes.createPolicy('het', {
   createHTML: (html) => DOMPurify.sanitize(html, {
     RETURN_TRUSTED_TYPE: false,
@@ -40,6 +41,8 @@ const trustedTypesPolicy = trustedTypes.createPolicy('het', {
 window.hetInitConfig.trustedTypesPolicy = trustedTypesPolicy;
 window.hetInitConfig.onError = (err) => {
   window.hetErrors.push(err.message);
-  console.error(err);
+  window.hetErrorCauses.push(err.cause);
+  window.hetLastError = err;
+  console.error(err, err.cause);
 };
 window.HET.init(window.hetInitConfig);

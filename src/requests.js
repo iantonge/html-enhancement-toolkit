@@ -3,8 +3,9 @@ const recentClicks = new Set();
 const parser = new DOMParser();
 const inFlightRequests = new Map();
 let historyStateReplaced = false;
+let currentHistoryUrl = window.location.href;
 let onError = (error) => {
-  throw error;
+  console.error(error, error.cause);
 };
 let replaceContent = (elToReplace, replacementEl) => {
   const importedNode = document.importNode(replacementEl, true);
@@ -42,6 +43,7 @@ const clickPipeline = async (event) => {
         ctx.target,
         ctx.select,
         ctx.also,
+        ctx.loggingContext,
         ctx.initiator,
       );
       if (!response) return;
@@ -81,6 +83,7 @@ const submitPipeline = async (event) => {
         ctx.target,
         ctx.select,
         ctx.also,
+        ctx.loggingContext,
         ctx.initiator,
       );
       if (!response) return;
@@ -116,7 +119,8 @@ const popstatePipeline = async (event) => {
         ctx.target,
         ctx.select,
         ctx.also,
-        document,
+        ctx.loggingContext,
+        ctx.initiator,
       );
       if (!response) return;
       if (response.finalTarget.isNav) {
@@ -135,7 +139,14 @@ const popstatePipeline = async (event) => {
   }
 };
 
-const fetchAndSwap = async (request, target, select, also, initiator) => {
+const fetchAndSwap = async (
+  request,
+  target,
+  select,
+  also,
+  loggingContext,
+  initiator,
+) => {
   if (nonce) {
     request.headers.set(nonceHeader, nonce);
   }
@@ -147,7 +158,15 @@ const fetchAndSwap = async (request, target, select, also, initiator) => {
   });
   initiator.dispatchEvent(beforeFetchEvent);
   if (beforeFetchEvent.defaultPrevented) return;
-  const response = await fetch(beforeFetchEvent.detail.request);
+  const finalRequest = beforeFetchEvent.detail.request;
+  const requestContext = {
+    ...loggingContext,
+    requestUrl: finalRequest.url,
+    requestMethod: finalRequest.method,
+    resolvedTargetName: target.name,
+    targetPaneElement: target.el,
+  };
+  const response = await fetch(finalRequest);
   const afterFetchEvent = new CustomEvent('het:afterFetch', {
     detail: { response, initiator, target: target.el },
     bubbles: true,
@@ -155,7 +174,23 @@ const fetchAndSwap = async (request, target, select, also, initiator) => {
   initiator.dispatchEvent(afterFetchEvent);
   const finalResponse = afterFetchEvent.detail.response;
   const targetOverride = finalResponse.headers.get('X-HET-Target-Override');
-  const finalTarget = targetOverride ? getTarget(targetOverride) : target;
+  const finalTarget = targetOverride
+    ? getTarget(targetOverride, {
+        ...requestContext,
+        responseTargetHeader: targetOverride,
+      })
+    : target;
+  const finalTargetChanged = finalTarget.el !== target.el;
+  const swapContext = {
+    ...requestContext,
+    ...(targetOverride ? { responseTargetHeader: targetOverride } : {}),
+    ...(finalTargetChanged
+      ? {
+          effectiveTargetPaneName: finalTarget.name,
+          effectiveTargetPaneElement: finalTarget.el,
+        }
+      : {}),
+  };
   const selectHeaderProvided = finalResponse.headers.has('X-HET-Select-Override');
   const selectOverride = finalResponse.headers.get('X-HET-Select-Override');
   const alsoHeaderProvided = finalResponse.headers.has('X-HET-Also-Override');
@@ -164,13 +199,19 @@ const fetchAndSwap = async (request, target, select, also, initiator) => {
     selectHeaderProvided && (selectOverride ?? '').trim() === ''
       ? undefined
       : selectHeaderProvided
-        ? getSelectIds(selectOverride)
+        ? getSelectIds(selectOverride, {
+            ...swapContext,
+            requestDirectiveAttribute: 'X-HET-Select-Override',
+          })
         : select;
   const finalAlso =
     alsoHeaderProvided && (alsoOverride ?? '').trim() === ''
       ? undefined
       : alsoHeaderProvided
-        ? getAlsoIds(alsoOverride)
+        ? getAlsoIds(alsoOverride, {
+            ...swapContext,
+            requestDirectiveAttribute: 'X-HET-Also-Override',
+          })
         : also;
   const responseHtml = await finalResponse.text();
   const htmlForParse = trustedTypesPolicy?.createHTML(responseHtml) ?? responseHtml;
@@ -178,13 +219,16 @@ const fetchAndSwap = async (request, target, select, also, initiator) => {
   const candidates = parsedDocument.querySelectorAll(`[het-pane="${finalTarget.name}"]`);
   if (candidates.length === 0)
     throw new Error(
-      `HET error: No pane named ${finalTarget.name} found in server response`,
+      'HET Error: Target pane not found in server response',
+      { cause: { ...swapContext } },
     );
   if (candidates.length > 1)
     throw new Error(
-      `HET error: Multiple panes named ${finalTarget.name} found in server response`,
+      'HET Error: Multiple target panes found in server response',
+      { cause: { ...swapContext, responseTargetPaneCount: candidates.length } },
     );
   const responseTarget = candidates[0];
+  const contentContext = { ...swapContext };
   const beforeLoadContentEvent = new CustomEvent('het:beforeLoadContent', {
     detail: { newContent: responseTarget },
     cancelable: true,
@@ -197,9 +241,20 @@ const fetchAndSwap = async (request, target, select, also, initiator) => {
   const insertedElements = [];
   let alsoElements = [];
   let loadedContent;
+  const alsoContext = {
+    ...contentContext,
+    requestDirectiveAttribute: also ? 'het-also' : '',
+    ...(alsoHeaderProvided ? { responseAlsoHeader: alsoOverride } : {}),
+  };
   if (!finalSelect || finalSelect.length === 0) {
     if (finalAlso && finalAlso.length) {
-      alsoElements = applyAlsoReplacements(finalAlso, finalTarget.el, newContent, responseDoc);
+      alsoElements = applyAlsoReplacements(
+        finalAlso,
+        finalTarget.el,
+        newContent,
+        responseDoc,
+        alsoContext,
+      );
       insertedElements.push(...alsoElements);
     }
     loadedContent = replaceContent(finalTarget.el, newContent);
@@ -212,14 +267,30 @@ const fetchAndSwap = async (request, target, select, also, initiator) => {
     loadedContent.dispatchEvent(afterLoadContentEvent);
     return { url: finalResponse.url, newHead: parsedDocument.head, finalTarget };
   }
-  validateSelectedIds(finalSelect, finalTarget.el, newContent);
+  const selectContext = {
+    ...contentContext,
+    requestDirectiveAttribute: select ? 'het-select' : '',
+    ...(selectHeaderProvided ? { responseSelectHeader: selectOverride } : {}),
+  };
+  validateSelectedIds(
+    finalSelect,
+    finalTarget.el,
+    newContent,
+    selectContext,
+  );
   for (const id of finalSelect) {
     const currentEl = getDescendantById(finalTarget.el, id);
     const replacement = getDescendantById(newContent, id);
     insertedElements.push(replaceContent(currentEl, replacement));
   }
   if (finalAlso && finalAlso.length) {
-    alsoElements = applyAlsoReplacements(finalAlso, finalTarget.el, newContent, responseDoc);
+    alsoElements = applyAlsoReplacements(
+      finalAlso,
+      finalTarget.el,
+      newContent,
+      responseDoc,
+      alsoContext,
+    );
     insertedElements.push(...alsoElements);
   }
   focusFirstAutofocus(insertedElements);
@@ -247,19 +318,44 @@ const getClickContext = (event) => {
   if (recentClicks.has(link)) return;
   recentClicks.add(link);
   setTimeout(() => recentClicks.delete(link), NAV_DEBOUNCE_TIME);
+  const targetName = link.getAttribute('het-target');
+  const loggingContext = {
+    linkElement: link,
+    linkUrl: link.href,
+    linkTargetName: targetName,
+    resolvedTargetName: targetName,
+  };
   if (new URL(link.href).origin !== window.location.origin)
-    throw new Error('HET error: Cannot progressively enhance external links');
+    throw new Error(
+      'HET Error: Cross-origin links cannot be progressively enhanced',
+      { cause: { ...loggingContext } },
+    );
   if (link.hasAttribute('target'))
     throw new Error(
-      'HET error: Cannot progressively enhance links with target attribute',
+      'HET Error: Links with a target attribute cannot be progressively enhanced',
+      { cause: { ...loggingContext } },
     );
-  const targetName = link.getAttribute('het-target');
-  const select = getSelectIds(link.getAttribute('het-select'));
-  const also = getAlsoIds(link.getAttribute('het-also'));
-  const target = getTarget(targetName);
+  const select = getSelectIds(link.getAttribute('het-select'), {
+    ...loggingContext,
+    requestDirectiveAttribute: 'het-select',
+  });
+  const also = getAlsoIds(link.getAttribute('het-also'), {
+    ...loggingContext,
+    requestDirectiveAttribute: 'het-also',
+  });
+  const target = getTarget(targetName, loggingContext);
+  loggingContext.targetPaneElement = target.el;
   const abortController = new AbortController();
   const request = new Request(link.href, { signal: abortController.signal });
-  return { request, target, abortController, select, also, initiator: link };
+  return {
+    request,
+    target,
+    abortController,
+    select,
+    also,
+    initiator: link,
+    loggingContext,
+  };
 };
 
 const getRequestId = () => {
@@ -268,63 +364,97 @@ const getRequestId = () => {
 };
 
 const getSubmitContext = (event) => {
-  const targetName =
-    event.submitter?.getAttribute("het-target") ||
-    event.target.getAttribute("het-target");
+  const formTargetName = event.target.getAttribute('het-target');
+  const submitterTargetName = event.submitter?.hasAttribute('het-target')
+    ? event.submitter.getAttribute('het-target')
+    : undefined;
+  const targetName = submitterTargetName || formTargetName;
   if (!targetName) return;
   event.preventDefault();
+  const form = event.target;
+  const submitter = event.submitter;
+  const formMethod = (form.getAttribute('method') || 'GET').toUpperCase();
+  const submitterMethod = submitter?.hasAttribute('formmethod')
+    ? submitter.getAttribute('formmethod').toUpperCase()
+    : undefined;
+  const resolvedMethod = submitterMethod || formMethod;
+  const formAction = form.getAttribute('action') || window.location.href;
+  const submitterAction = submitter?.hasAttribute('formaction')
+    ? submitter.getAttribute('formaction')
+    : undefined;
+  const resolvedAction = submitterAction || formAction;
+  const formEnctype =
+    form.getAttribute('enctype') || 'application/x-www-form-urlencoded';
+  const submitterEnctype = submitter?.hasAttribute('formenctype')
+    ? submitter.getAttribute('formenctype')
+    : undefined;
+  const resolvedEnctype = (submitterEnctype || formEnctype).toLowerCase();
+  const loggingContext = {
+    formElement: form,
+    ...(submitter ? { submitterElement: submitter } : {}),
+    ...(formTargetName ? { formTargetName } : {}),
+    ...(submitterTargetName ? { submitterTargetName } : {}),
+    resolvedTargetName: targetName,
+    formAction,
+    ...(submitterAction ? { submitterAction } : {}),
+    formMethod,
+    ...(submitterMethod ? { submitterMethod } : {}),
+    formEnctype,
+    ...(submitterEnctype ? { submitterEnctype } : {}),
+    resolvedActionUrl: new URL(resolvedAction, window.location.href).href,
+    resolvedMethod,
+    resolvedEnctype,
+  };
   const select = getSelectIds(
-    event.submitter?.getAttribute('het-select') ||
-      event.target.getAttribute('het-select'),
+    submitter?.getAttribute('het-select') ||
+      form.getAttribute('het-select'),
+    {
+      ...loggingContext,
+      requestDirectiveAttribute: 'het-select',
+    },
   );
   const also = getAlsoIds(
-    event.submitter?.getAttribute('het-also') ||
-      event.target.getAttribute('het-also'),
+    submitter?.getAttribute('het-also') ||
+      form.getAttribute('het-also'),
+    {
+      ...loggingContext,
+      requestDirectiveAttribute: 'het-also',
+    },
   );
-  const method = (
-    event.submitter?.getAttribute('formmethod') ||
-    event.target.getAttribute('method') ||
-    'GET'
-  ).toUpperCase();
-  const action =
-    event.submitter?.getAttribute('formaction') ||
-    event.target.getAttribute('action') ||
-    window.location.href;
-  const enctype = (
-    event.submitter?.getAttribute('formenctype') ||
-    event.target.getAttribute('enctype') ||
-    'application/x-www-form-urlencoded'
-  ).toLowerCase();
   const isBackgroundSubmission =
-    event.submitter?.hasAttribute('het-background') ||
-    event.target.hasAttribute('het-background');
-  const resolvedActionUrl = new URL(action, window.location.href);
+    submitter?.hasAttribute('het-background') ||
+    form.hasAttribute('het-background');
+  const resolvedActionUrl = new URL(resolvedAction, window.location.href);
   if (resolvedActionUrl.origin !== window.location.origin)
     throw new Error(
-      'HET error: Cannot progressively enhance cross-origin form submissions',
+      'HET Error: Cross-origin form submissions cannot be progressively enhanced',
+      { cause: { ...loggingContext } },
     );
-  const formData = new FormData(event.target, event.submitter);
+  const formData = new FormData(form, submitter);
   const abortController = new AbortController();
   const request =
-    method === 'GET'
+    resolvedMethod === 'GET'
       ? buildGetRequest(resolvedActionUrl, formData, abortController)
       : buildPostRequest(
           resolvedActionUrl,
-          method,
+          resolvedMethod,
           formData,
-          enctype,
+          resolvedEnctype,
           abortController,
         );
-  const target = getTarget(targetName);
+  const target = getTarget(targetName, loggingContext);
+  loggingContext.targetPaneElement = target.el;
   return {
     request,
     target,
-    form: event.target,
+    form,
     abortController,
     select,
     also,
     isBackgroundSubmission,
-    initiator: event.target,
+    initiator: form,
+    submitter,
+    loggingContext,
   };
 };
 
@@ -373,11 +503,14 @@ const buildPostRequest = (
   });
 };
 
-const getSelectIds = (raw) => {
+const getSelectIds = (raw, loggingContext) => {
   if (!raw) return;
   const ids = raw.split(/\s+/).filter(Boolean);
   if (ids.length === 0)
-    throw new Error('HET error: het-select must list at least one id');
+    throw new Error(
+      'HET Error: Select directive must list at least one id',
+      { cause: { ...loggingContext, requestDirectiveDeclaration: raw } },
+    );
   return ids;
 };
 
@@ -389,49 +522,104 @@ const getDescendantById = (root, id) => {
   return root.querySelector(selector);
 };
 
-const validateSelectedIds = (ids, currentContent, newContent) => {
+const validateSelectedIds = (ids, currentContent, newContent, loggingContext) => {
   ids.forEach((id) => {
     const currentEl = getDescendantById(currentContent, id);
     if (!currentEl)
       throw new Error(
-        `HET error: Element with id ${id} not found in current target`,
+        'HET Error: Selected element not found in the target pane on the page',
+        {
+          cause: {
+            ...loggingContext,
+            selectId: id,
+            targetPaneElement: currentContent,
+          },
+        },
       );
     const newEl = getDescendantById(newContent, id);
     if (!newEl)
       throw new Error(
-        `HET error: Element with id ${id} not found in server response`,
+        'HET Error: Selected element not found in the target pane in the server response',
+        {
+          cause: {
+            ...loggingContext,
+            selectId: id,
+            targetPaneElement: currentContent,
+            currentElement: currentEl,
+          },
+        },
       );
   });
 };
 
-const getAlsoIds = (raw) => {
+const getAlsoIds = (raw, loggingContext) => {
   if (!raw) return;
   const ids = raw.split(/\s+/).filter(Boolean);
   if (ids.length === 0)
-    throw new Error('HET error: het-also must list at least one id');
+    throw new Error(
+      'HET Error: Also directive must list at least one id',
+      { cause: { ...loggingContext, requestDirectiveDeclaration: raw } },
+    );
   return ids;
 };
 
-const applyAlsoReplacements = (ids, targetEl, responseTarget, responseDoc) => {
+const applyAlsoReplacements = (
+  ids,
+  targetEl,
+  responseTarget,
+  responseDoc,
+  loggingContext,
+) => {
   const replacements = [];
   ids.forEach((id) => {
     const currentEl = getDescendantById(document, id);
     if (!currentEl)
       throw new Error(
-        `HET error: Element with id ${id} not found in current document`,
+        'HET Error: het-also element not found on the page',
+        {
+          cause: {
+            ...loggingContext,
+            alsoId: id,
+            targetPaneElement: targetEl,
+          },
+        },
       );
     if (targetEl.contains(currentEl))
       throw new Error(
-        `HET error: het-also id ${id} must refer to an element outside the target`,
+        'HET Error: het-also element found inside the target pane on the page',
+        {
+          cause: {
+            ...loggingContext,
+            alsoId: id,
+            targetPaneElement: targetEl,
+            currentElement: currentEl,
+          },
+        },
       );
     const replacement = getDescendantById(responseDoc, id);
     if (!replacement)
       throw new Error(
-        `HET error: Element with id ${id} not found in server response`,
+        'HET Error: het-also element not found in the server response',
+        {
+          cause: {
+            ...loggingContext,
+            alsoId: id,
+            targetPaneElement: targetEl,
+            currentElement: currentEl,
+          },
+        },
       );
     if (responseTarget.contains(replacement)) {
       throw new Error(
-        `HET error: het-also id ${id} must refer to an element outside the target in server response`,
+        'HET Error: het-also element found inside the target pane in the server response',
+        {
+          cause: {
+            ...loggingContext,
+            alsoId: id,
+            targetPaneElement: targetEl,
+            currentElement: currentEl,
+          },
+        },
       );
     }
     replacements.push(replaceContent(currentEl, replacement));
@@ -523,6 +711,7 @@ const updateHistory = (target, responseUrl, select, also) => {
     historyStateReplaced = true;
   }
   history.pushState(state, '', responseUrl);
+  currentHistoryUrl = window.location.href;
 };
 
 const updateHead = (newHead) => {
@@ -536,23 +725,53 @@ const updateHead = (newHead) => {
 };
 
 const getPopStateContext = (event) => {
-  if (!event.state) return;
+  const toUrl = window.location.href;
+  if (!event.state) {
+    currentHistoryUrl = toUrl;
+    return;
+  }
   inFlightRequests.forEach((controller) => controller.abort());
   inFlightRequests.clear();
   const { paneName, url, select, also } = event.state;
-  const target = getTarget(paneName);
+  const loggingContext = {
+    navigationFromUrl: currentHistoryUrl,
+    navigationToUrl: toUrl,
+    navigationTargetName: paneName,
+    resolvedTargetName: paneName,
+  };
+  currentHistoryUrl = toUrl;
+  const target = getTarget(paneName, loggingContext);
+  loggingContext.targetPaneElement = target.el;
   const abortController = new AbortController();
   const request = new Request(url, { signal: abortController.signal });
-  return { request, target, abortController, select, also };
+  return {
+    request,
+    target,
+    abortController,
+    select,
+    also,
+    initiator: document,
+    loggingContext,
+  };
 };
 
-const getTarget = (targetName) => {
+const getTarget = (targetName, loggingContext) => {
   const candidates = document.querySelectorAll(`[het-pane="${targetName}"]`);
   if (candidates.length === 0)
-    throw new Error(`HET error: No pane named ${targetName} found in current document`);
+    throw new Error(
+      'HET Error: Target pane not found on the page',
+      { cause: { ...loggingContext, targetLookupName: targetName } },
+    );
   if (candidates.length > 1)
     throw new Error(
-      `HET error: Multiple panes named ${targetName} found in current document`,
+      'HET Error: Multiple target panes found on the page',
+      {
+        cause: {
+          ...loggingContext,
+          targetLookupName: targetName,
+          targetPaneElements: [...candidates],
+        },
+      },
     );
   const el = candidates[0];
   const isNav = el.hasAttribute('het-nav');

@@ -49,21 +49,21 @@ test.describe('components het-model', () => {
   test('reports error for empty het-model expression', async ({ page }) => {
     await page.goto('/components/het-model/invalid-expression-empty');
     await expect(page.locator('#error-message')).toHaveText(
-      "HET Error: Invalid expression ''",
+      'HET Error: Invalid binding expression',
     );
   });
 
   test('reports error for extra equals in het-model expression', async ({ page }) => {
     await page.goto('/components/het-model/invalid-expression-extra-equals');
     await expect(page.locator('#error-message')).toHaveText(
-      "HET Error: Invalid expression 'name=first=second'",
+      'HET Error: Invalid binding expression',
     );
   });
 
   test('reports error when negation is used with het-model', async ({ page }) => {
     await page.goto('/components/het-model/invalid-negation');
     await expect(page.locator('#error-message')).toHaveText(
-      "HET Error: Negation unsupported for het-model: '!name'",
+      'HET Error: Unsupported negation',
     );
   });
 });

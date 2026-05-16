@@ -70,4 +70,39 @@ test.describe('history navigation', () => {
       'Initial link history description',
     );
   });
+
+  test('includes browser navigation context in popstate errors', async ({ page }) => {
+    await page.goto('/requests/history/link');
+    await Promise.all([
+      page.waitForSelector('#main-content:has-text("Link response.")'),
+      page.click('#nav-link'),
+    ]);
+    const fromUrl = page.url();
+
+    await page.locator('[het-pane="main"]').evaluate((el) => {
+      el.removeAttribute('het-pane');
+    });
+
+    await page.goBack();
+    await page.waitForFunction(() =>
+      window.hetErrors.includes(
+        'HET Error: Target pane not found on the page',
+      ),
+    );
+
+    const cause = await page.evaluate(() => ({
+      navigationFromUrl: window.hetLastError.cause.navigationFromUrl,
+      navigationToUrl: window.hetLastError.cause.navigationToUrl,
+      navigationTargetName: window.hetLastError.cause.navigationTargetName,
+      resolvedTargetName: window.hetLastError.cause.resolvedTargetName,
+      targetLookupName: window.hetLastError.cause.targetLookupName,
+    }));
+    expect(cause).toEqual({
+      navigationFromUrl: fromUrl,
+      navigationToUrl: page.url(),
+      navigationTargetName: 'main',
+      resolvedTargetName: 'main',
+      targetLookupName: 'main',
+    });
+  });
 });
