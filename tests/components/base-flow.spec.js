@@ -7,6 +7,37 @@ test.describe('components base flow', () => {
     await expect(page.locator('#setup-count')).toHaveText('Setup count: 1');
   });
 
+  test('mounts anonymous component during init', async ({ page }) => {
+    await page.goto('/components/base-flow/anonymous');
+    await expect(page.locator('#anonymous-output')).toHaveText('Anonymous mounted');
+  });
+
+  test('omits component name from anonymous component error causes', async ({ page }) => {
+    await page.goto('/components/base-flow/anonymous-error');
+    await page.waitForFunction(() =>
+      window.hetErrors.includes('HET Error: Invalid binding expression'),
+    );
+
+    const cause = await page.evaluate(() => {
+      const { componentElement, bindingElement, ...serializableCause } =
+        window.hetLastError.cause;
+      return {
+        ...serializableCause,
+        hasComponentName: Object.hasOwn(window.hetLastError.cause, 'componentName'),
+        componentElementId: componentElement.id,
+        bindingElementId: bindingElement.id,
+      };
+    });
+
+    expect(cause).toEqual({
+      hasComponentName: false,
+      componentElementId: 'anonymous-error-root',
+      bindingAttribute: 'het-props',
+      bindingDeclaration: 'textContent=',
+      bindingElementId: 'anonymous-error-binding',
+    });
+  });
+
   test('runs cleanup callbacks on destroy', async ({ page }) => {
     await page.goto('/components/base-flow/destroy');
     await page.evaluate(() => {

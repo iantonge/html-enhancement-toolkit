@@ -172,12 +172,11 @@ function mountComponents(root) {
   componentsToMount.sort((a, b) => getNodeDepth(a) - getNodeDepth(b));
 
   for (const el of componentsToMount) {
-    const name = el.getAttribute('het-component');
-    if (!components.has(name)) continue;
-    const setup = components.get(name);
+    const component = getMountableComponent(el);
+    if (!component) continue;
 
     try {
-      if (mountComponent(el, setup)) {
+      if (mountComponent(el, component.setup)) {
         mountedComponents.push(el);
       }
     } catch (error) {
@@ -281,21 +280,45 @@ function removeCloakAttributes(components) {
 }
 
 function getComponentCause(componentElement) {
+  return withOptionalComponentName(
+    {
+      componentElement,
+    },
+    componentElement.getAttribute('het-component'),
+  );
+}
+
+function withOptionalComponentName(cause, componentName, property = 'componentName') {
+  if (componentName) {
+    cause[property] = componentName;
+  }
+  return cause;
+}
+
+function getMountableComponent(el) {
+  const name = el.getAttribute('het-component');
+  if (name === '') {
+    return { };
+  }
+  if (!components.has(name)) {
+    return undefined;
+  }
   return {
-    componentName: componentElement.getAttribute('het-component'),
-    componentElement,
+    setup: components.get(name),
   };
 }
 
 function getBindingCause(binding, extra = {}) {
-  return {
-    componentName: binding.componentName,
-    componentElement: binding.componentElement,
-    bindingAttribute: binding.dirName,
-    bindingDeclaration: binding.exp,
-    bindingElement: binding.el,
-    ...extra,
-  };
+  return withOptionalComponentName(
+    {
+      componentElement: binding.componentElement,
+      bindingAttribute: binding.dirName,
+      bindingDeclaration: binding.exp,
+      bindingElement: binding.el,
+      ...extra,
+    },
+    binding.componentName,
+  );
 }
 
 function getDeclaredExports(el) {
@@ -695,8 +718,8 @@ function initializeObserver() {
         try {
           if (!el.isConnected) continue;
           if (!el.hasAttribute('het-component')) continue;
-          const name = el.getAttribute('het-component');
-          if (components.has(name) && mountComponent(el, components.get(name))) {
+          const component = getMountableComponent(el);
+          if (component && mountComponent(el, component.setup)) {
             mountedComponents.push(el);
           }
         } catch (error) {
@@ -886,14 +909,17 @@ function resolveImports(
       throw new Error(
         'HET Error: Exporting ancestor component is not mounted',
         {
-          cause: {
-            ...componentLoggingContext,
-            bindingAttribute: IMPORTS_ATTR,
-            exportingComponentElement: parentEl,
-            exportingComponentName: parentEl.getAttribute('het-component'),
-            importLocalSignalName: local,
-            importSourceSignalName: source,
-          },
+          cause: withOptionalComponentName(
+            {
+              ...componentLoggingContext,
+              bindingAttribute: IMPORTS_ATTR,
+              exportingComponentElement: parentEl,
+              importLocalSignalName: local,
+              importSourceSignalName: source,
+            },
+            parentEl.getAttribute('het-component'),
+            'exportingComponentName',
+          ),
         },
       );
     }
@@ -903,14 +929,17 @@ function resolveImports(
       throw new Error(
         'HET Error: Exporting ancestor does not provide imported signal',
         {
-          cause: {
-            ...componentLoggingContext,
-            bindingAttribute: IMPORTS_ATTR,
-            exportingComponentElement: parentEl,
-            exportingComponentName: parentEl.getAttribute('het-component'),
-            importLocalSignalName: local,
-            importSourceSignalName: source,
-          },
+          cause: withOptionalComponentName(
+            {
+              ...componentLoggingContext,
+              bindingAttribute: IMPORTS_ATTR,
+              exportingComponentElement: parentEl,
+              importLocalSignalName: local,
+              importSourceSignalName: source,
+            },
+            parentEl.getAttribute('het-component'),
+            'exportingComponentName',
+          ),
         },
       );
     }

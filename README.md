@@ -107,7 +107,7 @@ HET is built around a few small primitives:
 
 ## Components
 
-Register components before calling `init()`, then attach them with `het-component`. A component starts from existing HTML and wires small behavior onto it:
+Register named components before calling `init()`, then attach them with `het-component`. A component starts from existing HTML and wires small behavior onto it:
 
 ```html
 <div het-component="counter">
@@ -128,6 +128,15 @@ window.HET.registerComponent('counter', ({ signals }) => {
 });
 
 window.HET.init();
+```
+
+For setup-free components, use `het-component` without a value. This mounts the component root so acquired signals, bindings, imports, exports, sync, and cleanup use the normal component lifecycle without a registered setup function:
+
+```html
+<div het-component>
+  <span het-props="textContent=message:seed">Ready</span>
+  <output het-props="textContent=message"></output>
+</div>
 ```
 
 Call `window.HET.destroy()` to run cleanup for mounted components and remove request listeners.
@@ -218,7 +227,7 @@ Negation and acquisition cannot be combined in the same declaration.
 
 | Attribute | Role | Value shape | Multiple declarations | Acquisition | Type hints | Negation | Notes |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| [`het-component`](#components) | Component root | Component name | No | No | No | No | Mounts the registered component with that name. |
+| [`het-component`](#components) | Component root | Optional component name | No | No | No | No | Mounts the registered component with that name, or mounts anonymously when empty. |
 | [`het-ref`](#het-ref) | DOM ref | Ref name | No | No | No | No | Exposed on `setup({ refs })` for the owning component scope. |
 | [`het-cloak`](#het-cloak) | Mount cloak | Boolean attribute | No | No | No | No | Removed after the component mount batch completes. |
 | [`het-props`](#het-props) | Property binding | `property=signal` | Yes | `:seed`, `:sync` | Yes | Yes | - |
@@ -575,7 +584,7 @@ Thrown when a binding declaration does not match the directive's value shape. Th
 
 | `cause` property | Meaning |
 | --- | --- |
-| `componentName` | Value of the owning `het-component` attribute. |
+| `componentName` | Value of the owning `het-component` attribute, if present. |
 | `componentElement` | Component root element that was mounting. |
 | `bindingAttribute` | Binding attribute being parsed. |
 | `bindingDeclaration` | Raw binding declaration that failed. |
@@ -593,7 +602,7 @@ Thrown when `!` is used with a directive that does not support negation, such as
 
 | `cause` property | Meaning |
 | --- | --- |
-| `componentName` | Value of the owning `het-component` attribute. |
+| `componentName` | Value of the owning `het-component` attribute, if present. |
 | `componentElement` | Component root element that was mounting. |
 | `bindingAttribute` | Binding attribute being parsed. |
 | `bindingDeclaration` | Raw binding declaration that failed. |
@@ -611,7 +620,7 @@ Thrown when a negated binding uses `!` without a following signal name.
 
 | `cause` property | Meaning |
 | --- | --- |
-| `componentName` | Value of the owning `het-component` attribute. |
+| `componentName` | Value of the owning `het-component` attribute, if present. |
 | `componentElement` | Component root element that was mounting. |
 | `bindingAttribute` | Binding attribute being parsed. |
 | `bindingDeclaration` | Raw binding declaration that failed. |
@@ -629,7 +638,7 @@ Thrown when a binding contains more than one acquisition separator.
 
 | `cause` property | Meaning |
 | --- | --- |
-| `componentName` | Value of the owning `het-component` attribute. |
+| `componentName` | Value of the owning `het-component` attribute, if present. |
 | `componentElement` | Component root element that was mounting. |
 | `bindingAttribute` | Binding attribute being parsed. |
 | `bindingDeclaration` | Raw binding declaration that failed. |
@@ -647,7 +656,7 @@ Thrown when one declaration combines `!` with `:seed` or `:sync`.
 
 | `cause` property | Meaning |
 | --- | --- |
-| `componentName` | Value of the owning `het-component` attribute. |
+| `componentName` | Value of the owning `het-component` attribute, if present. |
 | `componentElement` | Component root element that was mounting. |
 | `bindingAttribute` | Binding attribute being parsed. |
 | `bindingDeclaration` | Raw binding declaration that failed. |
@@ -665,7 +674,7 @@ Thrown when the signal name or acquisition strategy is missing around `:`.
 
 | `cause` property | Meaning |
 | --- | --- |
-| `componentName` | Value of the owning `het-component` attribute. |
+| `componentName` | Value of the owning `het-component` attribute, if present. |
 | `componentElement` | Component root element that was mounting. |
 | `bindingAttribute` | Binding attribute being parsed. |
 | `bindingDeclaration` | Raw binding declaration that failed. |
@@ -683,7 +692,7 @@ Thrown when `:seed` or `:sync` is used with a directive that cannot read from th
 
 | `cause` property | Meaning |
 | --- | --- |
-| `componentName` | Value of the owning `het-component` attribute. |
+| `componentName` | Value of the owning `het-component` attribute, if present. |
 | `componentElement` | Component root element that was mounting. |
 | `bindingAttribute` | Binding attribute being parsed. |
 | `bindingDeclaration` | Raw binding declaration that failed. |
@@ -701,7 +710,7 @@ Thrown when a type hint is used with a directive that does not support type hint
 
 | `cause` property | Meaning |
 | --- | --- |
-| `componentName` | Value of the owning `het-component` attribute. |
+| `componentName` | Value of the owning `het-component` attribute, if present. |
 | `componentElement` | Component root element that was mounting. |
 | `bindingAttribute` | Binding attribute being parsed. |
 | `bindingDeclaration` | Raw binding declaration that failed. |
@@ -719,7 +728,7 @@ Thrown when an acquisition clause uses an unsupported type hint.
 
 | `cause` property | Meaning |
 | --- | --- |
-| `componentName` | Value of the owning `het-component` attribute. |
+| `componentName` | Value of the owning `het-component` attribute, if present. |
 | `componentElement` | Component root element that was mounting. |
 | `bindingAttribute` | Binding attribute being parsed. |
 | `bindingDeclaration` | Raw binding declaration that failed. |
@@ -738,7 +747,7 @@ Thrown when an acquisition clause uses an unsupported strategy.
 
 | `cause` property | Meaning |
 | --- | --- |
-| `componentName` | Value of the owning `het-component` attribute. |
+| `componentName` | Value of the owning `het-component` attribute, if present. |
 | `componentElement` | Component root element that was mounting. |
 | `bindingAttribute` | Binding attribute being parsed. |
 | `bindingDeclaration` | Raw binding declaration that failed. |
@@ -757,7 +766,7 @@ Thrown when `:sync` is used with a directive that only supports `:seed`, such as
 
 | `cause` property | Meaning |
 | --- | --- |
-| `componentName` | Value of the owning `het-component` attribute. |
+| `componentName` | Value of the owning `het-component` attribute, if present. |
 | `componentElement` | Component root element that was mounting. |
 | `bindingAttribute` | Binding attribute being parsed. |
 | `bindingDeclaration` | Raw binding declaration that failed. |
@@ -773,7 +782,7 @@ Thrown when a `het-imports` item is neither `signal` nor `local=source`.
 
 | `cause` property | Meaning |
 | --- | --- |
-| `componentName` | Value of the owning `het-component` attribute. |
+| `componentName` | Value of the owning `het-component` attribute, if present. |
 | `componentElement` | Component root element that was mounting. |
 | `bindingAttribute` | Always `het-imports`. |
 | `bindingDeclaration` | Raw import declaration that failed. |
@@ -788,7 +797,7 @@ Thrown when `het-imports` asks for a signal that no ancestor component exports.
 
 | `cause` property | Meaning |
 | --- | --- |
-| `componentName` | Value of the importing component's `het-component` attribute. |
+| `componentName` | Value of the importing component's `het-component` attribute, if present. |
 | `componentElement` | Importing component root element. |
 | `bindingAttribute` | Always `het-imports`. |
 | `importLocalSignalName` | Local signal name requested by the importing component. |
@@ -811,11 +820,11 @@ window.HET.init();
 
 | `cause` property | Meaning |
 | --- | --- |
-| `componentName` | Value of the importing component's `het-component` attribute. |
+| `componentName` | Value of the importing component's `het-component` attribute, if present. |
 | `componentElement` | Importing component root element. |
 | `bindingAttribute` | Always `het-imports`. |
 | `exportingComponentElement` | Ancestor element that declared the export. |
-| `exportingComponentName` | Value of the ancestor's `het-component` attribute. |
+| `exportingComponentName` | Value of the ancestor's `het-component` attribute, if present. |
 | `importLocalSignalName` | Local signal name requested by the importing component. |
 | `importSourceSignalName` | Exported signal name HET looked for on the ancestor. |
 
@@ -837,11 +846,11 @@ window.HET.init();
 
 | `cause` property | Meaning |
 | --- | --- |
-| `componentName` | Value of the importing component's `het-component` attribute. |
+| `componentName` | Value of the importing component's `het-component` attribute, if present. |
 | `componentElement` | Importing component root element. |
 | `bindingAttribute` | Always `het-imports`. |
 | `exportingComponentElement` | Ancestor element that declared the export. |
-| `exportingComponentName` | Value of the ancestor's `het-component` attribute. |
+| `exportingComponentName` | Value of the ancestor's `het-component` attribute, if present. |
 | `importLocalSignalName` | Local signal name requested by the importing component. |
 | `importSourceSignalName` | Exported signal name HET looked for on the ancestor. |
 
@@ -859,7 +868,7 @@ Thrown when a component imports a signal and also tries to initialize the same s
 
 | `cause` property | Meaning |
 | --- | --- |
-| `componentName` | Value of the owning `het-component` attribute. |
+| `componentName` | Value of the owning `het-component` attribute, if present. |
 | `componentElement` | Component root element that was mounting. |
 | `bindingAttribute` | Binding attribute that tried to initialize the imported signal. |
 | `bindingDeclaration` | Raw binding declaration that tried to initialize the signal. |
@@ -879,7 +888,7 @@ Thrown when more than one `:seed` or `:sync` binding tries to initialize the sam
 
 | `cause` property | Meaning |
 | --- | --- |
-| `componentName` | Value of the owning `het-component` attribute. |
+| `componentName` | Value of the owning `het-component` attribute, if present. |
 | `componentElement` | Component root element that was mounting. |
 | `bindingAttribute` | Binding attribute that tried to initialize the signal again. |
 | `bindingDeclaration` | Raw duplicate initialization declaration. |
@@ -907,7 +916,7 @@ window.HET.registerComponent('counter', ({ signals }) => {
 
 | `cause` property | Meaning |
 | --- | --- |
-| `componentName` | Value of the owning `het-component` attribute. |
+| `componentName` | Value of the owning `het-component` attribute, if present. |
 | `componentElement` | Component root element that was mounting. |
 | `signalName` | Signal name that `setup()` tried to replace. |
 
@@ -923,7 +932,7 @@ window.HET.registerComponent('counter', ({ signals }) => {
 
 | `cause` property | Meaning |
 | --- | --- |
-| `componentName` | Value of the owning `het-component` attribute. |
+| `componentName` | Value of the owning `het-component` attribute, if present. |
 | `componentElement` | Component root element that was mounting. |
 | `signalName` | Signal name that received a non-signal value. |
 
@@ -943,7 +952,7 @@ window.HET.registerComponent('counter', () => ({}));
 
 | `cause` property | Meaning |
 | --- | --- |
-| `componentName` | Value of the owning `het-component` attribute. |
+| `componentName` | Value of the owning `het-component` attribute, if present. |
 | `componentElement` | Component root element that was mounting. |
 | `bindingAttribute` | Binding attribute that referenced the method. |
 | `bindingDeclaration` | Raw event binding declaration. |
@@ -966,7 +975,7 @@ window.HET.registerComponent('counter', () => ({}));
 
 | `cause` property | Meaning |
 | --- | --- |
-| `componentName` | Value of the owning `het-component` attribute. |
+| `componentName` | Value of the owning `het-component` attribute, if present. |
 | `componentElement` | Component root element that was mounting. |
 | `bindingAttribute` | Binding attribute that referenced the signal. |
 | `bindingDeclaration` | Raw signal binding declaration. |
