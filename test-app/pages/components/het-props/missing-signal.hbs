@@ -4,15 +4,8 @@
     <div het-component="het-props-missing">
       <p id="count-value" het-props="textContent=count" class="mb-0 text-muted">pending</p>
     </div>
-    <p id="error-message" class="mb-0 text-muted">No error</p>
   </div>
 </section>
 <script nonce="{{{cspNonce}}}">
   window.HET.registerComponent('het-props-missing');
-  window.addEventListener('load', () => {
-    const message = window.hetErrors.at(-1);
-    if (message) {
-      document.getElementById('error-message').textContent = message;
-    }
-  });
 </script>

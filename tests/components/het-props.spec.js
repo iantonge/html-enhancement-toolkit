@@ -17,24 +17,24 @@ test.describe('components het-props', () => {
 
   test('reports an error when a signal is initialized without signal(...)', async ({ page }) => {
     await page.goto('/components/het-props/invalid-assignment');
-    await expect(page.locator('#error-message')).toHaveText(
-      'HET Error: Signal initialized with a non-signal value',
+    await page.waitForFunction(() =>
+      window.hetErrors.some((error) => error.message === 'HET Error: Signal initialized with a non-signal value'),
     );
   });
 
   test('reports an error when a bound signal is missing', async ({ page }) => {
     await page.goto('/components/het-props/missing-signal');
-    await expect(page.locator('#error-message')).toHaveText(
-      'HET Error: Bound signal does not exist',
+    await page.waitForFunction(() =>
+      window.hetErrors.some((error) => error.message === 'HET Error: Bound signal does not exist'),
     );
   });
 
   test('routes effect write errors through onError', async ({ page }) => {
     await page.goto('/components/het-props/write-error');
-    await expect(page.locator('#error-message')).toHaveText(
-      'HET test error: write failed',
+    await page.waitForFunction(() =>
+      window.hetErrors.some((error) => error.message === 'HET test error: write failed'),
     );
-    const hetErrors = await page.evaluate(() => window.hetErrors);
+    const hetErrors = await page.evaluate(() => window.hetErrors.map((error) => error.message));
     expect(hetErrors).toContain('HET test error: write failed');
   });
 });

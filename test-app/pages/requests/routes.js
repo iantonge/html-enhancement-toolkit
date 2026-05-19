@@ -1,10 +1,17 @@
 import { Router } from 'express';
-import formRoutes from './forms/routes.js';
+import autofocusRoutes from './autofocus/routes.js';
+import debounceClicksRoutes from './debounce-clicks/routes.js';
+import disableRoutes from './disables-in-flight/routes.js';
 import headersRoutes from './headers/routes.js';
+import hetAlsoRoutes from './het-also/routes.js';
+import hetSelectRoutes from './het-select/routes.js';
 import historyRoutes from './history/routes.js';
 import lifecycleEventsRoutes from './lifecycle-events/routes.js';
-import linkRoutes from './links/routes.js';
+import navPanesRoutes from './nav-panes/routes.js';
+import progressiveEnhancementRoutes from './progressive-enhancement/routes.js';
 import replaceContentRoutes from './replace-content/routes.js';
+import requestCoordinationRoutes from './request-coordination/routes.js';
+import uiFeedbackRoutes from './ui-feedback/routes.js';
 
 const router = Router();
 
@@ -12,11 +19,18 @@ router.get('/', (request, response) => {
   response.render('requests/index', { title: 'Requests' });
 });
 
-router.use('/forms', formRoutes);
+router.use('/autofocus', autofocusRoutes);
+router.use('/debounce-clicks', debounceClicksRoutes);
+router.use('/disables-in-flight', disableRoutes);
 router.use('/headers', headersRoutes);
+router.use('/het-also', hetAlsoRoutes);
+router.use('/het-select', hetSelectRoutes);
 router.use('/history', historyRoutes);
 router.use('/lifecycle-events', lifecycleEventsRoutes);
-router.use('/links', linkRoutes);
+router.use('/nav-panes', navPanesRoutes);
+router.use('/progressive-enhancement', progressiveEnhancementRoutes);
 router.use('/replace-content', replaceContentRoutes);
+router.use('/request-coordination', requestCoordinationRoutes);
+router.use('/ui-feedback', uiFeedbackRoutes);
 
 export default router;

@@ -6,7 +6,6 @@
         <p het-props="textContent=count:seed">5</p>
       </div>
     </div>
-    <p id="error-message" class="mb-0 mt-3 text-muted">No error</p>
   </div>
 </section>
 <script nonce="{{{cspNonce}}}">
@@ -15,11 +14,4 @@
   });
 
   window.HET.registerComponent('imports-conflict-child');
-
-  window.addEventListener('load', () => {
-    const message = window.hetErrors.at(-1);
-    if (message) {
-      document.getElementById('error-message').textContent = message;
-    }
-  });
 </script>

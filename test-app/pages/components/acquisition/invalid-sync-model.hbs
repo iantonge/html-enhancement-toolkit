@@ -4,15 +4,8 @@
     <div het-component="acquisition-invalid-sync-model">
       <input het-model="count:sync" class="form-control">
     </div>
-    <p id="error-message" class="mb-0 mt-3 text-muted">No error</p>
   </div>
 </section>
 <script nonce="{{{cspNonce}}}">
   window.HET.registerComponent('acquisition-invalid-sync-model');
-  window.addEventListener('load', () => {
-    const message = window.hetErrors.at(-1);
-    if (message) {
-      document.getElementById('error-message').textContent = message;
-    }
-  });
 </script>

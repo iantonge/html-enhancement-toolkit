@@ -85,17 +85,15 @@ test.describe('history navigation', () => {
 
     await page.goBack();
     await page.waitForFunction(() =>
-      window.hetErrors.includes(
-        'HET Error: Target pane not found on the page',
-      ),
+      window.hetErrors.some((error) => error.message === 'HET Error: Target pane not found on the page',),
     );
 
     const cause = await page.evaluate(() => ({
-      navigationFromUrl: window.hetLastError.cause.navigationFromUrl,
-      navigationToUrl: window.hetLastError.cause.navigationToUrl,
-      navigationTargetName: window.hetLastError.cause.navigationTargetName,
-      resolvedTargetName: window.hetLastError.cause.resolvedTargetName,
-      targetLookupName: window.hetLastError.cause.targetLookupName,
+      navigationFromUrl: window.hetErrors.at(-1).cause.navigationFromUrl,
+      navigationToUrl: window.hetErrors.at(-1).cause.navigationToUrl,
+      navigationTargetName: window.hetErrors.at(-1).cause.navigationTargetName,
+      resolvedTargetName: window.hetErrors.at(-1).cause.resolvedTargetName,
+      targetLookupName: window.hetErrors.at(-1).cause.targetLookupName,
     }));
     expect(cause).toEqual({
       navigationFromUrl: fromUrl,

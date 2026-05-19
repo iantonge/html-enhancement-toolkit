@@ -4,15 +4,8 @@
     <div het-component="het-model-invalid-negation">
       <input id="invalid-negation-input" het-model="!name" value="Alpha">
     </div>
-    <p id="error-message" class="mb-0 text-muted">No error</p>
   </div>
 </section>
 <script nonce="{{{cspNonce}}}">
   window.HET.registerComponent('het-model-invalid-negation');
-  window.addEventListener('load', () => {
-    const message = window.hetErrors.at(-1);
-    if (message) {
-      document.getElementById('error-message').textContent = message;
-    }
-  });
 </script>

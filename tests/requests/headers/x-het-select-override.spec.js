@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 
 test.describe('X-HET-Select-Override header', () => {
   test('overrides selected ids for enhanced links', async ({ page }) => {
-    await page.goto('/requests/headers/het-select-override/link');
+    await page.goto('/requests/headers/x-het-select-override/link');
 
     await Promise.all([
       page.waitForSelector('#primary-content:has-text("Primary link response.")'),
@@ -13,7 +13,7 @@ test.describe('X-HET-Select-Override header', () => {
   });
 
   test('overrides selected ids for enhanced forms', async ({ page }) => {
-    await page.goto('/requests/headers/het-select-override/form');
+    await page.goto('/requests/headers/x-het-select-override/form');
 
     await Promise.all([
       page.waitForSelector('#primary-content:has-text("Primary form response.")'),
@@ -24,7 +24,7 @@ test.describe('X-HET-Select-Override header', () => {
   });
 
   test('clears selection when override header is empty for links', async ({ page }) => {
-    await page.goto('/requests/headers/het-select-override/link');
+    await page.goto('/requests/headers/x-het-select-override/link');
 
     await Promise.all([
       page.waitForSelector('#primary-content:has-text("Primary link response.")'),
@@ -35,7 +35,7 @@ test.describe('X-HET-Select-Override header', () => {
   });
 
   test('clears selection when override header is empty for forms', async ({ page }) => {
-    await page.goto('/requests/headers/het-select-override/form');
+    await page.goto('/requests/headers/x-het-select-override/form');
 
     await Promise.all([
       page.waitForSelector('#primary-content:has-text("Primary form response.")'),

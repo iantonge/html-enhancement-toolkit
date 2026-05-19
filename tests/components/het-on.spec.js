@@ -22,15 +22,15 @@ test.describe('components het-on', () => {
 
   test('reports error when method is missing', async ({ page }) => {
     await page.goto('/components/het-on/missing-method');
-    await expect(page.locator('#error-message')).toHaveText(
-      'HET Error: Missing component method',
+    await page.waitForFunction(() =>
+      window.hetErrors.some((error) => error.message === 'HET Error: Missing component method'),
     );
     const cause = await page.evaluate(() => ({
-      componentName: window.hetLastError.cause.componentName,
-      bindingAttribute: window.hetLastError.cause.bindingAttribute,
-      bindingDeclaration: window.hetLastError.cause.bindingDeclaration,
-      bindingElementId: window.hetLastError.cause.bindingElement.id,
-      methodName: window.hetLastError.cause.methodName,
+      componentName: window.hetErrors.at(-1).cause.componentName,
+      bindingAttribute: window.hetErrors.at(-1).cause.bindingAttribute,
+      bindingDeclaration: window.hetErrors.at(-1).cause.bindingDeclaration,
+      bindingElementId: window.hetErrors.at(-1).cause.bindingElement.id,
+      methodName: window.hetErrors.at(-1).cause.methodName,
     }));
     expect(cause).toEqual({
       componentName: 'het-on-missing',
@@ -43,29 +43,29 @@ test.describe('components het-on', () => {
 
   test('reports error for invalid het-on expression', async ({ page }) => {
     await page.goto('/components/het-on/invalid-expression');
-    await expect(page.locator('#error-message')).toHaveText(
-      'HET Error: Invalid binding expression',
+    await page.waitForFunction(() =>
+      window.hetErrors.some((error) => error.message === 'HET Error: Invalid binding expression'),
     );
   });
 
   test('reports error for empty het-on method expression', async ({ page }) => {
     await page.goto('/components/het-on/invalid-expression-empty-method');
-    await expect(page.locator('#error-message')).toHaveText(
-      'HET Error: Invalid binding expression',
+    await page.waitForFunction(() =>
+      window.hetErrors.some((error) => error.message === 'HET Error: Invalid binding expression'),
     );
   });
 
   test('reports error for extra equals in het-on expression', async ({ page }) => {
     await page.goto('/components/het-on/invalid-expression-extra-equals');
-    await expect(page.locator('#error-message')).toHaveText(
-      'HET Error: Invalid binding expression',
+    await page.waitForFunction(() =>
+      window.hetErrors.some((error) => error.message === 'HET Error: Invalid binding expression'),
     );
   });
 
   test('reports error when negation is used with het-on', async ({ page }) => {
     await page.goto('/components/het-on/invalid-negation');
-    await expect(page.locator('#error-message')).toHaveText(
-      'HET Error: Unsupported negation',
+    await page.waitForFunction(() =>
+      window.hetErrors.some((error) => error.message === 'HET Error: Unsupported negation'),
     );
   });
 });

@@ -21,15 +21,15 @@ test.describe('components het-exports / het-imports', () => {
 
   test('reports error when no exporting ancestor is found', async ({ page }) => {
     await page.goto('/components/het-imports/missing-parent');
-    await expect(page.locator('#error-message')).toHaveText(
-      'HET Error: Imported signal has no exporting ancestor',
+    await page.waitForFunction(() =>
+      window.hetErrors.some((error) => error.message === 'HET Error: Imported signal has no exporting ancestor'),
     );
     const cause = await page.evaluate(() => ({
-      componentName: window.hetLastError.cause.componentName,
-      bindingAttribute: window.hetLastError.cause.bindingAttribute,
-      importLocalSignalName: window.hetLastError.cause.importLocalSignalName,
-      importSourceSignalName: window.hetLastError.cause.importSourceSignalName,
-      componentImport: window.hetLastError.cause.componentElement.getAttribute('het-imports'),
+      componentName: window.hetErrors.at(-1).cause.componentName,
+      bindingAttribute: window.hetErrors.at(-1).cause.bindingAttribute,
+      importLocalSignalName: window.hetErrors.at(-1).cause.importLocalSignalName,
+      importSourceSignalName: window.hetErrors.at(-1).cause.importSourceSignalName,
+      componentImport: window.hetErrors.at(-1).cause.componentElement.getAttribute('het-imports'),
     }));
     expect(cause).toEqual({
       componentName: 'imports-missing-parent',
@@ -42,16 +42,16 @@ test.describe('components het-exports / het-imports', () => {
 
   test('reports error when nearest exporting parent exists but is not mounted', async ({ page }) => {
     await page.goto('/components/het-imports/parent-not-mounted');
-    await expect(page.locator('#error-message')).toHaveText(
-      'HET Error: Exporting ancestor component is not mounted',
+    await page.waitForFunction(() =>
+      window.hetErrors.some((error) => error.message === 'HET Error: Exporting ancestor component is not mounted'),
     );
     const cause = await page.evaluate(() => ({
-      componentName: window.hetLastError.cause.componentName,
-      bindingAttribute: window.hetLastError.cause.bindingAttribute,
-      importLocalSignalName: window.hetLastError.cause.importLocalSignalName,
-      importSourceSignalName: window.hetLastError.cause.importSourceSignalName,
-      exportingComponentName: window.hetLastError.cause.exportingComponentName,
-      parentExports: window.hetLastError.cause.exportingComponentElement.getAttribute('het-exports'),
+      componentName: window.hetErrors.at(-1).cause.componentName,
+      bindingAttribute: window.hetErrors.at(-1).cause.bindingAttribute,
+      importLocalSignalName: window.hetErrors.at(-1).cause.importLocalSignalName,
+      importSourceSignalName: window.hetErrors.at(-1).cause.importSourceSignalName,
+      exportingComponentName: window.hetErrors.at(-1).cause.exportingComponentName,
+      parentExports: window.hetErrors.at(-1).cause.exportingComponentElement.getAttribute('het-exports'),
     }));
     expect(cause).toEqual({
       componentName: 'imports-parent-not-mounted-child',
@@ -65,16 +65,16 @@ test.describe('components het-exports / het-imports', () => {
 
   test('reports error when exported signal is not found on nearest parent component', async ({ page }) => {
     await page.goto('/components/het-imports/export-missing-signal');
-    await expect(page.locator('#error-message')).toHaveText(
-      'HET Error: Exporting ancestor does not provide imported signal',
+    await page.waitForFunction(() =>
+      window.hetErrors.some((error) => error.message === 'HET Error: Exporting ancestor does not provide imported signal'),
     );
     const cause = await page.evaluate(() => ({
-      componentName: window.hetLastError.cause.componentName,
-      bindingAttribute: window.hetLastError.cause.bindingAttribute,
-      importLocalSignalName: window.hetLastError.cause.importLocalSignalName,
-      importSourceSignalName: window.hetLastError.cause.importSourceSignalName,
-      exportingComponentName: window.hetLastError.cause.exportingComponentName,
-      parentExports: window.hetLastError.cause.exportingComponentElement.getAttribute('het-exports'),
+      componentName: window.hetErrors.at(-1).cause.componentName,
+      bindingAttribute: window.hetErrors.at(-1).cause.bindingAttribute,
+      importLocalSignalName: window.hetErrors.at(-1).cause.importLocalSignalName,
+      importSourceSignalName: window.hetErrors.at(-1).cause.importSourceSignalName,
+      exportingComponentName: window.hetErrors.at(-1).cause.exportingComponentName,
+      parentExports: window.hetErrors.at(-1).cause.exportingComponentElement.getAttribute('het-exports'),
     }));
     expect(cause).toEqual({
       componentName: 'imports-export-missing-child',
@@ -88,15 +88,15 @@ test.describe('components het-exports / het-imports', () => {
 
   test('reports error for invalid het-imports declarations', async ({ page }) => {
     await page.goto('/components/het-imports/invalid-declaration');
-    await expect(page.locator('#error-message')).toHaveText(
-      'HET Error: Invalid import declaration',
+    await page.waitForFunction(() =>
+      window.hetErrors.some((error) => error.message === 'HET Error: Invalid import declaration'),
     );
   });
 
   test('reports error when imported and local signals conflict', async ({ page }) => {
     await page.goto('/components/het-imports/signal-name-conflict');
-    await expect(page.locator('#error-message')).toHaveText(
-      'HET Error: Imported signal conflicts with local initialization',
+    await page.waitForFunction(() =>
+      window.hetErrors.some((error) => error.message === 'HET Error: Imported signal conflicts with local initialization'),
     );
   });
 });

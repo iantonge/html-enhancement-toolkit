@@ -4,16 +4,8 @@
     <div het-component="imports-missing-parent" het-imports="count">
       <p id="missing-parent-value" het-props="textContent=count" class="mb-0 text-muted"></p>
     </div>
-    <p id="error-message" class="mb-0 mt-3 text-muted">No error</p>
   </div>
 </section>
 <script nonce="{{{cspNonce}}}">
   window.HET.registerComponent('imports-missing-parent');
-
-  window.addEventListener('load', () => {
-    const message = window.hetErrors.at(-1);
-    if (message) {
-      document.getElementById('error-message').textContent = message;
-    }
-  });
 </script>

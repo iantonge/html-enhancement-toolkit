@@ -1,10 +1,19 @@
 <section class="card shadow-sm border-0">
   <div class="card-body">
     <h1 class="h4 mb-3">{{title}}</h1>
-    <ul class="mb-0">
-      <li><a href="/components/het-attrs/attrs">het-attrs</a></li>
-      <li><a href="/components/het-attrs/bool-attrs">het-bool-attrs</a></li>
-      <li><a href="/components/het-attrs/class">het-class</a></li>
-    </ul>
+    <div het-component="het-attrs-basic">
+      <button id="set-status" type="button" het-on="click=setReady">Set ready</button>
+      <p id="status-target" het-attrs="data-status=status" class="mb-0 text-muted">Status target</p>
+    </div>
   </div>
 </section>
+<script nonce="{{{cspNonce}}}">
+  window.HET.registerComponent('het-attrs-basic', ({ signals }) => {
+    signals.status = window.HET.signals.signal('idle');
+    return {
+      setReady() {
+        signals.status.value = 'ready';
+      },
+    };
+  });
+</script>

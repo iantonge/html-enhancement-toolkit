@@ -6,18 +6,10 @@
         <p id="missing-export-value" het-props="textContent=count" class="mb-0 text-muted"></p>
       </div>
     </div>
-    <p id="error-message" class="mb-0 mt-3 text-muted">No error</p>
   </div>
 </section>
 <script nonce="{{{cspNonce}}}">
   window.HET.registerComponent('imports-export-missing-parent');
 
   window.HET.registerComponent('imports-export-missing-child');
-
-  window.addEventListener('load', () => {
-    const message = window.hetErrors.at(-1);
-    if (message) {
-      document.getElementById('error-message').textContent = message;
-    }
-  });
 </script>

@@ -42,25 +42,25 @@ test.describe('components acquisition strategies and type hints', () => {
 
   test('reports error when :sync is used on het-model', async ({ page }) => {
     await page.goto('/components/acquisition/invalid-sync-model');
-    await expect(page.locator('#error-message')).toHaveText(
-      'HET Error: Directive does not support sync acquisition',
+    await page.waitForFunction(() =>
+      window.hetErrors.some((error) => error.message === 'HET Error: Directive does not support sync acquisition'),
     );
   });
 
   test('reports error when the same seeded signal is declared twice', async ({ page }) => {
     await page.goto('/components/acquisition/duplicate-seed-signal');
-    await expect(page.locator('#error-message')).toHaveText(
-      'HET Error: Duplicate signal initialization',
+    await page.waitForFunction(() =>
+      window.hetErrors.some((error) => error.message === 'HET Error: Duplicate signal initialization'),
     );
     const cause = await page.evaluate(() => ({
-      componentName: window.hetLastError.cause.componentName,
-      signalName: window.hetLastError.cause.signalName,
-      bindingAttribute: window.hetLastError.cause.bindingAttribute,
-      bindingDeclaration: window.hetLastError.cause.bindingDeclaration,
-      bindingElementText: window.hetLastError.cause.bindingElement.textContent.trim(),
-      existingBindingAttribute: window.hetLastError.cause.existingBindingAttribute,
-      existingBindingDeclaration: window.hetLastError.cause.existingBindingDeclaration,
-      existingBindingElementText: window.hetLastError.cause.existingBindingElement.textContent.trim(),
+      componentName: window.hetErrors.at(-1).cause.componentName,
+      signalName: window.hetErrors.at(-1).cause.signalName,
+      bindingAttribute: window.hetErrors.at(-1).cause.bindingAttribute,
+      bindingDeclaration: window.hetErrors.at(-1).cause.bindingDeclaration,
+      bindingElementText: window.hetErrors.at(-1).cause.bindingElement.textContent.trim(),
+      existingBindingAttribute: window.hetErrors.at(-1).cause.existingBindingAttribute,
+      existingBindingDeclaration: window.hetErrors.at(-1).cause.existingBindingDeclaration,
+      existingBindingElementText: window.hetErrors.at(-1).cause.existingBindingElement.textContent.trim(),
     }));
     expect(cause).toEqual({
       componentName: 'acquisition-duplicate-seed',
@@ -76,28 +76,28 @@ test.describe('components acquisition strategies and type hints', () => {
 
   test('reports error for declarations with multiple colons', async ({ page }) => {
     await page.goto('/components/acquisition/invalid-multiple-colons');
-    await expect(page.locator('#error-message')).toHaveText(
-      'HET Error: Binding declaration has too many ":" characters',
+    await page.waitForFunction(() =>
+      window.hetErrors.some((error) => error.message === 'HET Error: Binding declaration has too many ":" characters'),
     );
   });
 
   test('reports error when negation is used with acquisition', async ({ page }) => {
     await page.goto('/components/acquisition/invalid-negation');
-    await expect(page.locator('#error-message')).toHaveText(
-      'HET Error: Negation cannot be used with acquisition',
+    await page.waitForFunction(() =>
+      window.hetErrors.some((error) => error.message === 'HET Error: Negation cannot be used with acquisition'),
     );
   });
 
   test('reports error when negation has no signal name', async ({ page }) => {
     await page.goto('/components/acquisition/empty-negation');
-    await expect(page.locator('#error-message')).toHaveText(
-      'HET Error: Negation requires a signal name',
+    await page.waitForFunction(() =>
+      window.hetErrors.some((error) => error.message === 'HET Error: Negation requires a signal name'),
     );
     const cause = await page.evaluate(() => ({
-      componentName: window.hetLastError.cause.componentName,
-      bindingAttribute: window.hetLastError.cause.bindingAttribute,
-      bindingDeclaration: window.hetLastError.cause.bindingDeclaration,
-      bindingElementId: window.hetLastError.cause.bindingElement.id,
+      componentName: window.hetErrors.at(-1).cause.componentName,
+      bindingAttribute: window.hetErrors.at(-1).cause.bindingAttribute,
+      bindingDeclaration: window.hetErrors.at(-1).cause.bindingDeclaration,
+      bindingElementId: window.hetErrors.at(-1).cause.bindingElement.id,
     }));
     expect(cause).toEqual({
       componentName: 'acquisition-empty-negation',
@@ -109,14 +109,14 @@ test.describe('components acquisition strategies and type hints', () => {
 
   test('reports error for incomplete acquisition clauses', async ({ page }) => {
     await page.goto('/components/acquisition/incomplete-acquisition');
-    await expect(page.locator('#error-message')).toHaveText(
-      'HET Error: Binding declaration has an incomplete acquisition clause',
+    await page.waitForFunction(() =>
+      window.hetErrors.some((error) => error.message === 'HET Error: Binding declaration has an incomplete acquisition clause'),
     );
     const cause = await page.evaluate(() => ({
-      componentName: window.hetLastError.cause.componentName,
-      bindingAttribute: window.hetLastError.cause.bindingAttribute,
-      bindingDeclaration: window.hetLastError.cause.bindingDeclaration,
-      bindingElementId: window.hetLastError.cause.bindingElement.id,
+      componentName: window.hetErrors.at(-1).cause.componentName,
+      bindingAttribute: window.hetErrors.at(-1).cause.bindingAttribute,
+      bindingDeclaration: window.hetErrors.at(-1).cause.bindingDeclaration,
+      bindingElementId: window.hetErrors.at(-1).cause.bindingElement.id,
     }));
     expect(cause).toEqual({
       componentName: 'acquisition-incomplete',
@@ -128,36 +128,36 @@ test.describe('components acquisition strategies and type hints', () => {
 
   test('reports error when type hint is unsupported for a directive', async ({ page }) => {
     await page.goto('/components/acquisition/type-hint-unsupported');
-    await expect(page.locator('#error-message')).toHaveText(
-      'HET Error: Directive does not support type hints',
+    await page.waitForFunction(() =>
+      window.hetErrors.some((error) => error.message === 'HET Error: Directive does not support type hints'),
     );
   });
 
   test('reports error for unknown type hint', async ({ page }) => {
     await page.goto('/components/acquisition/unknown-type-hint');
-    await expect(page.locator('#error-message')).toHaveText(
-      'HET Error: Type hint is not recognised. Expected type hints are "int", "bool" or "float"',
+    await page.waitForFunction(() =>
+      window.hetErrors.some((error) => error.message === 'HET Error: Type hint is not recognised. Expected type hints are "int", "bool" or "float"'),
     );
   });
 
   test('reports error for unknown acquisition strategy', async ({ page }) => {
     await page.goto('/components/acquisition/unknown-strategy');
-    await expect(page.locator('#error-message')).toHaveText(
-      'HET Error: Acquisition strategy is not recognised. Expected acquisition strategies are "seed" or "sync"',
+    await page.waitForFunction(() =>
+      window.hetErrors.some((error) => error.message === 'HET Error: Acquisition strategy is not recognised. Expected acquisition strategies are "seed" or "sync"'),
     );
   });
 
   test('reports error when acquisition clause is used on non-readable directive', async ({ page }) => {
     await page.goto('/components/acquisition/acquisition-not-supported');
-    await expect(page.locator('#error-message')).toHaveText(
-      'HET Error: Directive does not support acquisition clauses',
+    await page.waitForFunction(() =>
+      window.hetErrors.some((error) => error.message === 'HET Error: Directive does not support acquisition clauses'),
     );
   });
 
   test('reports error when a signal is reassigned after initialization', async ({ page }) => {
     await page.goto('/components/acquisition/signal-reassignment');
-    await expect(page.locator('#error-message')).toHaveText(
-      'HET Error: Signal override after initialization',
+    await page.waitForFunction(() =>
+      window.hetErrors.some((error) => error.message === 'HET Error: Signal override after initialization'),
     );
   });
 

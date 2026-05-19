@@ -10,7 +10,6 @@
         pending
       </p>
     </div>
-    <p id="error-message" class="mb-0 text-muted">No error</p>
   </div>
 </section>
 <script nonce="{{{cspNonce}}}">
@@ -22,11 +21,5 @@
       },
     });
     signals.count = window.HET.signals.signal(1);
-  });
-  window.addEventListener('load', () => {
-    const message = window.hetErrors.at(-1);
-    if (message) {
-      document.getElementById('error-message').textContent = message;
-    }
   });
 </script>

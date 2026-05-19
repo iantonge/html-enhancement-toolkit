@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 
 test.describe('X-HET-Also-Override header', () => {
   test('overrides also ids for enhanced links', async ({ page }) => {
-    await page.goto('/requests/headers/het-also-override/link');
+    await page.goto('/requests/headers/x-het-also-override/link');
 
     await Promise.all([
       page.waitForSelector('#main-content:has-text("Main link response.")'),
@@ -14,7 +14,7 @@ test.describe('X-HET-Also-Override header', () => {
   });
 
   test('overrides also ids for enhanced forms', async ({ page }) => {
-    await page.goto('/requests/headers/het-also-override/form');
+    await page.goto('/requests/headers/x-het-also-override/form');
 
     await Promise.all([
       page.waitForSelector('#main-content:has-text("Main form response.")'),
@@ -26,7 +26,7 @@ test.describe('X-HET-Also-Override header', () => {
   });
 
   test('clears also override when header is empty for links', async ({ page }) => {
-    await page.goto('/requests/headers/het-also-override/link');
+    await page.goto('/requests/headers/x-het-also-override/link');
 
     await Promise.all([
       page.waitForSelector('#main-content:has-text("Main link response.")'),
@@ -38,7 +38,7 @@ test.describe('X-HET-Also-Override header', () => {
   });
 
   test('clears also override when header is empty for forms', async ({ page }) => {
-    await page.goto('/requests/headers/het-also-override/form');
+    await page.goto('/requests/headers/x-het-also-override/form');
 
     await Promise.all([
       page.waitForSelector('#main-content:has-text("Main form response.")'),

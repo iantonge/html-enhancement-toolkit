@@ -4,17 +4,10 @@
     <div het-component="het-on-invalid-extra-equals">
       <button id="invalid-expression-extra-equals-button" type="button" het-on="click=increment=increment">Run</button>
     </div>
-    <p id="error-message" class="mb-0 text-muted">No error</p>
   </div>
 </section>
 <script nonce="{{{cspNonce}}}">
   window.HET.registerComponent('het-on-invalid-extra-equals', () => ({
     increment() {},
   }));
-  window.addEventListener('load', () => {
-    const message = window.hetErrors.at(-1);
-    if (message) {
-      document.getElementById('error-message').textContent = message;
-    }
-  });
 </script>
