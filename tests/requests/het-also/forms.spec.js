@@ -10,6 +10,15 @@ test.describe('form het-also', () => {
     await expect(page.locator('#sidebar')).toHaveText(/Sidebar response/);
   });
 
+  test('empty submitter het-also clears form het-also', async ({ page }) => {
+    await page.goto('/requests/het-also/forms/partial');
+    await Promise.all([
+      page.waitForSelector('#main-content:has-text("Main response.")'),
+      page.click('#clear-submit'),
+    ]);
+    await expect(page.locator('#sidebar')).toHaveText(/Sidebar content/);
+  });
+
   test('replaces multiple het-also ids', async ({ page }) => {
     await page.goto('/requests/het-also/forms/multi');
     await Promise.all([

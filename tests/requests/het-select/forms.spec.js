@@ -10,6 +10,15 @@ test.describe('form het-select', () => {
     await expect(page.locator('#secondary')).toHaveText('Secondary content.');
   });
 
+  test('empty submitter het-select clears form het-select', async ({ page }) => {
+    await page.goto('/requests/het-select/forms/partial');
+    await Promise.all([
+      page.waitForSelector('#secondary:has-text("Secondary response.")'),
+      page.click('#clear-submit'),
+    ]);
+    await expect(page.locator('#primary')).toHaveText('Primary response.');
+  });
+
   test('only replaces multiple selected ids', async ({ page }) => {
     await page.goto('/requests/het-select/forms/multi');
     await Promise.all([

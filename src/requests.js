@@ -363,6 +363,14 @@ const getRequestId = () => {
   return requestCount;
 };
 
+const getEffectiveDirectiveValue = (form, submitter, attributeName) => {
+  if (submitter?.hasAttribute(attributeName)) {
+    const value = submitter.getAttribute(attributeName);
+    return value === '' ? undefined : value;
+  }
+  return form.getAttribute(attributeName);
+};
+
 const getSubmitContext = (event) => {
   const formTargetName = event.target.getAttribute('het-target');
   const submitterTargetName = event.submitter?.hasAttribute('het-target')
@@ -406,16 +414,14 @@ const getSubmitContext = (event) => {
     resolvedEnctype,
   };
   const select = getSelectIds(
-    submitter?.getAttribute('het-select') ||
-      form.getAttribute('het-select'),
+    getEffectiveDirectiveValue(form, submitter, 'het-select'),
     {
       ...loggingContext,
       requestDirectiveAttribute: 'het-select',
     },
   );
   const also = getAlsoIds(
-    submitter?.getAttribute('het-also') ||
-      form.getAttribute('het-also'),
+    getEffectiveDirectiveValue(form, submitter, 'het-also'),
     {
       ...loggingContext,
       requestDirectiveAttribute: 'het-also',
