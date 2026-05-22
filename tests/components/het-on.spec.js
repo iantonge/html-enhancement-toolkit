@@ -70,6 +70,47 @@ test.describe('components het-on', () => {
     await expect(page.locator('#toggle-expanded')).toHaveText('false');
   });
 
+  test('supports prevent, stop, capture, debounce, throttle, key filters, and toggle modifiers', async ({ page }) => {
+    await page.goto('/components/het-on/modifiers');
+
+    await page.click('#modifier-submit');
+    await expect(page.locator('#modifier-submitted')).toHaveText('true');
+    expect(page.url()).toContain('/components/het-on/modifiers');
+
+    await page.click('#stop-child');
+    await expect(page.locator('#modifier-child-clicks')).toHaveText('1');
+    await expect(page.locator('#modifier-parent-clicks')).toHaveText('0');
+
+    await page.click('#capture-child');
+    await expect(page.locator('#modifier-capture-order')).toHaveText('parent child');
+
+    await page.fill('#debounce-input', 'alpha');
+    await expect(page.locator('#modifier-debounced')).toHaveText('alpha');
+
+    await page.click('#throttle-button');
+    await expect(page.locator('#modifier-throttled')).toHaveText('1');
+    await page.click('#throttle-button');
+    await expect(page.locator('#modifier-throttled')).toHaveText('1');
+    await page.waitForTimeout(350);
+    await page.click('#throttle-button');
+    await expect(page.locator('#modifier-throttled')).toHaveText('2');
+
+    await page.focus('#key-input');
+    await page.keyboard.press('KeyA');
+    await expect(page.locator('#modifier-key')).toHaveText('');
+    await page.keyboard.press('Escape');
+    await expect(page.locator('#modifier-key')).toHaveText('esc');
+    await page.keyboard.press('Enter');
+    await expect(page.locator('#modifier-key')).toHaveText('enter');
+    await page.keyboard.press('Space');
+    await expect(page.locator('#modifier-key')).toHaveText('space');
+
+    await page.click('#toggle-once');
+    await expect(page.locator('#modifier-toggled')).toHaveText('true');
+    await page.click('#toggle-once');
+    await expect(page.locator('#modifier-toggled')).toHaveText('true');
+  });
+
   test('reports error when assignment source signal is missing', async ({ page }) => {
     await page.goto('/components/het-on/assignment-missing-source');
     await page.click('#assignment-missing-source-button');
@@ -91,6 +132,34 @@ test.describe('components het-on', () => {
       window.hetErrors.some((error) =>
         error.message === 'HET Error: Type hint is not recognised. Expected type hints are "int", "bool" or "float"',
       ),
+    );
+  });
+
+  test('reports error for invalid modifier duration', async ({ page }) => {
+    await page.goto('/components/het-on/invalid-modifier-duration');
+    await page.waitForFunction(() =>
+      window.hetErrors.some((error) => error.message === 'HET Error: Invalid event modifier'),
+    );
+  });
+
+  test('reports error for duplicate timing modifiers', async ({ page }) => {
+    await page.goto('/components/het-on/invalid-modifier-duplicate-timing');
+    await page.waitForFunction(() =>
+      window.hetErrors.some((error) => error.message === 'HET Error: Invalid event modifier'),
+    );
+  });
+
+  test('reports error for duplicate key modifiers', async ({ page }) => {
+    await page.goto('/components/het-on/invalid-modifier-duplicate-key');
+    await page.waitForFunction(() =>
+      window.hetErrors.some((error) => error.message === 'HET Error: Invalid event modifier'),
+    );
+  });
+
+  test('reports error for key modifiers on non-key events', async ({ page }) => {
+    await page.goto('/components/het-on/invalid-modifier-key-event');
+    await page.waitForFunction(() =>
+      window.hetErrors.some((error) => error.message === 'HET Error: Invalid event modifier'),
     );
   });
 

@@ -8,6 +8,7 @@ const TYPE_HINTS = ['int', 'bool', 'float'];
 const EXPORTS_ATTR = 'het-exports';
 const IMPORTS_ATTR = 'het-imports';
 const IMPORTED_SIGNAL_WRAPPER = Symbol('hetImportedSignalWrapper');
+const KEYBOARD_EVENT_NAMES = ['keydown', 'keyup', 'keypress'];
 const exportsAttrCache = new WeakMap();
 const EMPTY_EXPORTS_SET = new Set();
 
@@ -479,7 +480,11 @@ function getParsedEventDeclaration(
     );
   }
 
-  const [key, actionExpression] = parts;
+  const [eventExpression, actionExpression] = parts;
+  const parsedEvent = getParsedEventExpression(
+    eventExpression,
+    bindingLoggingContext,
+  );
   const assignmentParts = actionExpression.split('=');
 
   if (assignmentParts.length === 1) {
@@ -503,7 +508,8 @@ function getParsedEventDeclaration(
       el,
       componentElement: componentLoggingContext.componentElement,
       componentName: componentLoggingContext.componentName,
-      key,
+      key: parsedEvent.name,
+      eventModifiers: parsedEvent.modifiers,
       source: actionExpression,
       sourceType: FUNC_SOURCE_TYPE,
       exp: declaration,
@@ -527,7 +533,8 @@ function getParsedEventDeclaration(
     el,
     componentElement: componentLoggingContext.componentElement,
     componentName: componentLoggingContext.componentName,
-    key,
+    key: parsedEvent.name,
+    eventModifiers: parsedEvent.modifiers,
     source,
     sourceType: ASSIGNMENT_SOURCE_TYPE,
     assignmentSource: getParsedAssignmentSource(
@@ -559,14 +566,19 @@ function getParsedToggleDeclaration(
     );
   }
 
-  const [key, source] = parts;
+  const [eventExpression, source] = parts;
+  const parsedEvent = getParsedEventExpression(
+    eventExpression,
+    bindingLoggingContext,
+  );
 
   return {
     dirName: directive.name,
     el,
     componentElement: componentLoggingContext.componentElement,
     componentName: componentLoggingContext.componentName,
-    key,
+    key: parsedEvent.name,
+    eventModifiers: parsedEvent.modifiers,
     source,
     sourceType: ASSIGNMENT_SOURCE_TYPE,
     assignmentSource: {
@@ -576,6 +588,172 @@ function getParsedToggleDeclaration(
     },
     exp: declaration,
   };
+}
+
+function getParsedEventExpression(eventExpression, bindingLoggingContext) {
+  const parts = eventExpression.split('|');
+  const parsedModifiers = [];
+
+  if (parts.some((part) => part.length === 0)) {
+    throw new Error(
+      'HET Error: Invalid binding expression',
+      { cause: { ...bindingLoggingContext } },
+    );
+  }
+
+  while (parts.length > 1) {
+    const parsedModifier = getParsedEventModifier(
+      parts.at(-1),
+      bindingLoggingContext,
+    );
+    if (!parsedModifier) break;
+    parsedModifiers.unshift(parsedModifier);
+    parts.pop();
+  }
+
+  const eventName = parts.join('|');
+  if (!eventName) {
+    throw new Error(
+      'HET Error: Invalid binding expression',
+      { cause: { ...bindingLoggingContext } },
+    );
+  }
+
+  return {
+    name: eventName,
+    modifiers: getValidatedEventModifiers(
+      eventName,
+      parsedModifiers,
+      bindingLoggingContext,
+    ),
+  };
+}
+
+function getParsedEventModifier(modifierExpression, bindingLoggingContext) {
+  if (
+    modifierExpression === 'prevent' ||
+    modifierExpression === 'stop' ||
+    modifierExpression === 'once' ||
+    modifierExpression === 'capture' ||
+    modifierExpression === 'esc' ||
+    modifierExpression === 'enter' ||
+    modifierExpression === 'space'
+  ) {
+    return { name: modifierExpression };
+  }
+
+  if (
+    modifierExpression.startsWith('debounce') ||
+    modifierExpression.startsWith('throttle')
+  ) {
+    return getParsedTimingModifier(modifierExpression, bindingLoggingContext);
+  }
+
+  return undefined;
+}
+
+function getParsedTimingModifier(modifierExpression, bindingLoggingContext) {
+  const match = /^(debounce|throttle)\((\d+)\)$/.exec(modifierExpression);
+  if (!match) {
+    throw new Error(
+      'HET Error: Invalid event modifier',
+      {
+        cause: {
+          ...bindingLoggingContext,
+          eventModifier: modifierExpression,
+        },
+      },
+    );
+  }
+
+  const delay = parseInt(match[2], 10);
+  if (delay <= 0) {
+    throw new Error(
+      'HET Error: Invalid event modifier',
+      {
+        cause: {
+          ...bindingLoggingContext,
+          eventModifier: modifierExpression,
+        },
+      },
+    );
+  }
+
+  return {
+    name: match[1],
+    delay,
+  };
+}
+
+function getValidatedEventModifiers(
+  eventName,
+  parsedModifiers,
+  bindingLoggingContext,
+) {
+  const modifiers = {
+    prevent: false,
+    stop: false,
+    once: false,
+    capture: false,
+    debounce: undefined,
+    throttle: undefined,
+    key: undefined,
+  };
+
+  for (const modifier of parsedModifiers) {
+    if (modifier.name === 'prevent') modifiers.prevent = true;
+    if (modifier.name === 'stop') modifiers.stop = true;
+    if (modifier.name === 'once') modifiers.once = true;
+    if (modifier.name === 'capture') modifiers.capture = true;
+
+    if (modifier.name === 'debounce' || modifier.name === 'throttle') {
+      if (modifiers.debounce || modifiers.throttle) {
+        throw new Error(
+          'HET Error: Invalid event modifier',
+          {
+            cause: {
+              ...bindingLoggingContext,
+              eventModifier: modifier.name,
+            },
+          },
+        );
+      }
+      modifiers[modifier.name] = modifier.delay;
+    }
+
+    if (
+      modifier.name === 'esc' ||
+      modifier.name === 'enter' ||
+      modifier.name === 'space'
+    ) {
+      if (modifiers.key) {
+        throw new Error(
+          'HET Error: Invalid event modifier',
+          {
+            cause: {
+              ...bindingLoggingContext,
+              eventModifier: modifier.name,
+            },
+          },
+        );
+      }
+      modifiers.key = modifier.name;
+    }
+  }
+
+  if (modifiers.key && !KEYBOARD_EVENT_NAMES.includes(eventName)) {
+    throw new Error(
+      'HET Error: Invalid event modifier',
+      {
+        cause: {
+          ...bindingLoggingContext,
+          eventModifier: modifiers.key,
+        },
+      },
+    );
+  }
+
+  return modifiers;
 }
 
 function getParsedAssignmentSource(sourceExpression, bindingLoggingContext) {
@@ -855,9 +1033,11 @@ function configureEventBinding(methods, binding, onCleanup) {
       { cause: getBindingCause(binding, { methodName: binding.source }) },
     );
   }
-  const listener = handler.bind(methods);
-  binding.el.addEventListener(binding.key, listener);
-  onCleanup(() => binding.el.removeEventListener(binding.key, listener));
+  configureEventListener(
+    binding,
+    handler.bind(methods),
+    onCleanup,
+  );
 }
 
 function configureAssignmentBinding(ctx, binding) {
@@ -877,8 +1057,67 @@ function configureAssignmentBinding(ctx, binding) {
     }
   };
 
-  binding.el.addEventListener(binding.key, listener);
-  ctx.onCleanup(() => binding.el.removeEventListener(binding.key, listener));
+  configureEventListener(binding, listener, ctx.onCleanup);
+}
+
+function configureEventListener(binding, action, onCleanup) {
+  const modifiers = binding.eventModifiers || {};
+  const listenerState = {
+    debounceTimer: undefined,
+    lastThrottleTime: 0,
+  };
+
+  const runAction = (event) => {
+    if (modifiers.debounce) {
+      clearTimeout(listenerState.debounceTimer);
+      listenerState.debounceTimer = setTimeout(() => action(event), modifiers.debounce);
+      return;
+    }
+
+    if (modifiers.throttle) {
+      const now = Date.now();
+      if (now - listenerState.lastThrottleTime < modifiers.throttle) return;
+      listenerState.lastThrottleTime = now;
+    }
+
+    action(event);
+  };
+
+  const listener = (event) => {
+    if (!eventMatchesKeyModifier(event, modifiers.key)) return;
+
+    if (modifiers.prevent) event.preventDefault();
+    if (modifiers.stop) event.stopPropagation();
+
+    runAction(event);
+  };
+
+  const listenerOptions = {
+    capture: modifiers.capture,
+    once: modifiers.once,
+  };
+
+  binding.el.addEventListener(binding.key, listener, listenerOptions);
+  onCleanup(() => {
+    clearTimeout(listenerState.debounceTimer);
+    binding.el.removeEventListener(binding.key, listener, listenerOptions);
+  });
+}
+
+function eventMatchesKeyModifier(event, keyModifier) {
+  if (!keyModifier) return true;
+
+  if (keyModifier === 'esc') {
+    return event.key === 'Escape' || event.key === 'Esc';
+  }
+  if (keyModifier === 'enter') {
+    return event.key === 'Enter';
+  }
+  if (keyModifier === 'space') {
+    return event.key === ' ' || event.key === 'Spacebar';
+  }
+
+  return true;
 }
 
 function configureSignalBinding(ctx, binding) {

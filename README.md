@@ -220,6 +220,8 @@ target=!source
 target=source:seed
 target=source:sync[bool]
 event->method
+event|modifier->method
+event|modifier(arg)->method
 event->signal=#property[int]
 event->signal=$otherSignal
 event->signal=literal
@@ -239,8 +241,8 @@ Negation and acquisition cannot be combined in the same declaration.
 | [`het-bool-attrs`](#het-bool-attrs) | Boolean attribute binding | `attribute=signal` | Yes | `:seed`, `:sync` | No | Yes | - |
 | [`het-class`](#het-class) | Class toggle binding | `class=signal` | Yes | `:seed`, `:sync` | No | Yes | - |
 | [`het-model`](#het-model) | Two-way form binding | `signal` or `signal:seed` | No | `:seed` only | No | No | `:sync` is invalid. |
-| [`het-on`](#het-on) | Event binding | `event->method` or `event->signal=source` | Yes | No | Assignment sources only | Assignment sources only | Binds methods or assigns signals. |
-| [`het-toggle`](#het-toggle) | Event toggle binding | `event->signal` | Yes | No | No | Yes | Toggles a signal by assigning `!$signal`. |
+| [`het-on`](#het-on) | Event binding | `event\|modifier->method` or `event\|modifier->signal=source` | Yes | No | Assignment sources only | Assignment sources only | Binds methods or assigns signals. |
+| [`het-toggle`](#het-toggle) | Event toggle binding | `event\|modifier->signal` | Yes | No | No | Yes | Toggles a signal by assigning `!$signal`. |
 | [`het-exports`](#het-exports-and-het-imports) | Signal export list | `signal` | Yes | No | No | No | Whitespace-separated exported signal names. |
 | [`het-imports`](#het-exports-and-het-imports) | Signal import list | `signal` or `local=source` | Yes | No | No | No | Imports from the nearest exporting ancestor. |
 
@@ -411,11 +413,13 @@ Support:
 Use `het-on` to bind DOM events to methods returned from `setup`, or to assign signal values when an event fires.
 Method declarations use `event->method`.
 Assignment declarations use `event->signal=source`.
+Add event modifiers to the event side with `|`.
 
 ```html
 <div het-component="counter">
   <button type="button" het-on="click->increment">+</button>
-  <input het-props="value=count:seed[int]" het-on="input->count=#value[int]" value="0">
+  <button type="button" het-on="click|prevent->increment">+</button>
+  <input het-props="value=count:seed[int]" het-on="input|debounce(300)->count=#value[int]" value="0">
 </div>
 ```
 
@@ -469,6 +473,25 @@ literal[int]
 
 Unprefixed assignment sources are literals. Use `$` when assigning from another signal.
 
+Event modifiers:
+
+```text
+prevent
+stop
+once
+capture
+debounce(ms)
+throttle(ms)
+esc
+enter
+space
+```
+
+Timing modifiers require a positive integer duration in parentheses.
+Square brackets remain reserved for value type hints, such as `#value[int]`.
+Keyboard modifiers are supported on `keydown`, `keyup`, and `keypress` events.
+`debounce(ms)` runs once after events stop for the duration; `throttle(ms)` runs immediately, then ignores events until the duration has elapsed.
+
 Support:
 
 | Feature | Support |
@@ -477,19 +500,20 @@ Support:
 | Negation | Assignment sources only |
 | [Acquisition](#acquisition-strategies-seed-sync) | No (`:seed`/`:sync` are invalid) |
 | [Type hints](#type-hints) | Assignment sources only |
+| Event modifiers | `prevent`, `stop`, `once`, `capture`, `debounce(ms)`, `throttle(ms)`, `esc`, `enter`, `space` |
 
 ### `het-toggle`
 
 Use `het-toggle` to toggle a signal when an event fires.
 
 ```html
-<button type="button" het-toggle="click->isOpen">Toggle</button>
+<button type="button" het-toggle="click|once->isOpen">Toggle</button>
 ```
 
 This is equivalent to:
 
 ```html
-<button type="button" het-on="click->isOpen=!$isOpen">Toggle</button>
+<button type="button" het-on="click|once->isOpen=!$isOpen">Toggle</button>
 ```
 
 ### `het-exports` and `het-imports`
@@ -611,7 +635,7 @@ This error does not include a structured `cause`.
 
 #### `HET Error: Invalid binding expression`
 
-Thrown when a binding declaration does not match the directive's value shape. This includes missing separators and empty names around `=`, `:`, or `->`.
+Thrown when a binding declaration does not match the directive's value shape. This includes missing separators and empty names around `=`, `:`, `|`, or `->`.
 
 ```html
 <div het-component="counter">
@@ -626,6 +650,25 @@ Thrown when a binding declaration does not match the directive's value shape. Th
 | `bindingAttribute` | Binding attribute being parsed. |
 | `bindingDeclaration` | Raw binding declaration that failed. |
 | `bindingElement` | Element containing the binding declaration. |
+
+#### `HET Error: Invalid event modifier`
+
+Thrown when an event modifier is malformed or cannot be applied to the event.
+
+```html
+<div het-component="search">
+  <input het-on="input|debounce->update">
+</div>
+```
+
+| `cause` property | Meaning |
+| --- | --- |
+| `componentName` | Value of the owning `het-component` attribute, if present. |
+| `componentElement` | Component root element that was mounting. |
+| `bindingAttribute` | Binding attribute being parsed. |
+| `bindingDeclaration` | Raw binding declaration that failed. |
+| `bindingElement` | Element containing the binding declaration. |
+| `eventModifier` | Event modifier that failed validation. |
 
 #### `HET Error: Unsupported negation`
 

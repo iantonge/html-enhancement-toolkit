@@ -1,0 +1,13 @@
+<section class="card shadow-sm border-0">
+  <div class="card-body">
+    <h1 class="h4 mb-3">{{title}}</h1>
+    <div het-component="het-on-invalid-modifier-duplicate-key">
+      <input id="invalid-modifier-duplicate-key-input" het-on="keydown|esc|enter->run" class="form-control">
+    </div>
+  </div>
+</section>
+<script nonce="{{{cspNonce}}}">
+  window.HET.registerComponent('het-on-invalid-modifier-duplicate-key', () => ({
+    run() {},
+  }));
+</script>

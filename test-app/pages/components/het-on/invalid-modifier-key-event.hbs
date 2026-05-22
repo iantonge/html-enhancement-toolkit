@@ -1,0 +1,13 @@
+<section class="card shadow-sm border-0">
+  <div class="card-body">
+    <h1 class="h4 mb-3">{{title}}</h1>
+    <div het-component="het-on-invalid-modifier-key-event">
+      <button id="invalid-modifier-key-event-button" type="button" het-on="click|esc->run">Run</button>
+    </div>
+  </div>
+</section>
+<script nonce="{{{cspNonce}}}">
+  window.HET.registerComponent('het-on-invalid-modifier-key-event', () => ({
+    run() {},
+  }));
+</script>
