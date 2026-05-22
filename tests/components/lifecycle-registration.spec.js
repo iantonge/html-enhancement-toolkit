@@ -95,7 +95,7 @@ test.describe('components lifecycle and registration', () => {
       const button = document.createElement('button');
       button.id = 'default-error-button';
       button.type = 'button';
-      button.setAttribute('het-on', 'click=missing');
+      button.setAttribute('het-on', 'click->missing');
       root.append(button);
       document.body.append(root);
 
@@ -121,7 +121,7 @@ test.describe('components lifecycle and registration', () => {
       argumentCount: 2,
       componentName: 'default-error',
       bindingAttribute: 'het-on',
-      bindingDeclaration: 'click=missing',
+      bindingDeclaration: 'click->missing',
       bindingElementId: 'default-error-button',
       methodName: 'missing',
       errorMessage: 'HET Error: Missing component method',

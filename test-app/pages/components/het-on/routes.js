@@ -56,4 +56,34 @@ router.get('/custom-event-colon', (request, response) => {
   });
 });
 
+router.get('/assigns-signal', (request, response) => {
+  response.render('components/het-on/assigns-signal', {
+    title: 'Assigns signal',
+  });
+});
+
+router.get('/assignment-missing-source', (request, response) => {
+  response.render('components/het-on/assignment-missing-source', {
+    title: 'Assignment missing source',
+  });
+});
+
+router.get('/assignment-invalid-expression', (request, response) => {
+  response.render('components/het-on/assignment-invalid-expression', {
+    title: 'Assignment invalid expression',
+  });
+});
+
+router.get('/assignment-unknown-type-hint', (request, response) => {
+  response.render('components/het-on/assignment-unknown-type-hint', {
+    title: 'Assignment unknown type hint',
+  });
+});
+
+router.get('/toggle', (request, response) => {
+  response.render('components/het-on/toggle', {
+    title: 'Toggle',
+  });
+});
+
 export default router;

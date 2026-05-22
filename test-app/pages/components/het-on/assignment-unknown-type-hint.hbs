@@ -1,0 +1,15 @@
+<section class="card shadow-sm border-0">
+  <div class="card-body">
+    <h1 class="h4 mb-3">{{title}}</h1>
+    <div het-component="het-on-assignment-unknown-type-hint">
+      <button id="assignment-unknown-type-hint-button" type="button" het-on="click->count=1[number]">
+        Run
+      </button>
+    </div>
+  </div>
+</section>
+<script nonce="{{{cspNonce}}}">
+  window.HET.registerComponent('het-on-assignment-unknown-type-hint', ({ signals }) => {
+    signals.count = window.HET.signals.signal(0);
+  });
+</script>

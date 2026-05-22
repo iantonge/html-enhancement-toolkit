@@ -1,8 +1,8 @@
 <section class="card shadow-sm border-0">
   <div class="card-body">
     <h1 class="h4 mb-3">{{title}}</h1>
-    <div id="custom-event-root" het-component="het-on-custom-event" het-on="het:beforeFetch=onBeforeFetch">
-      <button id="dispatch-custom-event" type="button" het-on="click=dispatchCustomEvent">
+    <div id="custom-event-root" het-component="het-on-custom-event" het-on="het:beforeFetch->onBeforeFetch">
+      <button id="dispatch-custom-event" type="button" het-on="click->dispatchCustomEvent">
         Dispatch custom event
       </button>
       <p id="custom-event-count" class="mb-0 mt-2 text-muted">0</p>

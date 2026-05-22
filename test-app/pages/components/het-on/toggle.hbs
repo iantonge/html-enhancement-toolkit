@@ -1,0 +1,22 @@
+<section class="card shadow-sm border-0">
+  <div class="card-body">
+    <h1 class="h4 mb-3">{{title}}</h1>
+    <div het-component="het-on-toggle">
+      <button
+        id="toggle-button"
+        type="button"
+        class="btn btn-sm btn-primary"
+        het-toggle="click->enabled click->expanded">
+        Toggle
+      </button>
+      <p id="toggle-enabled" het-props="textContent=enabled" class="mt-2 mb-0 text-muted"></p>
+      <p id="toggle-expanded" het-props="textContent=expanded" class="mb-0 text-muted"></p>
+    </div>
+  </div>
+</section>
+<script nonce="{{{cspNonce}}}">
+  window.HET.registerComponent('het-on-toggle', ({ signals }) => {
+    signals.enabled = window.HET.signals.signal(false);
+    signals.expanded = window.HET.signals.signal(true);
+  });
+</script>

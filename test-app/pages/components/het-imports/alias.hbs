@@ -2,7 +2,7 @@
   <div class="card-body">
     <h1 class="h4 mb-3">{{title}}</h1>
     <div het-component="imports-alias-parent" het-exports="count">
-      <button id="increment-alias" type="button" het-on="click=increment" class="btn btn-sm btn-primary">
+      <button id="increment-alias" type="button" het-on="click->increment" class="btn btn-sm btn-primary">
         Increment
       </button>
       <div het-component="imports-alias-child" het-imports="childCount=count">

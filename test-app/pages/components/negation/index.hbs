@@ -2,9 +2,9 @@
   <div class="card-body">
     <h1 class="h4 mb-3">{{title}}</h1>
     <div het-component="negation-basic">
-      <button id="expand-panel" type="button" het-on="click=expand">Expand</button>
-      <button id="disable-input" type="button" het-on="click=disable">Disable</button>
-      <button id="activate-panel" type="button" het-on="click=activate">Activate</button>
+      <button id="expand-panel" type="button" het-on="click->expand">Expand</button>
+      <button id="disable-input" type="button" het-on="click->disable">Disable</button>
+      <button id="activate-panel" type="button" het-on="click->activate">Activate</button>
       <p
         id="attr-negation-target"
         het-attrs="aria-expanded=!isCollapsed"

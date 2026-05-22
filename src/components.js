@@ -2,6 +2,7 @@ import { effect, signal } from '@preact/signals-core';
 
 const SIGNAL_SOURCE_TYPE = 0;
 const FUNC_SOURCE_TYPE = 1;
+const ASSIGNMENT_SOURCE_TYPE = 2;
 const PREACT_SIGNAL_BRAND = Symbol.for('preact-signals');
 const TYPE_HINTS = ['int', 'bool', 'float'];
 const EXPORTS_ATTR = 'het-exports';
@@ -13,11 +14,13 @@ const EMPTY_EXPORTS_SET = new Set();
 const DIRECTIVES = [
   {
     name: 'het-on',
-    keyRequired: true,
     sourceType: FUNC_SOURCE_TYPE,
     allowMultiple: true,
-    allowTypeHint: false,
-    allowSync: false,
+  },
+  {
+    name: 'het-toggle',
+    sourceType: ASSIGNMENT_SOURCE_TYPE,
+    allowMultiple: true,
   },
   {
     name: 'het-props',
@@ -92,7 +95,7 @@ const DIRECTIVES = [
     keyRequired: false,
     sourceType: SIGNAL_SOURCE_TYPE,
     allowMultiple: false,
-    allowTypeHint: true,
+    allowTypeHint: false,
     allowSync: false,
     read: (el, key) => {
       return el[key];
@@ -252,8 +255,10 @@ function mountComponent(rootEl, setup) {
   for (const binding of bindings) {
     if (binding.sourceType === SIGNAL_SOURCE_TYPE) {
       configureSignalBinding(ctx, binding);
-    } else {
+    } else if (binding.sourceType === FUNC_SOURCE_TYPE) {
       configureEventBinding(methods, binding, onCleanup);
+    } else {
+      configureAssignmentBinding(ctx, binding);
     }
   }
 
@@ -381,6 +386,18 @@ function getParsedBindingDeclarations(directive, el, componentLoggingContext) {
     ? rawAttr.split(/\s+/).filter(Boolean)
     : [rawAttr];
 
+  if (directive.name === 'het-on') {
+    return declarations.map((declaration) =>
+      getParsedEventDeclaration(directive, el, declaration, componentLoggingContext),
+    );
+  }
+
+  if (directive.name === 'het-toggle') {
+    return declarations.map((declaration) =>
+      getParsedToggleDeclaration(directive, el, declaration, componentLoggingContext),
+    );
+  }
+
   return declarations.map((declaration) => {
     const bindingLoggingContext = {
       ...componentLoggingContext,
@@ -403,8 +420,6 @@ function getParsedBindingDeclarations(directive, el, componentLoggingContext) {
     } else if (parts.length === 1 && parts[0].length > 0) {
       key = inferModelKey(el);
       [sourceWithAcquisition] = parts;
-    } else if (parts.length === 2 && parts.every((part) => part.length > 0)) {
-      [key, sourceWithAcquisition] = parts;
     } else {
       throw new Error(
         'HET Error: Invalid binding expression',
@@ -441,6 +456,241 @@ function getParsedBindingDeclarations(directive, el, componentLoggingContext) {
     };
     return parsedBinding;
   });
+}
+
+function getParsedEventDeclaration(
+  directive,
+  el,
+  declaration,
+  componentLoggingContext,
+) {
+  const bindingLoggingContext = {
+    ...componentLoggingContext,
+    bindingAttribute: directive.name,
+    bindingDeclaration: declaration,
+    bindingElement: el,
+  };
+  const parts = declaration.split('->');
+
+  if (parts.length !== 2 || parts.some((part) => part.length === 0)) {
+    throw new Error(
+      'HET Error: Invalid binding expression',
+      { cause: { ...bindingLoggingContext } },
+    );
+  }
+
+  const [key, actionExpression] = parts;
+  const assignmentParts = actionExpression.split('=');
+
+  if (assignmentParts.length === 1) {
+    if (actionExpression.startsWith('!')) {
+      throw new Error(
+        'HET Error: Unsupported negation',
+        { cause: { ...bindingLoggingContext } },
+      );
+    }
+    if (actionExpression.includes(':')) {
+      getSourceAndAcquisition(
+        directive,
+        actionExpression,
+        false,
+        bindingLoggingContext,
+      );
+    }
+
+    return {
+      dirName: directive.name,
+      el,
+      componentElement: componentLoggingContext.componentElement,
+      componentName: componentLoggingContext.componentName,
+      key,
+      source: actionExpression,
+      sourceType: FUNC_SOURCE_TYPE,
+      exp: declaration,
+    };
+  }
+
+  if (
+    assignmentParts.length !== 2 ||
+    assignmentParts.some((part) => part.length === 0)
+  ) {
+    throw new Error(
+      'HET Error: Invalid binding expression',
+      { cause: { ...bindingLoggingContext } },
+    );
+  }
+
+  const [source, assignmentSourceExpression] = assignmentParts;
+
+  return {
+    dirName: directive.name,
+    el,
+    componentElement: componentLoggingContext.componentElement,
+    componentName: componentLoggingContext.componentName,
+    key,
+    source,
+    sourceType: ASSIGNMENT_SOURCE_TYPE,
+    assignmentSource: getParsedAssignmentSource(
+      assignmentSourceExpression,
+      bindingLoggingContext,
+    ),
+    exp: declaration,
+  };
+}
+
+function getParsedToggleDeclaration(
+  directive,
+  el,
+  declaration,
+  componentLoggingContext,
+) {
+  const bindingLoggingContext = {
+    ...componentLoggingContext,
+    bindingAttribute: directive.name,
+    bindingDeclaration: declaration,
+    bindingElement: el,
+  };
+  const parts = declaration.split('->');
+
+  if (parts.length !== 2 || parts.some((part) => part.length === 0)) {
+    throw new Error(
+      'HET Error: Invalid binding expression',
+      { cause: { ...bindingLoggingContext } },
+    );
+  }
+
+  const [key, source] = parts;
+
+  return {
+    dirName: directive.name,
+    el,
+    componentElement: componentLoggingContext.componentElement,
+    componentName: componentLoggingContext.componentName,
+    key,
+    source,
+    sourceType: ASSIGNMENT_SOURCE_TYPE,
+    assignmentSource: {
+      kind: 'signal',
+      source,
+      negated: true,
+    },
+    exp: declaration,
+  };
+}
+
+function getParsedAssignmentSource(sourceExpression, bindingLoggingContext) {
+  let negated = false;
+  let expression = sourceExpression;
+
+  if (expression.startsWith('!')) {
+    negated = true;
+    expression = expression.slice(1);
+  }
+
+  if (!expression) {
+    throw new Error(
+      'HET Error: Invalid binding expression',
+      { cause: { ...bindingLoggingContext } },
+    );
+  }
+
+  const { value, typeHint } = getValueAndTypeHint(expression, bindingLoggingContext);
+  const prefix = value[0];
+
+  if (prefix === '$') {
+    return getPrefixedAssignmentSource(
+      'signal',
+      value.slice(1),
+      typeHint,
+      negated,
+      bindingLoggingContext,
+    );
+  }
+  if (prefix === '#') {
+    return getPrefixedAssignmentSource(
+      'property',
+      value.slice(1),
+      typeHint,
+      negated,
+      bindingLoggingContext,
+    );
+  }
+  if (prefix === '@') {
+    return getPrefixedAssignmentSource(
+      'attribute',
+      value.slice(1),
+      typeHint,
+      negated,
+      bindingLoggingContext,
+    );
+  }
+
+  return {
+    kind: 'literal',
+    source: value,
+    typeHint,
+    negated,
+  };
+}
+
+function getPrefixedAssignmentSource(
+  kind,
+  source,
+  typeHint,
+  negated,
+  bindingLoggingContext,
+) {
+  if (!source) {
+    throw new Error(
+      'HET Error: Invalid binding expression',
+      { cause: { ...bindingLoggingContext } },
+    );
+  }
+
+  return {
+    kind,
+    source,
+    typeHint,
+    negated,
+  };
+}
+
+function getValueAndTypeHint(expression, bindingLoggingContext) {
+  const typeHintStart = expression.indexOf('[');
+
+  if (typeHintStart === -1) {
+    if (expression.includes(']')) {
+      throw new Error(
+        'HET Error: Invalid binding expression',
+        { cause: { ...bindingLoggingContext } },
+      );
+    }
+    return { value: expression };
+  }
+
+  if (!expression.endsWith(']')) {
+    throw new Error(
+      'HET Error: Invalid binding expression',
+      { cause: { ...bindingLoggingContext } },
+    );
+  }
+
+  const value = expression.slice(0, typeHintStart);
+  const typeHint = expression.slice(typeHintStart + 1, -1);
+
+  if (!value || !TYPE_HINTS.includes(typeHint)) {
+    throw new Error(
+      'HET Error: Type hint is not recognised. Expected type hints are "int", "bool" or "float"',
+      {
+        cause: {
+          ...bindingLoggingContext,
+          bindingTypeHint: typeHint,
+        },
+      },
+    );
+  }
+
+  return { value, typeHint };
 }
 
 function getNegationAndSource(
@@ -610,6 +860,27 @@ function configureEventBinding(methods, binding, onCleanup) {
   onCleanup(() => binding.el.removeEventListener(binding.key, listener));
 }
 
+function configureAssignmentBinding(ctx, binding) {
+  const signalRef = ctx.signals[binding.source];
+  if (!signalRef) {
+    throw new Error(
+      'HET Error: Bound signal does not exist',
+      { cause: getBindingCause(binding, { signalName: binding.source }) },
+    );
+  }
+
+  const listener = () => {
+    try {
+      signalRef.value = getAssignmentValue(ctx, binding);
+    } catch (error) {
+      onError(error);
+    }
+  };
+
+  binding.el.addEventListener(binding.key, listener);
+  ctx.onCleanup(() => binding.el.removeEventListener(binding.key, listener));
+}
+
 function configureSignalBinding(ctx, binding) {
   const signalRef = ctx.signals[binding.source];
   if (!signalRef) {
@@ -776,15 +1047,44 @@ function inferInputEvent(key) {
 function readValue(binding) {
   const rawValue = binding.read(binding.el, binding.key);
 
-  if (binding.typeHint === 'int') {
+  return parseValue(rawValue, binding.typeHint);
+}
+
+function getAssignmentValue(ctx, binding) {
+  const assignmentSource = binding.assignmentSource;
+  let rawValue;
+
+  if (assignmentSource.kind === 'signal') {
+    const signalRef = ctx.signals[assignmentSource.source];
+    if (!signalRef) {
+      throw new Error(
+        'HET Error: Bound signal does not exist',
+        { cause: getBindingCause(binding, { signalName: assignmentSource.source }) },
+      );
+    }
+    rawValue = signalRef.value;
+  } else if (assignmentSource.kind === 'property') {
+    rawValue = binding.el[assignmentSource.source];
+  } else if (assignmentSource.kind === 'attribute') {
+    rawValue = binding.el.getAttribute(assignmentSource.source);
+  } else {
+    rawValue = assignmentSource.source;
+  }
+
+  const parsedValue = parseValue(rawValue, assignmentSource.typeHint);
+  return assignmentSource.negated ? !parsedValue : parsedValue;
+}
+
+function parseValue(rawValue, typeHint) {
+  if (typeHint === 'int') {
     return parseInt(rawValue, 10);
   }
 
-  if (binding.typeHint === 'float') {
+  if (typeHint === 'float') {
     return parseFloat(rawValue);
   }
 
-  if (binding.typeHint === 'bool') {
+  if (typeHint === 'bool') {
     return rawValue === true || rawValue === 'true';
   }
 

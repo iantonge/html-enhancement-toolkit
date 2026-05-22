@@ -2,8 +2,8 @@
   <div class="card-body">
     <h1 class="h4 mb-3">{{title}}</h1>
     <div het-component="het-bool-attrs-basic">
-      <button id="disable-target" type="button" het-on="click=disable">Disable</button>
-      <button id="enable-target" type="button" het-on="click=enable">Enable</button>
+      <button id="disable-target" type="button" het-on="click->disable">Disable</button>
+      <button id="enable-target" type="button" het-on="click->enable">Enable</button>
       <input
         id="bool-attr-target"
         het-bool-attrs="disabled=isDisabled"
