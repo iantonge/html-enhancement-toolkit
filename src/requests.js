@@ -159,7 +159,7 @@ const fetchAndSwap = async (
   initiator.dispatchEvent(beforeFetchEvent);
   if (beforeFetchEvent.defaultPrevented) return;
   const finalRequest = beforeFetchEvent.detail.request;
-  const requestContext = {
+  const requestLoggingContext = {
     ...loggingContext,
     requestUrl: finalRequest.url,
     requestMethod: finalRequest.method,
@@ -174,45 +174,32 @@ const fetchAndSwap = async (
   initiator.dispatchEvent(afterFetchEvent);
   const finalResponse = afterFetchEvent.detail.response;
   const targetOverride = finalResponse.headers.get('X-HET-Target-Override');
-  const finalTarget = targetOverride
-    ? getTarget(targetOverride, {
-        ...requestContext,
-        responseTargetHeader: targetOverride,
-      })
-    : target;
+  const finalTarget = getFinalTarget(target, targetOverride, requestLoggingContext);
   const finalTargetChanged = finalTarget.el !== target.el;
-  const swapContext = {
-    ...requestContext,
-    ...(targetOverride ? { responseTargetHeader: targetOverride } : {}),
-    ...(finalTargetChanged
-      ? {
-          effectiveTargetPaneName: finalTarget.name,
-          effectiveTargetPaneElement: finalTarget.el,
-        }
-      : {}),
-  };
+  const swapLoggingContext = { ...requestLoggingContext };
+  if (targetOverride) {
+    swapLoggingContext.responseTargetHeader = targetOverride;
+  }
+  if (finalTargetChanged) {
+    swapLoggingContext.effectiveTargetPaneName = finalTarget.name;
+    swapLoggingContext.effectiveTargetPaneElement = finalTarget.el;
+  }
   const selectHeaderProvided = finalResponse.headers.has('X-HET-Select-Override');
   const selectOverride = finalResponse.headers.get('X-HET-Select-Override');
   const alsoHeaderProvided = finalResponse.headers.has('X-HET-Also-Override');
   const alsoOverride = finalResponse.headers.get('X-HET-Also-Override');
-  const finalSelect =
-    selectHeaderProvided && (selectOverride ?? '').trim() === ''
-      ? undefined
-      : selectHeaderProvided
-        ? getSelectIds(selectOverride, {
-            ...swapContext,
-            requestDirectiveAttribute: 'X-HET-Select-Override',
-          })
-        : select;
-  const finalAlso =
-    alsoHeaderProvided && (alsoOverride ?? '').trim() === ''
-      ? undefined
-      : alsoHeaderProvided
-        ? getAlsoIds(alsoOverride, {
-            ...swapContext,
-            requestDirectiveAttribute: 'X-HET-Also-Override',
-          })
-        : also;
+  const finalSelect = getFinalSelect(
+    select,
+    selectHeaderProvided,
+    selectOverride,
+    swapLoggingContext,
+  );
+  const finalAlso = getFinalAlso(
+    also,
+    alsoHeaderProvided,
+    alsoOverride,
+    swapLoggingContext,
+  );
   const responseHtml = await finalResponse.text();
   const htmlForParse = trustedTypesPolicy?.createHTML(responseHtml) ?? responseHtml;
   const parsedDocument = parser.parseFromString(htmlForParse, 'text/html');
@@ -220,15 +207,19 @@ const fetchAndSwap = async (
   if (candidates.length === 0)
     throw new Error(
       'HET Error: Target pane not found in server response',
-      { cause: { ...swapContext } },
+      { cause: { ...swapLoggingContext } },
     );
-  if (candidates.length > 1)
+  if (candidates.length > 1) {
+    const multipleTargetLoggingContext = {
+      ...swapLoggingContext,
+      responseTargetPaneCount: candidates.length,
+    };
     throw new Error(
       'HET Error: Multiple target panes found in server response',
-      { cause: { ...swapContext, responseTargetPaneCount: candidates.length } },
+      { cause: multipleTargetLoggingContext },
     );
+  }
   const responseTarget = candidates[0];
-  const contentContext = { ...swapContext };
   const beforeLoadContentEvent = new CustomEvent('het:beforeLoadContent', {
     detail: { newContent: responseTarget },
     cancelable: true,
@@ -241,11 +232,13 @@ const fetchAndSwap = async (
   const insertedElements = [];
   let alsoElements = [];
   let loadedContent;
-  const alsoContext = {
-    ...contentContext,
+  const alsoLoggingContext = {
+    ...swapLoggingContext,
     requestDirectiveAttribute: also ? 'het-also' : '',
-    ...(alsoHeaderProvided ? { responseAlsoHeader: alsoOverride } : {}),
   };
+  if (alsoHeaderProvided) {
+    alsoLoggingContext.responseAlsoHeader = alsoOverride;
+  }
   if (!finalSelect || finalSelect.length === 0) {
     if (finalAlso && finalAlso.length) {
       alsoElements = applyAlsoReplacements(
@@ -253,7 +246,7 @@ const fetchAndSwap = async (
         finalTarget.el,
         newContent,
         responseDoc,
-        alsoContext,
+        alsoLoggingContext,
       );
       insertedElements.push(...alsoElements);
     }
@@ -267,16 +260,18 @@ const fetchAndSwap = async (
     loadedContent.dispatchEvent(afterLoadContentEvent);
     return { url: finalResponse.url, newHead: parsedDocument.head, finalTarget };
   }
-  const selectContext = {
-    ...contentContext,
+  const selectLoggingContext = {
+    ...swapLoggingContext,
     requestDirectiveAttribute: select ? 'het-select' : '',
-    ...(selectHeaderProvided ? { responseSelectHeader: selectOverride } : {}),
   };
+  if (selectHeaderProvided) {
+    selectLoggingContext.responseSelectHeader = selectOverride;
+  }
   validateSelectedIds(
     finalSelect,
     finalTarget.el,
     newContent,
-    selectContext,
+    selectLoggingContext,
   );
   for (const id of finalSelect) {
     const currentEl = getDescendantById(finalTarget.el, id);
@@ -289,7 +284,7 @@ const fetchAndSwap = async (
       finalTarget.el,
       newContent,
       responseDoc,
-      alsoContext,
+      alsoLoggingContext,
     );
     insertedElements.push(...alsoElements);
   }
@@ -301,6 +296,45 @@ const fetchAndSwap = async (
   });
   loadedContent.dispatchEvent(afterLoadContentEvent);
   return { url: finalResponse.url, newHead: parsedDocument.head, finalTarget };
+};
+
+const getFinalSelect = (
+  select,
+  selectHeaderProvided,
+  selectOverride,
+  swapLoggingContext,
+) => {
+  if (!selectHeaderProvided) return select;
+  if ((selectOverride ?? '').trim() === '') return undefined;
+  const selectOverrideLoggingContext = {
+    ...swapLoggingContext,
+    requestDirectiveAttribute: 'X-HET-Select-Override',
+  };
+  return getSelectIds(selectOverride, selectOverrideLoggingContext);
+};
+
+const getFinalAlso = (
+  also,
+  alsoHeaderProvided,
+  alsoOverride,
+  swapLoggingContext,
+) => {
+  if (!alsoHeaderProvided) return also;
+  if ((alsoOverride ?? '').trim() === '') return undefined;
+  const alsoOverrideLoggingContext = {
+    ...swapLoggingContext,
+    requestDirectiveAttribute: 'X-HET-Also-Override',
+  };
+  return getAlsoIds(alsoOverride, alsoOverrideLoggingContext);
+};
+
+const getFinalTarget = (target, targetOverride, requestLoggingContext) => {
+  if (!targetOverride) return target;
+  const targetLookupLoggingContext = {
+    ...requestLoggingContext,
+    responseTargetHeader: targetOverride,
+  };
+  return getTarget(targetOverride, targetLookupLoggingContext);
 };
 
 const getClickContext = (event) => {
@@ -335,14 +369,16 @@ const getClickContext = (event) => {
       'HET Error: Links with a target attribute cannot be progressively enhanced',
       { cause: { ...loggingContext } },
     );
-  const select = getSelectIds(link.getAttribute('het-select'), {
+  const selectLoggingContext = {
     ...loggingContext,
     requestDirectiveAttribute: 'het-select',
-  });
-  const also = getAlsoIds(link.getAttribute('het-also'), {
+  };
+  const select = getSelectIds(link.getAttribute('het-select'), selectLoggingContext);
+  const alsoLoggingContext = {
     ...loggingContext,
     requestDirectiveAttribute: 'het-also',
-  });
+  };
+  const also = getAlsoIds(link.getAttribute('het-also'), alsoLoggingContext);
   const target = getTarget(targetName, loggingContext);
   loggingContext.targetPaneElement = target.el;
   const abortController = new AbortController();
@@ -399,33 +435,47 @@ const getSubmitContext = (event) => {
   const resolvedEnctype = (submitterEnctype || formEnctype).toLowerCase();
   const loggingContext = {
     formElement: form,
-    ...(submitter ? { submitterElement: submitter } : {}),
-    ...(formTargetName ? { formTargetName } : {}),
-    ...(submitterTargetName ? { submitterTargetName } : {}),
     resolvedTargetName: targetName,
     formAction,
-    ...(submitterAction ? { submitterAction } : {}),
     formMethod,
-    ...(submitterMethod ? { submitterMethod } : {}),
     formEnctype,
-    ...(submitterEnctype ? { submitterEnctype } : {}),
     resolvedActionUrl: new URL(resolvedAction, window.location.href).href,
     resolvedMethod,
     resolvedEnctype,
   };
+  if (submitter) {
+    loggingContext.submitterElement = submitter;
+  }
+  if (formTargetName) {
+    loggingContext.formTargetName = formTargetName;
+  }
+  if (submitterTargetName) {
+    loggingContext.submitterTargetName = submitterTargetName;
+  }
+  if (submitterAction) {
+    loggingContext.submitterAction = submitterAction;
+  }
+  if (submitterMethod) {
+    loggingContext.submitterMethod = submitterMethod;
+  }
+  if (submitterEnctype) {
+    loggingContext.submitterEnctype = submitterEnctype;
+  }
+  const selectLoggingContext = {
+    ...loggingContext,
+    requestDirectiveAttribute: 'het-select',
+  };
   const select = getSelectIds(
     getEffectiveDirectiveValue(form, submitter, 'het-select'),
-    {
-      ...loggingContext,
-      requestDirectiveAttribute: 'het-select',
-    },
+    selectLoggingContext,
   );
+  const alsoLoggingContext = {
+    ...loggingContext,
+    requestDirectiveAttribute: 'het-also',
+  };
   const also = getAlsoIds(
     getEffectiveDirectiveValue(form, submitter, 'het-also'),
-    {
-      ...loggingContext,
-      requestDirectiveAttribute: 'het-also',
-    },
+    alsoLoggingContext,
   );
   const isBackgroundSubmission =
     submitter?.hasAttribute('het-background') ||
@@ -512,11 +562,16 @@ const buildPostRequest = (
 const getSelectIds = (raw, loggingContext) => {
   if (!raw) return;
   const ids = raw.split(/\s+/).filter(Boolean);
-  if (ids.length === 0)
+  if (ids.length === 0) {
+    const emptyDirectiveLoggingContext = {
+      ...loggingContext,
+      requestDirectiveDeclaration: raw,
+    };
     throw new Error(
       'HET Error: Select directive must list at least one id',
-      { cause: { ...loggingContext, requestDirectiveDeclaration: raw } },
+      { cause: emptyDirectiveLoggingContext },
     );
+  }
   return ids;
 };
 
@@ -531,41 +586,46 @@ const getDescendantById = (root, id) => {
 const validateSelectedIds = (ids, currentContent, newContent, loggingContext) => {
   ids.forEach((id) => {
     const currentEl = getDescendantById(currentContent, id);
-    if (!currentEl)
+    if (!currentEl) {
+      const missingCurrentLoggingContext = {
+        ...loggingContext,
+        selectId: id,
+        targetPaneElement: currentContent,
+      };
       throw new Error(
         'HET Error: Selected element not found in the target pane on the page',
-        {
-          cause: {
-            ...loggingContext,
-            selectId: id,
-            targetPaneElement: currentContent,
-          },
-        },
+        { cause: missingCurrentLoggingContext },
       );
+    }
     const newEl = getDescendantById(newContent, id);
-    if (!newEl)
+    if (!newEl) {
+      const missingResponseLoggingContext = {
+        ...loggingContext,
+        selectId: id,
+        targetPaneElement: currentContent,
+        currentElement: currentEl,
+      };
       throw new Error(
         'HET Error: Selected element not found in the target pane in the server response',
-        {
-          cause: {
-            ...loggingContext,
-            selectId: id,
-            targetPaneElement: currentContent,
-            currentElement: currentEl,
-          },
-        },
+        { cause: missingResponseLoggingContext },
       );
+    }
   });
 };
 
 const getAlsoIds = (raw, loggingContext) => {
   if (!raw) return;
   const ids = raw.split(/\s+/).filter(Boolean);
-  if (ids.length === 0)
+  if (ids.length === 0) {
+    const emptyDirectiveLoggingContext = {
+      ...loggingContext,
+      requestDirectiveDeclaration: raw,
+    };
     throw new Error(
       'HET Error: Also directive must list at least one id',
-      { cause: { ...loggingContext, requestDirectiveDeclaration: raw } },
+      { cause: emptyDirectiveLoggingContext },
     );
+  }
   return ids;
 };
 
@@ -579,53 +639,52 @@ const applyAlsoReplacements = (
   const replacements = [];
   ids.forEach((id) => {
     const currentEl = getDescendantById(document, id);
-    if (!currentEl)
+    if (!currentEl) {
+      const missingCurrentLoggingContext = {
+        ...loggingContext,
+        alsoId: id,
+        targetPaneElement: targetEl,
+      };
       throw new Error(
         'HET Error: het-also element not found on the page',
-        {
-          cause: {
-            ...loggingContext,
-            alsoId: id,
-            targetPaneElement: targetEl,
-          },
-        },
+        { cause: missingCurrentLoggingContext },
       );
-    if (targetEl.contains(currentEl))
+    }
+    if (targetEl.contains(currentEl)) {
+      const nestedCurrentLoggingContext = {
+        ...loggingContext,
+        alsoId: id,
+        targetPaneElement: targetEl,
+        currentElement: currentEl,
+      };
       throw new Error(
         'HET Error: het-also element found inside the target pane on the page',
-        {
-          cause: {
-            ...loggingContext,
-            alsoId: id,
-            targetPaneElement: targetEl,
-            currentElement: currentEl,
-          },
-        },
+        { cause: nestedCurrentLoggingContext },
       );
+    }
     const replacement = getDescendantById(responseDoc, id);
-    if (!replacement)
+    if (!replacement) {
+      const missingResponseLoggingContext = {
+        ...loggingContext,
+        alsoId: id,
+        targetPaneElement: targetEl,
+        currentElement: currentEl,
+      };
       throw new Error(
         'HET Error: het-also element not found in the server response',
-        {
-          cause: {
-            ...loggingContext,
-            alsoId: id,
-            targetPaneElement: targetEl,
-            currentElement: currentEl,
-          },
-        },
+        { cause: missingResponseLoggingContext },
       );
+    }
     if (responseTarget.contains(replacement)) {
+      const nestedResponseLoggingContext = {
+        ...loggingContext,
+        alsoId: id,
+        targetPaneElement: targetEl,
+        currentElement: currentEl,
+      };
       throw new Error(
         'HET Error: het-also element found inside the target pane in the server response',
-        {
-          cause: {
-            ...loggingContext,
-            alsoId: id,
-            targetPaneElement: targetEl,
-            currentElement: currentEl,
-          },
-        },
+        { cause: nestedResponseLoggingContext },
       );
     }
     replacements.push(replaceContent(currentEl, replacement));
@@ -763,22 +822,27 @@ const getPopStateContext = (event) => {
 
 const getTarget = (targetName, loggingContext) => {
   const candidates = document.querySelectorAll(`[het-pane="${targetName}"]`);
-  if (candidates.length === 0)
+  if (candidates.length === 0) {
+    const missingTargetLoggingContext = {
+      ...loggingContext,
+      targetLookupName: targetName,
+    };
     throw new Error(
       'HET Error: Target pane not found on the page',
-      { cause: { ...loggingContext, targetLookupName: targetName } },
+      { cause: missingTargetLoggingContext },
     );
-  if (candidates.length > 1)
+  }
+  if (candidates.length > 1) {
+    const multipleTargetLoggingContext = {
+      ...loggingContext,
+      targetLookupName: targetName,
+      targetPaneElements: [...candidates],
+    };
     throw new Error(
       'HET Error: Multiple target panes found on the page',
-      {
-        cause: {
-          ...loggingContext,
-          targetLookupName: targetName,
-          targetPaneElements: [...candidates],
-        },
-      },
+      { cause: multipleTargetLoggingContext },
     );
+  }
   const el = candidates[0];
   const isNav = el.hasAttribute('het-nav');
   return { el, name: targetName, isNav };
