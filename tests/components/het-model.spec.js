@@ -49,21 +49,21 @@ test.describe('components het-model', () => {
   test('reports error for empty het-model expression', async ({ page }) => {
     await page.goto('/components/het-model/invalid-expression-empty');
     await page.waitForFunction(() =>
-      window.hetErrors.some((error) => error.message === 'HET Error: Invalid binding expression'),
+      window.hetErrors.some((error) => error.message === 'HET Error: het-model binding requires a signal name'),
     );
   });
 
   test('reports error for extra equals in het-model expression', async ({ page }) => {
     await page.goto('/components/het-model/invalid-expression-extra-equals');
     await page.waitForFunction(() =>
-      window.hetErrors.some((error) => error.message === 'HET Error: Invalid binding expression'),
+      window.hetErrors.some((error) => error.message === 'HET Error: het-model binding must be a signal name'),
     );
   });
 
   test('reports error for explicit property het-model expression', async ({ page }) => {
     await page.goto('/components/het-model/invalid-property-expression');
     await page.waitForFunction(() =>
-      window.hetErrors.some((error) => error.message === 'HET Error: Invalid binding expression'),
+      window.hetErrors.some((error) => error.message === 'HET Error: het-model binding must be a signal name'),
     );
   });
 

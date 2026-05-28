@@ -7,12 +7,12 @@
         value="5"
         data-label="ready"
         class="form-control"
-        het-on="input->count=#value[int] input->label=@data-label input->copy=$label input->status=done input->enabled=true[bool]">
+        het-on="input->count=prop:value[int] input->label=attr:data-label input->copy=label input->status=literal:done input->enabled=literal:true[bool]">
       <button
         id="assignment-negate"
         type="button"
         class="btn btn-sm btn-primary mt-2"
-        het-on="click->enabled=!$enabled">
+        het-on="click->enabled=!enabled">
         Negate
       </button>
       <p id="assignment-count" het-props="textContent=count" class="mt-2 mb-0 text-muted"></p>

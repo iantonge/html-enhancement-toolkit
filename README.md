@@ -134,7 +134,7 @@ For setup-free components, use `het-component` without a value. This mounts the 
 
 ```html
 <div het-component>
-  <span het-props="textContent=message:seed">Ready</span>
+  <span het-text:seed="message">Ready</span>
   <output het-props="textContent=message"></output>
 </div>
 ```
@@ -208,8 +208,8 @@ Some binding attributes support multiple declarations in the same attribute, sep
 For example, `het-props="textContent=count title=label"` binds two properties from two signals.
 Some signal bindings support negation with `!`, which applies JavaScript boolean negation before writing to the DOM.
 For example, `het-attrs="aria-expanded=!isCollapsed"` writes `"false"` when `isCollapsed` is truthy.
-Some signal bindings can add an acquisition clause, such as `:seed` or `:sync`, to initialize a signal from the DOM.
-Some acquisition clauses can also add a type hint, such as `:seed[int]`.
+Plain output bindings only write signal values to the DOM.
+Use `:seed` and `:sync` attribute variants, or explicit `het-seed` / `het-sync` attributes, to initialize a signal from the DOM.
 Each directive has its own support limits; see [Acquisition Strategies (`:seed`, `:sync`)](#acquisition-strategies-seed-sync) for the full reference.
 
 General forms:
@@ -217,14 +217,16 @@ General forms:
 ```text
 target=source
 target=!source
-target=source:seed
-target=source:sync[bool]
+het-directive:seed="target=source[type]"
+het-directive:sync="target=source[type]"
+het-seed="signal=source[type]"
+het-sync="signal=source[type]"
 event->method
-event|modifier->method
-event|modifier(arg)->method
-event->signal=#property[int]
-event->signal=$otherSignal
-event->signal=literal
+event.modifier->method
+event.modifier(arg)->method
+event->signal=prop:property[int]
+event->signal=otherSignal
+event->signal=literal:value
 ```
 
 Negation and acquisition cannot be combined in the same declaration.
@@ -236,15 +238,36 @@ Negation and acquisition cannot be combined in the same declaration.
 | [`het-component`](#components) | Component root | Optional component name | No | No | No | No | Mounts the registered component with that name, or mounts anonymously when empty. |
 | [`het-ref`](#het-ref) | DOM ref | Ref name | No | No | No | No | Exposed on `setup({ refs })` for the owning component scope. |
 | [`het-cloak`](#het-cloak) | Mount cloak | Boolean attribute | No | No | No | No | Removed after the component mount batch completes. |
-| [`het-props`](#het-props) | Property binding | `property=signal` | Yes | `:seed`, `:sync` | Yes | Yes | - |
-| [`het-attrs`](#het-attrs) | Attribute binding | `attribute=signal` | Yes | `:seed`, `:sync` | Yes | Yes | - |
-| [`het-bool-attrs`](#het-bool-attrs) | Boolean attribute binding | `attribute=signal` | Yes | `:seed`, `:sync` | No | Yes | - |
-| [`het-class`](#het-class) | Class toggle binding | `class=signal` | Yes | `:seed`, `:sync` | No | Yes | - |
-| [`het-model`](#het-model) | Two-way form binding | `signal` or `signal:seed` | No | `:seed` only | No | No | `:sync` is invalid. |
-| [`het-on`](#het-on) | Event binding | `event\|modifier->method` or `event\|modifier->signal=source` | Yes | No | Assignment sources only | Assignment sources only | Binds methods or assigns signals. |
-| [`het-toggle`](#het-toggle) | Event toggle binding | `event\|modifier->signal` | Yes | No | No | Yes | Toggles a signal by assigning `!$signal`. |
+| [`het-text`](#het-text) | Text binding | `signal` | No | `het-text:seed`, `het-text:sync` | Yes | Yes | Sugar for `textContent`. |
+| [`het-props`](#het-props) | Property binding | `property=signal` | Yes | `het-props:seed`, `het-props:sync` | Yes | Yes | - |
+| [`het-attrs`](#het-attrs) | Attribute binding | `attribute=signal` | Yes | `het-attrs:seed`, `het-attrs:sync` | Yes | Yes | - |
+| [`het-bool-attrs`](#het-bool-attrs) | Boolean attribute binding | `attribute=signal` | Yes | `het-bool-attrs:seed`, `het-bool-attrs:sync` | No | Yes | - |
+| [`het-class`](#het-class) | Class toggle binding | `class=signal` | Yes | `het-class:seed`, `het-class:sync` | No | Yes | - |
+| [`het-seed`](#acquisition-strategies-seed-sync) | Explicit DOM read | `signal=source` | Yes | Seed once | Value sources only | Read sources only | Reads before setup. |
+| [`het-sync`](#acquisition-strategies-seed-sync) | Explicit DOM read | `signal=source` | Yes | Seed and resync | Value sources only | Read sources only | Reads before setup and on `het:sync`. |
+| [`het-model`](#het-model) | Two-way form binding | `signal` or `signal[type]` | No | Always seeded | Yes | No | `:sync` is invalid. |
+| [`het-on`](#het-on) | Event binding | `event.modifier->method` or `event.modifier->signal=source` | Yes | No | Assignment read sources only | Assignment read sources only | Binds methods or assigns signals. |
+| [`het-toggle`](#het-toggle) | Event toggle binding | `event.modifier->signal` | Yes | No | No | Yes | Toggles a signal by assigning `!signal`. |
 | [`het-exports`](#het-exports-and-het-imports) | Signal export list | `signal` | Yes | No | No | No | Whitespace-separated exported signal names. |
 | [`het-imports`](#het-exports-and-het-imports) | Signal import list | `signal` or `local=source` | Yes | No | No | No | Imports from the nearest exporting ancestor. |
+
+### `het-text`
+
+Use `het-text` to bind a signal to an element's `textContent`.
+It is sugar for `het-props="textContent=signal"`.
+
+```html
+<p het-text="message"></p>
+```
+
+Support:
+
+| Feature | Support |
+| --- | --- |
+| Multiple declarations | No |
+| Negation | Yes |
+| [Acquisition](#acquisition-strategies-seed-sync) | `het-text:seed`, `het-text:sync` |
+| [Type hints](#type-hints) | Yes, for acquisition variants |
 
 ### `het-props`
 
@@ -275,8 +298,8 @@ Support:
 | --- | --- |
 | Multiple declarations | Yes |
 | Negation | Yes |
-| [Acquisition](#acquisition-strategies-seed-sync) | `:seed`, `:sync` |
-| [Type hints](#type-hints) | Yes |
+| [Acquisition](#acquisition-strategies-seed-sync) | `:seed`, `:sync` attribute variants |
+| [Type hints](#type-hints) | Yes, for acquisition variants |
 
 ### `het-attrs`
 
@@ -307,8 +330,8 @@ Support:
 | --- | --- |
 | Multiple declarations | Yes |
 | Negation | Yes |
-| [Acquisition](#acquisition-strategies-seed-sync) | `:seed`, `:sync` |
-| [Type hints](#type-hints) | Yes |
+| [Acquisition](#acquisition-strategies-seed-sync) | `:seed`, `:sync` attribute variants |
+| [Type hints](#type-hints) | Yes, for acquisition variants |
 
 ### `het-bool-attrs`
 
@@ -339,7 +362,7 @@ Support:
 | --- | --- |
 | Multiple declarations | Yes |
 | Negation | Yes |
-| [Acquisition](#acquisition-strategies-seed-sync) | `:seed`, `:sync` |
+| [Acquisition](#acquisition-strategies-seed-sync) | `:seed`, `:sync` attribute variants |
 | [Type hints](#type-hints) | No |
 
 ### `het-class`
@@ -371,7 +394,7 @@ Support:
 | --- | --- |
 | Multiple declarations | Yes |
 | Negation | Yes |
-| [Acquisition](#acquisition-strategies-seed-sync) | `:seed`, `:sync` |
+| [Acquisition](#acquisition-strategies-seed-sync) | `:seed`, `:sync` attribute variants |
 | [Type hints](#type-hints) | No |
 
 ### `het-model`
@@ -379,13 +402,14 @@ Support:
 Use `het-model` for two-way signal binding on form controls.
 HET infers `value` for most inputs and `checked` for checkbox/radio inputs.
 The DOM event cannot be specified; HET infers `change` for `checked` bindings and `input` for all other properties.
-Use `signal:seed` to initialize the signal from the element's current property value.
-For explicit properties, events, or typed values, combine `het-props` with `het-on` assignment.
+The signal is always seeded from the element's current property value before setup runs.
+For explicit properties or events, combine `het-props` with `het-seed` and `het-on` assignment.
 
 ```html
 <div het-component="profileForm">
-  <input het-model="name">
-  <input het-model="email:seed" value="ada@example.com">
+  <input het-model="name" value="Ada">
+  <input het-model="email" value="ada@example.com">
+  <input het-model="age[int]" value="37">
   <input type="checkbox" het-model="isSubscribed">
   <p het-props="textContent=name"></p>
   <p het-props="textContent=email"></p>
@@ -393,10 +417,7 @@ For explicit properties, events, or typed values, combine `het-props` with `het-
 ```
 
 ```js
-window.HET.registerComponent('profileForm', ({ signals }) => {
-  signals.name = window.HET.signals.signal('Ada');
-  signals.isSubscribed = window.HET.signals.signal(false);
-});
+window.HET.registerComponent('profileForm');
 ```
 
 Support:
@@ -405,21 +426,21 @@ Support:
 | --- | --- |
 | Multiple declarations | No, one declaration per attribute |
 | Negation | No |
-| [Acquisition](#acquisition-strategies-seed-sync) | `:seed` only (`:sync` is invalid) |
-| [Type hints](#type-hints) | No |
+| [Acquisition](#acquisition-strategies-seed-sync) | Always seeded |
+| [Type hints](#type-hints) | Yes |
 
 ### `het-on`
 
 Use `het-on` to bind DOM events to methods returned from `setup`, or to assign signal values when an event fires.
 Method declarations use `event->method`.
 Assignment declarations use `event->signal=source`.
-Add event modifiers to the event side with `|`.
+Add event modifiers to the event side with dot syntax.
 
 ```html
 <div het-component="counter">
   <button type="button" het-on="click->increment">+</button>
-  <button type="button" het-on="click|prevent->increment">+</button>
-  <input het-props="value=count:seed[int]" het-on="input|debounce(300)->count=#value[int]" value="0">
+  <button type="button" het-on="click.prevent->increment">+</button>
+  <input het-props:seed="value=count[int]" het-on="input.debounce(300)->count=prop:value[int]" value="0">
 </div>
 ```
 
@@ -462,16 +483,18 @@ window.HET.registerComponent('searchBox', () => ({
 Assignment sources:
 
 ```text
-$signal
-#property
-@attribute
-literal
-literal[int]
-#property[float]
-!$signal
+signal
+!signal
+prop:property
+attr:attribute
+bool-attr:hidden
+class:active
+literal:value
+literal:value[int]
+prop:property[float]
 ```
 
-Unprefixed assignment sources are literals. Use `$` when assigning from another signal.
+Unprefixed assignment sources are signals. Use `literal:` when assigning a literal value.
 
 Event modifiers:
 
@@ -488,7 +511,7 @@ space
 ```
 
 Timing modifiers require a positive integer duration in parentheses.
-Square brackets remain reserved for value type hints, such as `#value[int]`.
+Square brackets remain reserved for value type hints, such as `prop:value[int]`.
 Keyboard modifiers are supported on `keydown`, `keyup`, and `keypress` events.
 `debounce(ms)` runs once after events stop for the duration; `throttle(ms)` runs immediately, then ignores events until the duration has elapsed.
 
@@ -507,13 +530,13 @@ Support:
 Use `het-toggle` to toggle a signal when an event fires.
 
 ```html
-<button type="button" het-toggle="click|once->isOpen">Toggle</button>
+<button type="button" het-toggle="click.once->isOpen">Toggle</button>
 ```
 
 This is equivalent to:
 
 ```html
-<button type="button" het-on="click|once->isOpen=!$isOpen">Toggle</button>
+<button type="button" het-on="click.once->isOpen=!isOpen">Toggle</button>
 ```
 
 ### `het-exports` and `het-imports`
@@ -553,10 +576,12 @@ Support:
 
 ### Acquisition Strategies (`:seed`, `:sync`)
 
-Signal bindings can initialize from existing DOM values using acquisition clauses for some directives (see the acquisition support matrix below):
+Signal bindings can initialize from existing DOM values using acquisition variants or explicit read attributes:
 
-- `:seed` initializes the signal once from the bound element.
-- `:sync` initializes once and updates the signal again when a `het:sync` event is dispatched.
+- `het-*:seed` writes signal to DOM and seeds from the same DOM target once.
+- `het-*:sync` writes signal to DOM, seeds initially, and updates again when a `het:sync` event is dispatched.
+- `het-seed="signal=source"` reads once before setup.
+- `het-sync="signal=source"` reads before setup and again on `het:sync`.
 
 An acquired signal is created before `setup` runs. A signal may be referenced by multiple bindings, but it may have only one DOM acquisition source. That acquisition binding becomes the source of truth for the signal's initial value (`:seed`) or synchronized value (`:sync`).
 
@@ -564,15 +589,15 @@ Do not initialize an acquired signal manually in `setup`, import a signal with t
 
 ```html
 <!-- Valid: one acquisition source, multiple output bindings -->
-<input het-props="value=count:seed[int]" value="7">
+<input het-props:seed="value=count[int]" value="7">
 <span het-props="textContent=count"></span>
 <output het-attrs="data-count=count"></output>
 ```
 
 ```html
 <!-- Invalid: two acquisition sources for the same signal -->
-<input het-props="value=count:seed[int]" value="7">
-<span het-props="textContent=count:seed[int]">7</span>
+<input het-props:seed="value=count[int]" value="7">
+<span het-text:seed="count">7</span>
 ```
 
 Sync trigger behavior:
@@ -587,24 +612,37 @@ container.dispatchEvent(new CustomEvent('het:sync', { bubbles: true }));
 
 ```html
 <div het-component="searchBox">
-  <input het-props="value=query:sync" value="initial query">
+  <input het-props:sync="value=query" value="initial query">
   <p het-props="textContent=query"></p>
 </div>
 ```
 
+Read sources:
+
+```text
+value
+prop:value
+attr:data-status
+bool-attr:hidden
+class:active
+literal:ready
+```
+
+The default read source kind for `het-seed` and `het-sync` is `prop`, so `name=value` and `name=prop:value` are equivalent. Colons are allowed inside names after a known source prefix, such as `attr:xlink:href` or `class:md:hover:block`.
+
 #### Type hints
 
-Type hints can be applied to acquisition values for some directives and to `het-on` assignment sources:
+Type hints can be applied to value-bearing DOM reads and to `het-on` assignment sources:
 
 - `[int]` uses `parseInt(value, 10)`
 - `[float]` uses `parseFloat(value)`
 - `[bool]` treats `true` and `"true"` as `true`; other values are `false`
 
 ```html
-<p het-props="textContent=count:seed[int]">7</p>
-<p het-props="textContent=price:seed[float]">3.5</p>
-<p het-props="textContent=enabled:seed[bool]">true</p>
-<input het-on="input->count=#value[int]">
+<p het-props:seed="textContent=count[int]">7</p>
+<p het-props:seed="textContent=price[float]">3.5</p>
+<p het-props:seed="textContent=enabled[bool]">true</p>
+<input het-on="input->count=prop:value[int]">
 ```
 
 Acquisition support matrix:
@@ -615,9 +653,10 @@ Acquisition support matrix:
 | `het-attrs` | Yes | Yes | Yes | Yes |
 | `het-bool-attrs` | Yes | Yes | No | Yes |
 | `het-class` | Yes | Yes | No | Yes |
-| `het-model` | Yes | No | No | No |
+| `het-text` | Yes | Yes | Yes | Yes |
+| `het-model` | Always | No | Yes | No |
 
-`het-component`, `het-ref`, `het-cloak`, `het-on`, `het-toggle`, `het-exports`, and `het-imports` do not use acquisition syntax.
+`het-component`, `het-ref`, `het-cloak`, `het-on`, `het-toggle`, `het-exports`, and `het-imports` do not use acquisition variants.
 
 ### Component errors
 
@@ -635,7 +674,7 @@ This error does not include a structured `cause`.
 
 #### `HET Error: Invalid binding expression`
 
-Thrown when a binding declaration does not match the directive's value shape. This includes missing separators and empty names around `=`, `:`, `|`, or `->`.
+Thrown when a binding declaration does not match the directive's value shape. This includes missing separators and empty names around `=`, `.`, `:`, or `->`.
 
 ```html
 <div het-component="counter">
@@ -657,7 +696,7 @@ Thrown when an event modifier is malformed or cannot be applied to the event.
 
 ```html
 <div het-component="search">
-  <input het-on="input|debounce->update">
+  <input het-on="input.debounce->update">
 </div>
 ```
 
@@ -712,7 +751,7 @@ Thrown when a binding contains more than one acquisition separator.
 
 ```html
 <div het-component="counter">
-  <output het-props="textContent=count:seed:int"></output>
+  <output het-props:seed="textContent=count:int"></output>
 </div>
 ```
 
@@ -730,7 +769,7 @@ Thrown when one declaration combines `!` with `:seed` or `:sync`.
 
 ```html
 <div het-component="panel">
-  <section het-class="is-hidden=!collapsed:seed"></section>
+  <section het-class:seed="is-hidden=!collapsed"></section>
 </div>
 ```
 
@@ -762,11 +801,11 @@ Thrown when the signal name or acquisition strategy is missing around `:`.
 
 #### `HET Error: Directive does not support acquisition clauses`
 
-Thrown when `:seed` or `:sync` is used with a directive that cannot read from the DOM, such as `het-on`.
+Thrown when acquisition syntax is used where the directive grammar does not allow it.
 
 ```html
 <div het-component="counter">
-  <button type="button" het-on="click->increment:seed">+</button>
+  <button type="button" het-on:seed="click->increment">+</button>
 </div>
 ```
 
@@ -784,7 +823,7 @@ Thrown when a type hint is used with a directive that does not support type hint
 
 ```html
 <div het-component="panel">
-  <section het-class="active=isActive:seed[bool]"></section>
+  <section het-class:seed="active=isActive[bool]"></section>
 </div>
 ```
 
@@ -802,7 +841,7 @@ Thrown when an acquisition clause uses an unsupported type hint.
 
 ```html
 <div het-component="counter">
-  <output het-props="textContent=count:seed[number]">1</output>
+  <output het-props:seed="textContent=count[number]">1</output>
 </div>
 ```
 
@@ -836,7 +875,7 @@ Thrown when an acquisition clause uses an unsupported strategy.
 
 #### `HET Error: Directive does not support sync acquisition`
 
-Thrown when `:sync` is used with a directive that only supports `:seed`, such as `het-model`.
+Thrown when sync-style syntax is used with a directive that only supports seeded behavior, such as `het-model`.
 
 ```html
 <div het-component="profileForm">
@@ -941,7 +980,7 @@ Thrown when a component imports a signal and also tries to initialize the same s
 ```html
 <div het-component="parent" het-exports="count">
   <div het-component="child" het-imports="count">
-    <output het-props="textContent=count:seed">1</output>
+    <output het-props:seed="textContent=count">1</output>
   </div>
 </div>
 ```
@@ -961,8 +1000,8 @@ Thrown when more than one `:seed` or `:sync` binding tries to initialize the sam
 
 ```html
 <div het-component="counter">
-  <input het-props="value=count:seed[int]" value="1">
-  <output het-props="textContent=count:seed[int]">1</output>
+  <input het-props:seed="value=count[int]" value="1">
+  <output het-props:seed="textContent=count[int]">1</output>
 </div>
 ```
 
@@ -984,7 +1023,7 @@ Thrown when `setup()` assigns a signal name that already exists because it was a
 
 ```html
 <div het-component="counter">
-  <output het-props="textContent=count:seed[int]">1</output>
+  <output het-props:seed="textContent=count[int]">1</output>
 </div>
 ```
 

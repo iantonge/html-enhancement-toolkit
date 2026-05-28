@@ -3,12 +3,14 @@ import { effect, signal } from '@preact/signals-core';
 const SIGNAL_SOURCE_TYPE = 0;
 const FUNC_SOURCE_TYPE = 1;
 const ASSIGNMENT_SOURCE_TYPE = 2;
+const READ_SOURCE_TYPE = 3;
 const PREACT_SIGNAL_BRAND = Symbol.for('preact-signals');
 const TYPE_HINTS = ['int', 'bool', 'float'];
 const EXPORTS_ATTR = 'het-exports';
 const IMPORTS_ATTR = 'het-imports';
 const IMPORTED_SIGNAL_WRAPPER = Symbol('hetImportedSignalWrapper');
 const KEYBOARD_EVENT_NAMES = ['keydown', 'keyup', 'keypress'];
+const ACQUISITION_STRATEGIES = ['seed', 'sync'];
 const exportsAttrCache = new WeakMap();
 const EMPTY_EXPORTS_SET = new Set();
 
@@ -22,6 +24,34 @@ const DIRECTIVES = [
     name: 'het-toggle',
     sourceType: ASSIGNMENT_SOURCE_TYPE,
     allowMultiple: true,
+  },
+  {
+    name: 'het-seed',
+    sourceType: READ_SOURCE_TYPE,
+    allowMultiple: true,
+    acquisitionStrategy: 'seed',
+  },
+  {
+    name: 'het-sync',
+    sourceType: READ_SOURCE_TYPE,
+    allowMultiple: true,
+    acquisitionStrategy: 'sync',
+  },
+  {
+    name: 'het-text',
+    keyRequired: false,
+    sourceType: SIGNAL_SOURCE_TYPE,
+    allowMultiple: false,
+    allowTypeHint: true,
+    allowSync: true,
+    allowNegation: true,
+    read: (el) => {
+      return el.textContent;
+    },
+    write: (el, key, value) => {
+      el[key] = value;
+    },
+    defaultKey: 'textContent',
   },
   {
     name: 'het-props',
@@ -96,7 +126,7 @@ const DIRECTIVES = [
     keyRequired: false,
     sourceType: SIGNAL_SOURCE_TYPE,
     allowMultiple: false,
-    allowTypeHint: false,
+    allowTypeHint: true,
     allowSync: false,
     read: (el, key) => {
       return el[key];
@@ -107,7 +137,22 @@ const DIRECTIVES = [
   },
 ];
 
-const DIRECTIVES_SELECTOR = DIRECTIVES.map((directive) => `[${directive.name}]`).join(', ');
+const DIRECTIVE_BY_NAME = Object.fromEntries(
+  DIRECTIVES.map((directive) => [directive.name, directive]),
+);
+const DIRECTIVE_ATTR_NAMES = DIRECTIVES.flatMap((directive) => {
+  if (!directive.read || !directive.write || directive.name === 'het-model') {
+    return [directive.name];
+  }
+  return [
+    directive.name,
+    `${directive.name}:seed`,
+    `${directive.name}:sync`,
+  ];
+});
+const DIRECTIVES_SELECTOR = DIRECTIVE_ATTR_NAMES
+  .map((name) => `[${escapeAttributeSelectorName(name)}]`)
+  .join(', ');
 
 const components = new Map();
 const pendingRemovals = new Set();
@@ -240,14 +285,14 @@ function mountComponent(rootEl, setup) {
         {
           cause: getBindingCause(binding, {
             signalName: binding.source,
-            existingBindingAttribute: existingBinding.dirName,
+            existingBindingAttribute: existingBinding.attrName ?? existingBinding.dirName,
             existingBindingDeclaration: existingBinding.exp,
             existingBindingElement: existingBinding.el,
           }),
         },
       );
     }
-    rawSignals[binding.source] = signal(readValue(binding));
+    rawSignals[binding.source] = signal(readValue(binding, rawSignals));
     signalMeta[binding.source] = 'local';
     signalInitBindings[binding.source] = binding;
   }
@@ -258,7 +303,7 @@ function mountComponent(rootEl, setup) {
       configureSignalBinding(ctx, binding);
     } else if (binding.sourceType === FUNC_SOURCE_TYPE) {
       configureEventBinding(methods, binding, onCleanup);
-    } else {
+    } else if (binding.sourceType === ASSIGNMENT_SOURCE_TYPE) {
       configureAssignmentBinding(ctx, binding);
     }
   }
@@ -318,7 +363,7 @@ function getBindingCause(binding, extra = {}) {
   return withOptionalComponentName(
     {
       componentElement: binding.componentElement,
-      bindingAttribute: binding.dirName,
+      bindingAttribute: binding.attrName ?? binding.dirName,
       bindingDeclaration: binding.exp,
       bindingElement: binding.el,
       ...extra,
@@ -353,15 +398,14 @@ function getImportDeclarations(el, componentLoggingContext) {
       return { local: parts[0], source: parts[1] };
     }
 
+    const invalidImportLoggingContext = {
+      ...componentLoggingContext,
+      bindingAttribute: IMPORTS_ATTR,
+      bindingDeclaration: declaration,
+    };
     throw new Error(
       'HET Error: Invalid import declaration',
-      {
-        cause: {
-          ...componentLoggingContext,
-          bindingAttribute: IMPORTS_ATTR,
-          bindingDeclaration: declaration,
-        },
-      },
+      { cause: invalidImportLoggingContext },
     );
   });
 }
@@ -369,10 +413,13 @@ function getImportDeclarations(el, componentLoggingContext) {
 function getBindings(boundEls, componentLoggingContext) {
   const bindings = [];
   for (const el of boundEls) {
-    for (const directive of DIRECTIVES) {
-      if (!el.hasAttribute(directive.name)) continue;
+    for (const attrName of el.getAttributeNames()) {
+      const parsedAttr = getParsedDirectiveAttributeName(attrName);
+      if (!parsedAttr) continue;
       bindings.push(...getParsedBindingDeclarations(
-        directive,
+        parsedAttr.directive,
+        parsedAttr.attrName,
+        parsedAttr.acquisitionStrategy,
         el,
         componentLoggingContext,
       ));
@@ -381,102 +428,221 @@ function getBindings(boundEls, componentLoggingContext) {
   return bindings;
 }
 
-function getParsedBindingDeclarations(directive, el, componentLoggingContext) {
-  const rawAttr = el.getAttribute(directive.name) || '';
+function getParsedDirectiveAttributeName(attrName) {
+  if (DIRECTIVE_BY_NAME[attrName]) {
+    return {
+      directive: DIRECTIVE_BY_NAME[attrName],
+      attrName,
+    };
+  }
+
+  const separatorIndex = attrName.lastIndexOf(':');
+  if (separatorIndex === -1) return undefined;
+
+  const baseName = attrName.slice(0, separatorIndex);
+  const acquisitionStrategy = attrName.slice(separatorIndex + 1);
+  const directive = DIRECTIVE_BY_NAME[baseName];
+  if (
+    !directive ||
+    !directive.read ||
+    !directive.write ||
+    !ACQUISITION_STRATEGIES.includes(acquisitionStrategy)
+  ) {
+    return undefined;
+  }
+
+  if (acquisitionStrategy === 'sync' && directive.allowSync === false) {
+    return undefined;
+  }
+
+  return {
+    directive,
+    attrName,
+    acquisitionStrategy,
+  };
+}
+
+function getParsedBindingDeclarations(
+  directive,
+  attrName,
+  acquisitionStrategy,
+  el,
+  componentLoggingContext,
+) {
+  const rawAttr = el.getAttribute(attrName) || '';
   const declarations = directive.allowMultiple
     ? rawAttr.split(/\s+/).filter(Boolean)
     : [rawAttr];
 
   if (directive.name === 'het-on') {
     return declarations.map((declaration) =>
-      getParsedEventDeclaration(directive, el, declaration, componentLoggingContext),
+      getParsedEventDeclaration(attrName, el, declaration, componentLoggingContext),
     );
   }
 
   if (directive.name === 'het-toggle') {
     return declarations.map((declaration) =>
-      getParsedToggleDeclaration(directive, el, declaration, componentLoggingContext),
+      getParsedToggleDeclaration(attrName, el, declaration, componentLoggingContext),
+    );
+  }
+
+  if (directive.name === 'het-seed' || directive.name === 'het-sync') {
+    return declarations.map((declaration) =>
+      getParsedReadDeclaration(directive, attrName, el, declaration, componentLoggingContext),
     );
   }
 
   return declarations.map((declaration) => {
-    const bindingLoggingContext = {
-      ...componentLoggingContext,
-      bindingAttribute: directive.name,
-      bindingDeclaration: declaration,
-      bindingElement: el,
-    };
-    const parts = declaration.split('=');
-    let key;
-    let sourceWithAcquisition;
-
-    if (directive.keyRequired) {
-      if (parts.length !== 2 || parts.some((part) => part.length === 0)) {
-        throw new Error(
-          'HET Error: Invalid binding expression',
-          { cause: { ...bindingLoggingContext } },
-        );
-      }
-      [key, sourceWithAcquisition] = parts;
-    } else if (parts.length === 1 && parts[0].length > 0) {
-      key = inferModelKey(el);
-      [sourceWithAcquisition] = parts;
-    } else {
-      throw new Error(
-        'HET Error: Invalid binding expression',
-        { cause: { ...bindingLoggingContext } },
-      );
-    }
-    const { negated, sourceWithAcquisition: parsedSourceWithAcquisition } =
-      getNegationAndSource(
-        directive,
-        sourceWithAcquisition,
-        bindingLoggingContext,
-      );
-    const { source, parsedAcquisition } = getSourceAndAcquisition(
+    return getParsedSignalBinding(
       directive,
-      parsedSourceWithAcquisition,
-      negated,
-      bindingLoggingContext,
-    );
-
-    const parsedBinding = {
-      dirName: directive.name,
+      attrName,
+      acquisitionStrategy,
       el,
-      componentElement: componentLoggingContext.componentElement,
-      componentName: componentLoggingContext.componentName,
-      key,
-      source,
-      negated,
-      sourceType: directive.sourceType,
-      read: directive.read,
-      write: directive.write,
-      typeHint: parsedAcquisition.typeHint,
-      acquisitionStrategy: parsedAcquisition.strategy,
-      exp: declaration,
-    };
-    return parsedBinding;
+      declaration,
+      componentLoggingContext,
+    );
   });
 }
 
-function getParsedEventDeclaration(
+function getParsedSignalBinding(
   directive,
+  attrName,
+  acquisitionStrategy,
   el,
   declaration,
   componentLoggingContext,
 ) {
   const bindingLoggingContext = {
     ...componentLoggingContext,
-    bindingAttribute: directive.name,
+    bindingAttribute: attrName,
+    bindingDeclaration: declaration,
+    bindingElement: el,
+  };
+  const parts = declaration.split('=');
+  let key;
+  let sourceExpression;
+
+  if (directive.name === 'het-text') {
+    if (parts.length !== 1) {
+      throwInvalidBindingExpression(
+        bindingLoggingContext,
+        'het-text binding must be a signal name',
+      );
+    }
+    if (!parts[0]) {
+      throwInvalidBindingExpression(
+        bindingLoggingContext,
+        'het-text binding requires a signal name',
+      );
+    }
+    key = directive.defaultKey;
+    sourceExpression = parts[0];
+  } else if (directive.name === 'het-model') {
+    if (parts.length !== 1) {
+      throwInvalidBindingExpression(
+        bindingLoggingContext,
+        'het-model binding must be a signal name',
+      );
+    }
+    if (!parts[0]) {
+      throwInvalidBindingExpression(
+        bindingLoggingContext,
+        'het-model binding requires a signal name',
+      );
+    }
+    key = inferModelKey(el);
+    sourceExpression = parts[0];
+    acquisitionStrategy = 'seed';
+  } else if (directive.keyRequired) {
+    if (parts.length !== 2) {
+      throwInvalidBindingExpression(
+        bindingLoggingContext,
+        'Binding declaration must contain exactly one "="',
+      );
+    }
+    if (parts.some((part) => part.length === 0)) {
+      throwInvalidBindingExpression(
+        bindingLoggingContext,
+        'Binding declaration requires a target and source',
+      );
+    }
+    [key, sourceExpression] = parts;
+  } else {
+    throwInvalidBindingExpression(
+      bindingLoggingContext,
+      'Unsupported binding directive',
+    );
+  }
+
+  const parsedSource = getParsedSignalExpression(
+    directive,
+    sourceExpression,
+    Boolean(acquisitionStrategy) || directive.name === 'het-model',
+    bindingLoggingContext,
+  );
+
+  if (parsedSource.typeHint && !directive.allowTypeHint) {
+    const unsupportedTypeHintLoggingContext = {
+      ...bindingLoggingContext,
+    };
+    throw new Error(
+      'HET Error: Directive does not support type hints',
+      { cause: unsupportedTypeHintLoggingContext },
+    );
+  }
+
+  if (acquisitionStrategy && parsedSource.negated) {
+    const negatedAcquisitionLoggingContext = {
+      ...bindingLoggingContext,
+    };
+    throw new Error(
+      'HET Error: Negation cannot be used with acquisition',
+      { cause: negatedAcquisitionLoggingContext },
+    );
+  }
+
+  return {
+      dirName: directive.name,
+      attrName,
+      el,
+      componentElement: componentLoggingContext.componentElement,
+      componentName: componentLoggingContext.componentName,
+      key,
+      source: parsedSource.source,
+      negated: parsedSource.negated,
+      sourceType: directive.sourceType,
+      read: directive.read,
+      write: directive.write,
+      typeHint: parsedSource.typeHint,
+      acquisitionStrategy,
+      exp: declaration,
+    };
+}
+
+function getParsedEventDeclaration(
+  attrName,
+  el,
+  declaration,
+  componentLoggingContext,
+) {
+  const bindingLoggingContext = {
+    ...componentLoggingContext,
+    bindingAttribute: attrName,
     bindingDeclaration: declaration,
     bindingElement: el,
   };
   const parts = declaration.split('->');
 
-  if (parts.length !== 2 || parts.some((part) => part.length === 0)) {
-    throw new Error(
-      'HET Error: Invalid binding expression',
-      { cause: { ...bindingLoggingContext } },
+  if (parts.length !== 2) {
+    throwInvalidBindingExpression(
+      bindingLoggingContext,
+      'Event binding must contain exactly one "->"',
+    );
+  }
+  if (parts.some((part) => part.length === 0)) {
+    throwInvalidBindingExpression(
+      bindingLoggingContext,
+      'Event binding requires an event and action',
     );
   }
 
@@ -489,22 +655,17 @@ function getParsedEventDeclaration(
 
   if (assignmentParts.length === 1) {
     if (actionExpression.startsWith('!')) {
+      const unsupportedNegationLoggingContext = {
+        ...bindingLoggingContext,
+      };
       throw new Error(
         'HET Error: Unsupported negation',
-        { cause: { ...bindingLoggingContext } },
+        { cause: unsupportedNegationLoggingContext },
       );
     }
-    if (actionExpression.includes(':')) {
-      getSourceAndAcquisition(
-        directive,
-        actionExpression,
-        false,
-        bindingLoggingContext,
-      );
-    }
-
     return {
-      dirName: directive.name,
+      dirName: 'het-on',
+      attrName,
       el,
       componentElement: componentLoggingContext.componentElement,
       componentName: componentLoggingContext.componentName,
@@ -517,19 +678,26 @@ function getParsedEventDeclaration(
   }
 
   if (
-    assignmentParts.length !== 2 ||
-    assignmentParts.some((part) => part.length === 0)
+    assignmentParts.length !== 2
   ) {
-    throw new Error(
-      'HET Error: Invalid binding expression',
-      { cause: { ...bindingLoggingContext } },
+    throwInvalidBindingExpression(
+      bindingLoggingContext,
+      'Event assignment must contain exactly one "="',
+    );
+  }
+
+  if (assignmentParts.some((part) => part.length === 0)) {
+    throwInvalidBindingExpression(
+      bindingLoggingContext,
+      'Event assignment requires a signal name and source',
     );
   }
 
   const [source, assignmentSourceExpression] = assignmentParts;
 
   return {
-    dirName: directive.name,
+    dirName: 'het-on',
+    attrName,
     el,
     componentElement: componentLoggingContext.componentElement,
     componentName: componentLoggingContext.componentName,
@@ -537,8 +705,9 @@ function getParsedEventDeclaration(
     eventModifiers: parsedEvent.modifiers,
     source,
     sourceType: ASSIGNMENT_SOURCE_TYPE,
-    assignmentSource: getParsedAssignmentSource(
+    assignmentSource: getParsedReadSource(
       assignmentSourceExpression,
+      { allowDefaultProp: false },
       bindingLoggingContext,
     ),
     exp: declaration,
@@ -546,23 +715,29 @@ function getParsedEventDeclaration(
 }
 
 function getParsedToggleDeclaration(
-  directive,
+  attrName,
   el,
   declaration,
   componentLoggingContext,
 ) {
   const bindingLoggingContext = {
     ...componentLoggingContext,
-    bindingAttribute: directive.name,
+    bindingAttribute: attrName,
     bindingDeclaration: declaration,
     bindingElement: el,
   };
   const parts = declaration.split('->');
 
-  if (parts.length !== 2 || parts.some((part) => part.length === 0)) {
-    throw new Error(
-      'HET Error: Invalid binding expression',
-      { cause: { ...bindingLoggingContext } },
+  if (parts.length !== 2) {
+    throwInvalidBindingExpression(
+      bindingLoggingContext,
+      'Toggle binding must contain exactly one "->"',
+    );
+  }
+  if (parts.some((part) => part.length === 0)) {
+    throwInvalidBindingExpression(
+      bindingLoggingContext,
+      'Toggle binding requires an event and signal name',
     );
   }
 
@@ -573,7 +748,8 @@ function getParsedToggleDeclaration(
   );
 
   return {
-    dirName: directive.name,
+    dirName: 'het-toggle',
+    attrName,
     el,
     componentElement: componentLoggingContext.componentElement,
     componentName: componentLoggingContext.componentName,
@@ -590,14 +766,68 @@ function getParsedToggleDeclaration(
   };
 }
 
+function getParsedReadDeclaration(
+  directive,
+  attrName,
+  el,
+  declaration,
+  componentLoggingContext,
+) {
+  const bindingLoggingContext = {
+    ...componentLoggingContext,
+    bindingAttribute: attrName,
+    bindingDeclaration: declaration,
+    bindingElement: el,
+  };
+  const parts = declaration.split('=');
+
+  if (parts.length !== 2) {
+    throwInvalidBindingExpression(
+      bindingLoggingContext,
+      'Read binding must contain exactly one "="',
+    );
+  }
+  if (parts.some((part) => part.length === 0)) {
+    throwInvalidBindingExpression(
+      bindingLoggingContext,
+      'Read binding requires a signal name and source',
+    );
+  }
+
+  const [signalName, sourceExpression] = parts;
+  if (signalName.startsWith('!') || signalName.includes('[') || signalName.includes(']')) {
+    throwInvalidBindingExpression(
+      bindingLoggingContext,
+      'Read binding target must be a signal name',
+    );
+  }
+
+  return {
+    dirName: directive.name,
+    attrName,
+    el,
+    componentElement: componentLoggingContext.componentElement,
+    componentName: componentLoggingContext.componentName,
+    source: signalName,
+    sourceType: READ_SOURCE_TYPE,
+    readSource: getParsedReadSource(
+      sourceExpression,
+      { allowDefaultProp: true },
+      bindingLoggingContext,
+    ),
+    acquisitionStrategy: directive.acquisitionStrategy,
+    exp: declaration,
+  };
+}
+
 function getParsedEventExpression(eventExpression, bindingLoggingContext) {
-  const parts = eventExpression.split('|');
+  const parts = eventExpression.split('.');
   const parsedModifiers = [];
 
   if (parts.some((part) => part.length === 0)) {
-    throw new Error(
-      'HET Error: Invalid binding expression',
-      { cause: { ...bindingLoggingContext } },
+    throwInvalidBindingExpression(
+      bindingLoggingContext,
+      'Event modifier cannot be empty',
     );
   }
 
@@ -611,11 +841,11 @@ function getParsedEventExpression(eventExpression, bindingLoggingContext) {
     parts.pop();
   }
 
-  const eventName = parts.join('|');
+  const eventName = parts.join('.');
   if (!eventName) {
-    throw new Error(
-      'HET Error: Invalid binding expression',
-      { cause: { ...bindingLoggingContext } },
+    throwInvalidBindingExpression(
+      bindingLoggingContext,
+      'Event name is required',
     );
   }
 
@@ -655,27 +885,25 @@ function getParsedEventModifier(modifierExpression, bindingLoggingContext) {
 function getParsedTimingModifier(modifierExpression, bindingLoggingContext) {
   const match = /^(debounce|throttle)\((\d+)\)$/.exec(modifierExpression);
   if (!match) {
+    const invalidModifierLoggingContext = {
+      ...bindingLoggingContext,
+      eventModifier: modifierExpression,
+    };
     throw new Error(
       'HET Error: Invalid event modifier',
-      {
-        cause: {
-          ...bindingLoggingContext,
-          eventModifier: modifierExpression,
-        },
-      },
+      { cause: invalidModifierLoggingContext },
     );
   }
 
   const delay = parseInt(match[2], 10);
   if (delay <= 0) {
+    const invalidModifierLoggingContext = {
+      ...bindingLoggingContext,
+      eventModifier: modifierExpression,
+    };
     throw new Error(
       'HET Error: Invalid event modifier',
-      {
-        cause: {
-          ...bindingLoggingContext,
-          eventModifier: modifierExpression,
-        },
-      },
+      { cause: invalidModifierLoggingContext },
     );
   }
 
@@ -708,14 +936,13 @@ function getValidatedEventModifiers(
 
     if (modifier.name === 'debounce' || modifier.name === 'throttle') {
       if (modifiers.debounce || modifiers.throttle) {
+        const duplicateTimingLoggingContext = {
+          ...bindingLoggingContext,
+          eventModifier: modifier.name,
+        };
         throw new Error(
           'HET Error: Invalid event modifier',
-          {
-            cause: {
-              ...bindingLoggingContext,
-              eventModifier: modifier.name,
-            },
-          },
+          { cause: duplicateTimingLoggingContext },
         );
       }
       modifiers[modifier.name] = modifier.delay;
@@ -727,14 +954,13 @@ function getValidatedEventModifiers(
       modifier.name === 'space'
     ) {
       if (modifiers.key) {
+        const duplicateKeyLoggingContext = {
+          ...bindingLoggingContext,
+          eventModifier: modifier.name,
+        };
         throw new Error(
           'HET Error: Invalid event modifier',
-          {
-            cause: {
-              ...bindingLoggingContext,
-              eventModifier: modifier.name,
-            },
-          },
+          { cause: duplicateKeyLoggingContext },
         );
       }
       modifiers.key = modifier.name;
@@ -742,21 +968,96 @@ function getValidatedEventModifiers(
   }
 
   if (modifiers.key && !KEYBOARD_EVENT_NAMES.includes(eventName)) {
+    const invalidKeyLoggingContext = {
+      ...bindingLoggingContext,
+      eventModifier: modifiers.key,
+    };
     throw new Error(
       'HET Error: Invalid event modifier',
-      {
-        cause: {
-          ...bindingLoggingContext,
-          eventModifier: modifiers.key,
-        },
-      },
+      { cause: invalidKeyLoggingContext },
     );
   }
 
   return modifiers;
 }
 
-function getParsedAssignmentSource(sourceExpression, bindingLoggingContext) {
+function getParsedSignalExpression(
+  directive,
+  sourceExpression,
+  allowTypeHint,
+  bindingLoggingContext,
+) {
+  let negated = false;
+  let expression = sourceExpression;
+
+  if (expression.startsWith('!')) {
+    negated = true;
+    expression = expression.slice(1);
+  }
+
+  if (negated && !directive.allowNegation) {
+    const unsupportedNegationLoggingContext = {
+      ...bindingLoggingContext,
+    };
+    throw new Error(
+      'HET Error: Unsupported negation',
+      { cause: unsupportedNegationLoggingContext },
+    );
+  }
+
+  if (!expression) {
+    if (negated) {
+      const missingNegatedSignalLoggingContext = {
+        ...bindingLoggingContext,
+      };
+      throw new Error(
+        'HET Error: Negation requires a signal name',
+        { cause: missingNegatedSignalLoggingContext },
+      );
+    }
+    throwInvalidBindingExpression(
+      bindingLoggingContext,
+      'Signal name is required',
+    );
+  }
+
+  return {
+    ...getValidatedSignalSource(expression, allowTypeHint, bindingLoggingContext),
+    negated,
+  };
+}
+
+function getValidatedSignalSource(expression, allowTypeHint, bindingLoggingContext) {
+  const { value, typeHint } = getValueAndTypeHint(expression, bindingLoggingContext);
+
+  if (value.includes(':')) {
+    throwInvalidBindingExpression(
+      bindingLoggingContext,
+      'Signal source cannot contain ":"',
+    );
+  }
+
+  if (typeHint && !allowTypeHint) {
+    const unsupportedTypeHintLoggingContext = {
+      ...bindingLoggingContext,
+    };
+    throw new Error(
+      'HET Error: Type hints are only supported for DOM reads',
+      { cause: unsupportedTypeHintLoggingContext },
+    );
+  }
+
+  return {
+    source: value,
+    typeHint,
+  };
+}
+
+function getParsedReadSource(
+  sourceExpression,
+  options,
+  bindingLoggingContext,
+) {
   let negated = false;
   let expression = sourceExpression;
 
@@ -766,71 +1067,76 @@ function getParsedAssignmentSource(sourceExpression, bindingLoggingContext) {
   }
 
   if (!expression) {
-    throw new Error(
-      'HET Error: Invalid binding expression',
-      { cause: { ...bindingLoggingContext } },
+    throwInvalidBindingExpression(
+      bindingLoggingContext,
+      'Read source cannot be empty',
     );
   }
 
   const { value, typeHint } = getValueAndTypeHint(expression, bindingLoggingContext);
-  const prefix = value[0];
+  const prefixedSource = getKnownReadSource(value);
+  const source = prefixedSource ?? (
+    options.allowDefaultProp && !value.includes(':')
+      ? { kind: 'property', source: value }
+      : { kind: 'signal', source: value }
+  );
 
-  if (prefix === '$') {
-    return getPrefixedAssignmentSource(
-      'signal',
-      value.slice(1),
-      typeHint,
-      negated,
+  if (!source.source) {
+    throwInvalidBindingExpression(
       bindingLoggingContext,
+      'Read source name is required',
     );
   }
-  if (prefix === '#') {
-    return getPrefixedAssignmentSource(
-      'property',
-      value.slice(1),
-      typeHint,
-      negated,
-      bindingLoggingContext,
-    );
-  }
-  if (prefix === '@') {
-    return getPrefixedAssignmentSource(
-      'attribute',
-      value.slice(1),
-      typeHint,
-      negated,
-      bindingLoggingContext,
+
+  if (typeHint && source.kind !== 'property' && source.kind !== 'attribute' && source.kind !== 'literal') {
+    const unsupportedReadTypeHintLoggingContext = {
+      ...bindingLoggingContext,
+    };
+    throw new Error(
+      'HET Error: Directive does not support type hints',
+      { cause: unsupportedReadTypeHintLoggingContext },
     );
   }
 
   return {
-    kind: 'literal',
-    source: value,
+    ...source,
     typeHint,
     negated,
   };
 }
 
-function getPrefixedAssignmentSource(
-  kind,
-  source,
-  typeHint,
-  negated,
-  bindingLoggingContext,
-) {
-  if (!source) {
-    throw new Error(
-      'HET Error: Invalid binding expression',
-      { cause: { ...bindingLoggingContext } },
-    );
+function getKnownReadSource(value) {
+  if (value.startsWith('prop:')) {
+    return { kind: 'property', source: value.slice('prop:'.length) };
   }
+  if (value.startsWith('attr:')) {
+    return { kind: 'attribute', source: value.slice('attr:'.length) };
+  }
+  if (value.startsWith('bool-attr:')) {
+    return { kind: 'booleanAttribute', source: value.slice('bool-attr:'.length) };
+  }
+  if (value.startsWith('class:')) {
+    return { kind: 'class', source: value.slice('class:'.length) };
+  }
+  if (value.startsWith('literal:')) {
+    return { kind: 'literal', source: value.slice('literal:'.length) };
+  }
+  return undefined;
+}
 
-  return {
-    kind,
-    source,
-    typeHint,
-    negated,
+function throwInvalidBindingExpression(bindingLoggingContext, reason = 'Invalid binding expression') {
+  const invalidBindingLoggingContext = {
+    ...bindingLoggingContext,
+    bindingErrorReason: reason,
   };
+  throw new Error(
+    `HET Error: ${reason}`,
+    { cause: invalidBindingLoggingContext },
+  );
+}
+
+function escapeAttributeSelectorName(name) {
+  return name.replace(/:/g, '\\:');
 }
 
 function getValueAndTypeHint(expression, bindingLoggingContext) {
@@ -838,18 +1144,18 @@ function getValueAndTypeHint(expression, bindingLoggingContext) {
 
   if (typeHintStart === -1) {
     if (expression.includes(']')) {
-      throw new Error(
-        'HET Error: Invalid binding expression',
-        { cause: { ...bindingLoggingContext } },
+      throwInvalidBindingExpression(
+        bindingLoggingContext,
+        'Type hint is incomplete',
       );
     }
     return { value: expression };
   }
 
   if (!expression.endsWith(']')) {
-    throw new Error(
-      'HET Error: Invalid binding expression',
-      { cause: { ...bindingLoggingContext } },
+    throwInvalidBindingExpression(
+      bindingLoggingContext,
+      'Type hint is incomplete',
     );
   }
 
@@ -857,173 +1163,19 @@ function getValueAndTypeHint(expression, bindingLoggingContext) {
   const typeHint = expression.slice(typeHintStart + 1, -1);
 
   if (!value || !TYPE_HINTS.includes(typeHint)) {
+    const invalidTypeHintLoggingContext = {
+      ...bindingLoggingContext,
+      bindingTypeHint: typeHint,
+    };
     throw new Error(
       'HET Error: Type hint is not recognised. Expected type hints are "int", "bool" or "float"',
-      {
-        cause: {
-          ...bindingLoggingContext,
-          bindingTypeHint: typeHint,
-        },
-      },
+      { cause: invalidTypeHintLoggingContext },
     );
   }
 
   return { value, typeHint };
 }
 
-function getNegationAndSource(
-  directive,
-  sourceWithAcquisition,
-  bindingLoggingContext,
-) {
-  if (!sourceWithAcquisition.startsWith('!')) {
-    return { negated: false, sourceWithAcquisition };
-  }
-
-  if (!directive.allowNegation) {
-    throw new Error(
-      'HET Error: Unsupported negation',
-      { cause: { ...bindingLoggingContext } },
-    );
-  }
-
-  const parsedSource = sourceWithAcquisition.slice(1);
-  if (!parsedSource) {
-    throw new Error(
-      'HET Error: Negation requires a signal name',
-      { cause: { ...bindingLoggingContext } },
-    );
-  }
-
-  return { negated: true, sourceWithAcquisition: parsedSource };
-}
-
-function getSourceAndAcquisition(
-  directive,
-  sourceWithAcquisition,
-  negated,
-  bindingLoggingContext,
-) {
-  const separatorCount = (sourceWithAcquisition.match(/:/g) || []).length;
-  if (separatorCount === 0) {
-    return {
-      source: sourceWithAcquisition,
-      parsedAcquisition: {},
-    };
-  }
-
-  if (separatorCount > 1) {
-    throw new Error(
-      'HET Error: Binding declaration has too many ":" characters',
-      { cause: { ...bindingLoggingContext } },
-    );
-  }
-
-  if (negated) {
-    throw new Error(
-      'HET Error: Negation cannot be used with acquisition',
-      { cause: { ...bindingLoggingContext } },
-    );
-  }
-
-  const [source, acquisitionClause] = sourceWithAcquisition.split(':');
-  if (!source || !acquisitionClause) {
-    throw new Error(
-      'HET Error: Binding declaration has an incomplete acquisition clause',
-      { cause: { ...bindingLoggingContext } },
-    );
-  }
-
-  if (!directive.read) {
-    throw new Error(
-      'HET Error: Directive does not support acquisition clauses',
-      { cause: { ...bindingLoggingContext } },
-    );
-  }
-
-  return {
-    source,
-    parsedAcquisition: getParsedAcquisition(
-      directive,
-      acquisitionClause,
-      bindingLoggingContext,
-    ),
-  };
-}
-
-function getParsedAcquisition(
-  directive,
-  acquisitionClause,
-  bindingLoggingContext,
-) {
-  const typeHintStart = acquisitionClause.indexOf('[');
-  if (typeHintStart === -1) {
-    return {
-      strategy: getValidatedAcquisitionStrategy(
-        directive,
-        acquisitionClause,
-        bindingLoggingContext,
-      ),
-    };
-  }
-
-  if (!directive.allowTypeHint) {
-    throw new Error(
-      'HET Error: Directive does not support type hints',
-      { cause: { ...bindingLoggingContext } },
-    );
-  }
-
-  const typeHint = acquisitionClause.slice(typeHintStart + 1, -1);
-  if (!TYPE_HINTS.includes(typeHint)) {
-    throw new Error(
-      'HET Error: Type hint is not recognised. Expected type hints are "int", "bool" or "float"',
-      {
-        cause: {
-          ...bindingLoggingContext,
-          bindingTypeHint: typeHint,
-        },
-      },
-    );
-  }
-
-  const strategy = acquisitionClause.slice(0, typeHintStart);
-  return {
-    strategy: getValidatedAcquisitionStrategy(
-      directive,
-      strategy,
-      bindingLoggingContext,
-    ),
-    typeHint,
-  };
-}
-
-function getValidatedAcquisitionStrategy(
-  directive,
-  strategy,
-  bindingLoggingContext,
-) {
-  if (strategy !== 'seed' && strategy !== 'sync') {
-    throw new Error(
-      'HET Error: Acquisition strategy is not recognised. Expected acquisition strategies are "seed" or "sync"',
-      {
-        cause: {
-          ...bindingLoggingContext,
-          bindingAcquisitionStrategy: strategy,
-        },
-      },
-    );
-  }
-
-  if (strategy === 'sync' && directive.allowSync === false) {
-    throw new Error(
-      'HET Error: Directive does not support sync acquisition',
-      { cause: { ...bindingLoggingContext } },
-    );
-  }
-
-  return strategy;
-}
 
 function configureEventBinding(methods, binding, onCleanup) {
   const handler = methods?.[binding.source];
@@ -1144,7 +1296,7 @@ function configureSignalBinding(ctx, binding) {
   if (binding.dirName === 'het-model') {
     const updateFromEl = () => {
       try {
-        const nextValue = readValue(binding);
+        const nextValue = readValue(binding, ctx.signals);
         if (signalRef.value !== nextValue) {
           signalRef.value = nextValue;
         }
@@ -1283,35 +1435,44 @@ function inferInputEvent(key) {
   return key === 'checked' ? 'change' : 'input';
 }
 
-function readValue(binding) {
-  const rawValue = binding.read(binding.el, binding.key);
+function readValue(binding, signals) {
+  const rawValue = binding.readSource
+    ? getReadSourceValue(binding, binding.readSource, signals)
+    : binding.read(binding.el, binding.key);
 
   return parseValue(rawValue, binding.typeHint);
 }
 
-function getAssignmentValue(ctx, binding) {
-  const assignmentSource = binding.assignmentSource;
+function getReadSourceValue(binding, readSource, signals) {
   let rawValue;
 
-  if (assignmentSource.kind === 'signal') {
-    const signalRef = ctx.signals[assignmentSource.source];
+  if (readSource.kind === 'signal') {
+    const signalRef = signals?.[readSource.source];
     if (!signalRef) {
       throw new Error(
         'HET Error: Bound signal does not exist',
-        { cause: getBindingCause(binding, { signalName: assignmentSource.source }) },
+        { cause: getBindingCause(binding, { signalName: readSource.source }) },
       );
     }
     rawValue = signalRef.value;
-  } else if (assignmentSource.kind === 'property') {
-    rawValue = binding.el[assignmentSource.source];
-  } else if (assignmentSource.kind === 'attribute') {
-    rawValue = binding.el.getAttribute(assignmentSource.source);
+  } else if (readSource.kind === 'property') {
+    rawValue = binding.el[readSource.source];
+  } else if (readSource.kind === 'attribute') {
+    rawValue = binding.el.getAttribute(readSource.source);
+  } else if (readSource.kind === 'booleanAttribute') {
+    rawValue = binding.el.hasAttribute(readSource.source);
+  } else if (readSource.kind === 'class') {
+    rawValue = binding.el.classList.contains(readSource.source);
   } else {
-    rawValue = assignmentSource.source;
+    rawValue = readSource.source;
   }
 
-  const parsedValue = parseValue(rawValue, assignmentSource.typeHint);
-  return assignmentSource.negated ? !parsedValue : parsedValue;
+  const parsedValue = parseValue(rawValue, readSource.typeHint);
+  return readSource.negated ? !parsedValue : parsedValue;
+}
+
+function getAssignmentValue(ctx, binding) {
+  return getReadSourceValue(binding, binding.assignmentSource, ctx.signals);
 }
 
 function parseValue(rawValue, typeHint) {
@@ -1369,7 +1530,7 @@ function syncComponent(rootEl) {
 
     for (const binding of instance.syncBindings) {
       const currentSignal = instance.signals[binding.source];
-      const nextValue = readValue(binding);
+      const nextValue = readValue(binding, instance.rawSignals);
       currentSignal.value = nextValue;
     }
 
@@ -1430,56 +1591,53 @@ function resolveImports(
   for (const { local, source } of importDeclarations) {
     const parentEl = findNearestExportingAncestor(rootEl, source);
     if (!parentEl) {
+      const missingExportingAncestorLoggingContext = {
+        ...componentLoggingContext,
+        bindingAttribute: IMPORTS_ATTR,
+        importLocalSignalName: local,
+        importSourceSignalName: source,
+      };
       throw new Error(
         'HET Error: Imported signal has no exporting ancestor',
-        {
-          cause: {
-            ...componentLoggingContext,
-            bindingAttribute: IMPORTS_ATTR,
-            importLocalSignalName: local,
-            importSourceSignalName: source,
-          },
-        },
+        { cause: missingExportingAncestorLoggingContext },
       );
     }
 
     const parentInstance = parentEl.__het_instance;
     if (!parentInstance) {
+      const unmountedExportingAncestorLoggingContext = withOptionalComponentName(
+        {
+          ...componentLoggingContext,
+          bindingAttribute: IMPORTS_ATTR,
+          exportingComponentElement: parentEl,
+          importLocalSignalName: local,
+          importSourceSignalName: source,
+        },
+        parentEl.getAttribute('het-component'),
+        'exportingComponentName',
+      );
       throw new Error(
         'HET Error: Exporting ancestor component is not mounted',
-        {
-          cause: withOptionalComponentName(
-            {
-              ...componentLoggingContext,
-              bindingAttribute: IMPORTS_ATTR,
-              exportingComponentElement: parentEl,
-              importLocalSignalName: local,
-              importSourceSignalName: source,
-            },
-            parentEl.getAttribute('het-component'),
-            'exportingComponentName',
-          ),
-        },
+        { cause: unmountedExportingAncestorLoggingContext },
       );
     }
 
     const parentSignal = parentInstance.signals?.[source];
     if (!parentSignal) {
+      const missingExportedSignalLoggingContext = withOptionalComponentName(
+        {
+          ...componentLoggingContext,
+          bindingAttribute: IMPORTS_ATTR,
+          exportingComponentElement: parentEl,
+          importLocalSignalName: local,
+          importSourceSignalName: source,
+        },
+        parentEl.getAttribute('het-component'),
+        'exportingComponentName',
+      );
       throw new Error(
         'HET Error: Exporting ancestor does not provide imported signal',
-        {
-          cause: withOptionalComponentName(
-            {
-              ...componentLoggingContext,
-              bindingAttribute: IMPORTS_ATTR,
-              exportingComponentElement: parentEl,
-              importLocalSignalName: local,
-              importSourceSignalName: source,
-            },
-            parentEl.getAttribute('het-component'),
-            'exportingComponentName',
-          ),
-        },
+        { cause: missingExportedSignalLoggingContext },
       );
     }
 
@@ -1545,25 +1703,23 @@ function createSignalsProxy(target, componentLoggingContext) {
         typeof prop === 'string' &&
         Object.prototype.hasOwnProperty.call(obj, prop)
       ) {
+        const signalOverrideLoggingContext = {
+          ...componentLoggingContext,
+          signalName: prop,
+        };
         throw new Error(
           'HET Error: Signal override after initialization',
-          {
-            cause: {
-              ...componentLoggingContext,
-              signalName: prop,
-            },
-          },
+          { cause: signalOverrideLoggingContext },
         );
       }
       if (value?.brand !== PREACT_SIGNAL_BRAND) {
+        const invalidSignalLoggingContext = {
+          ...componentLoggingContext,
+          signalName: String(prop),
+        };
         throw new Error(
           'HET Error: Signal initialized with a non-signal value',
-          {
-            cause: {
-              ...componentLoggingContext,
-              signalName: String(prop),
-            },
-          },
+          { cause: invalidSignalLoggingContext },
         );
       }
       obj[prop] = value;

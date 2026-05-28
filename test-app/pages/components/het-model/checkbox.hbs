@@ -15,7 +15,6 @@
 </section>
 <script nonce="{{{cspNonce}}}">
   window.HET.registerComponent('het-model-checkbox', ({ signals }) => {
-    signals.isDone = window.HET.signals.signal(false);
     return {
       setDone() {
         signals.isDone.value = true;

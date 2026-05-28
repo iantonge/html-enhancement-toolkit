@@ -40,10 +40,22 @@ test.describe('components acquisition strategies and type hints', () => {
     await expect(page.locator('#bool-value')).toHaveText('false');
   });
 
+  test('supports explicit read sources and het-text bindings', async ({ page }) => {
+    await page.goto('/components/acquisition/explicit-sources');
+
+    await expect(page.locator('#text-output')).toHaveText('Ready');
+    await expect(page.locator('#count-output')).toHaveText('7');
+    await expect(page.locator('#status-output')).toHaveText('open');
+    await expect(page.locator('#hidden-output')).toHaveText('true');
+    await expect(page.locator('#active-output')).toHaveText('true');
+    await expect(page.locator('#responsive-output')).toHaveText('true');
+    await expect(page.locator('#answer-output')).toHaveText('42');
+  });
+
   test('reports error when :sync is used on het-model', async ({ page }) => {
     await page.goto('/components/acquisition/invalid-sync-model');
     await page.waitForFunction(() =>
-      window.hetErrors.some((error) => error.message === 'HET Error: Directive does not support sync acquisition'),
+      window.hetErrors.some((error) => error.message === 'HET Error: Signal source cannot contain ":"'),
     );
   });
 
@@ -65,11 +77,11 @@ test.describe('components acquisition strategies and type hints', () => {
     expect(cause).toEqual({
       componentName: 'acquisition-duplicate-seed',
       signalName: 'count',
-      bindingAttribute: 'het-props',
-      bindingDeclaration: 'textContent=count:seed[int]',
+      bindingAttribute: 'het-props:seed',
+      bindingDeclaration: 'textContent=count[int]',
       bindingElementText: '2',
-      existingBindingAttribute: 'het-props',
-      existingBindingDeclaration: 'textContent=count:seed[int]',
+      existingBindingAttribute: 'het-props:seed',
+      existingBindingDeclaration: 'textContent=count[int]',
       existingBindingElementText: '1',
     });
   });
@@ -77,7 +89,7 @@ test.describe('components acquisition strategies and type hints', () => {
   test('reports error for declarations with multiple colons', async ({ page }) => {
     await page.goto('/components/acquisition/invalid-multiple-colons');
     await page.waitForFunction(() =>
-      window.hetErrors.some((error) => error.message === 'HET Error: Binding declaration has too many ":" characters'),
+      window.hetErrors.some((error) => error.message === 'HET Error: Signal source cannot contain ":"'),
     );
   });
 
@@ -110,7 +122,7 @@ test.describe('components acquisition strategies and type hints', () => {
   test('reports error for incomplete acquisition clauses', async ({ page }) => {
     await page.goto('/components/acquisition/incomplete-acquisition');
     await page.waitForFunction(() =>
-      window.hetErrors.some((error) => error.message === 'HET Error: Binding declaration has an incomplete acquisition clause'),
+      window.hetErrors.some((error) => error.message === 'HET Error: Signal source cannot contain ":"'),
     );
     const cause = await page.evaluate(() => ({
       componentName: window.hetErrors.at(-1).cause.componentName,
@@ -143,14 +155,14 @@ test.describe('components acquisition strategies and type hints', () => {
   test('reports error for unknown acquisition strategy', async ({ page }) => {
     await page.goto('/components/acquisition/unknown-strategy');
     await page.waitForFunction(() =>
-      window.hetErrors.some((error) => error.message === 'HET Error: Acquisition strategy is not recognised. Expected acquisition strategies are "seed" or "sync"'),
+      window.hetErrors.some((error) => error.message === 'HET Error: Signal source cannot contain ":"'),
     );
   });
 
   test('reports error when acquisition clause is used on non-readable directive', async ({ page }) => {
     await page.goto('/components/acquisition/acquisition-not-supported');
     await page.waitForFunction(() =>
-      window.hetErrors.some((error) => error.message === 'HET Error: Directive does not support acquisition clauses'),
+      window.hetErrors.some((error) => error.message === 'HET Error: Missing component method'),
     );
   });
 

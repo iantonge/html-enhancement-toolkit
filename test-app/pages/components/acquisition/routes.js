@@ -26,6 +26,12 @@ router.get('/type-hints', (request, response) => {
   });
 });
 
+router.get('/explicit-sources', (request, response) => {
+  response.render('components/acquisition/explicit-sources', {
+    title: 'Explicit read sources',
+  });
+});
+
 router.get('/invalid-sync-model', (request, response) => {
   response.render('components/acquisition/invalid-sync-model', {
     title: 'Invalid sync on het-model',

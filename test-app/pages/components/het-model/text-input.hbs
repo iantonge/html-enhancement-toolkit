@@ -2,7 +2,7 @@
   <div class="card-body">
     <h1 class="h4 mb-3">{{title}}</h1>
     <div het-component="het-model-text">
-      <input id="name-input" het-model="name" class="form-control">
+      <input id="name-input" het-model="name" class="form-control" value="Alpha">
       <p id="name-value" het-props="textContent=name" class="mt-2 mb-0 text-muted"></p>
       <button id="set-name" type="button" het-on="click->setName" class="btn btn-sm btn-primary mt-2">
         Set from signal
@@ -12,7 +12,6 @@
 </section>
 <script nonce="{{{cspNonce}}}">
   window.HET.registerComponent('het-model-text', ({ signals }) => {
-    signals.name = window.HET.signals.signal('Alpha');
     return {
       setName() {
         signals.name.value = 'Bravo';

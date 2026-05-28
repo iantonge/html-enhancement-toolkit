@@ -2,14 +2,14 @@
   <div class="card-body">
     <h1 id="sync-title" class="h4 mb-3">{{title}}</h1>
     <div id="sync-component" het-component="integration-sync" het-cloak>
-      <input id="sync-input" class="form-control" het-props="value=query:sync" value="beta">
+      <input id="sync-input" class="form-control" het-props:sync="value=query" value="beta">
       <p id="sync-value" het-props="textContent=query" class="mt-2 text-muted mb-3"></p>
-      <input id="sync-flag" type="checkbox" het-props="checked=isActive:sync" checked>
+      <input id="sync-flag" type="checkbox" het-props:sync="checked=isActive" checked>
       <span id="sync-indicator" het-bool-attrs="hidden=isActive">Inactive</span>
     </div>
   </div>
 </section>
 <aside id="sync-sidebar" het-component="integration-sync" class="mt-3">
-  <input id="sync-sidebar-input" class="form-control" het-props="value=query:sync" value="aside beta">
+  <input id="sync-sidebar-input" class="form-control" het-props:sync="value=query" value="aside beta">
   <p id="sync-sidebar-value" het-props="textContent=query" class="mt-2 text-muted mb-0"></p>
 </aside>

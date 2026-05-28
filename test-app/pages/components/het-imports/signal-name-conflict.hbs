@@ -3,7 +3,7 @@
     <h1 class="h4 mb-3">{{title}}</h1>
     <div het-component="imports-conflict-parent" het-exports="count">
       <div het-component="imports-conflict-child" het-imports="count">
-        <p het-props="textContent=count:seed">5</p>
+        <p het-props:seed="textContent=count">5</p>
       </div>
     </div>
   </div>

@@ -1,0 +1,25 @@
+<section class="card shadow-sm border-0">
+  <div class="card-body">
+    <h1 class="h4 mb-3">{{title}}</h1>
+    <div het-component>
+      <p id="text-source" het-text:seed="message">Ready</p>
+      <p id="text-output" het-text="message" class="mb-2"></p>
+
+      <input id="prop-source" class="form-control" value="7" het-seed="count=value[int]">
+      <div
+        id="mixed-source"
+        data-status="open"
+        class="active md:hover:block"
+        hidden
+        het-seed="status=attr:data-status isHidden=bool-attr:hidden isActive=class:active responsive=class:md:hover:block answer=literal:42[int]"
+      ></div>
+
+      <p id="count-output" het-text="count" class="mb-0"></p>
+      <p id="status-output" het-text="status" class="mb-0"></p>
+      <p id="hidden-output" het-text="isHidden" class="mb-0"></p>
+      <p id="active-output" het-text="isActive" class="mb-0"></p>
+      <p id="responsive-output" het-text="responsive" class="mb-0"></p>
+      <p id="answer-output" het-text="answer" class="mb-0"></p>
+    </div>
+  </div>
+</section>

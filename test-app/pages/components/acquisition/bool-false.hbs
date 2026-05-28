@@ -2,7 +2,7 @@
   <div class="card-body">
     <h1 class="h4 mb-3">{{title}}</h1>
     <div het-component="acquisition-bool-false">
-      <p id="bool-false-value" het-props="textContent=isEnabled:seed[bool]" class="mb-2">false</p>
+      <p id="bool-false-value" het-props:seed="textContent=isEnabled[bool]" class="mb-2">false</p>
       <button id="bool-false-toggle" type="button" het-on="click->toggle" class="btn btn-sm btn-primary">
         Toggle
       </button>
