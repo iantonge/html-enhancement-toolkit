@@ -1,0 +1,22 @@
+<section class="card shadow-sm border-0" het-component="structural-invalid-property">
+  <div class="card-body">
+    <h1 class="h4 mb-3">{{title}}</h1>
+    <template het-for="items">
+      <div het-component="structural-invalid-property-item">
+        <span het-text="label"></span>
+      </div>
+    </template>
+  </div>
+</section>
+
+<script nonce="{{{cspNonce}}}">
+  window.HET.registerComponent('structural-invalid-property', ({ signals }) => {
+    signals.items = window.HET.signals.signal([
+      {
+        label: 'plain-text',
+      },
+    ]);
+  });
+
+  window.HET.registerComponent('structural-invalid-property-item');
+</script>

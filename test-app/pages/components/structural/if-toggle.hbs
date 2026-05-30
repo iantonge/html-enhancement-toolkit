@@ -1,0 +1,64 @@
+<section class="card shadow-sm border-0" het-component="structural-if-host" het-cloak>
+  <div class="card-body">
+    <h1 class="h4 mb-3">{{title}}</h1>
+    <div class="d-flex gap-2 mb-3">
+      <button id="show-item" type="button" class="btn btn-sm btn-primary" het-on="click->showItem">Show</button>
+      <button id="hide-item" type="button" class="btn btn-sm btn-outline-secondary" het-on="click->hideItem">Hide</button>
+      <button id="swap-item" type="button" class="btn btn-sm btn-outline-primary" het-on="click->swapItem">Swap</button>
+    </div>
+
+    <div id="if-host">
+      <template het-if="activeItem">
+        <article het-component="structural-if-item" het-ref="root" class="border rounded p-3">
+          <div class="d-flex gap-2 align-items-center">
+            <strong class="if-label" het-text="label"></strong>
+            <span class="if-mount badge text-bg-secondary" het-text="mountId"></span>
+            <button id="if-mutate" type="button" class="btn btn-sm btn-outline-dark" het-on="click->appendMark">Mutate</button>
+          </div>
+        </article>
+      </template>
+    </div>
+  </div>
+</section>
+
+<script nonce="{{{cspNonce}}}">
+  window.structuralIfCleanupIds = [];
+  window.structuralIfMountCount = 0;
+
+  const createSelectedItem = (label) => ({
+    label: window.HET.signals.signal(label),
+  });
+
+  window.HET.registerComponent('structural-if-host', ({ signals }) => {
+    signals.activeItem = window.HET.signals.signal(null);
+
+    return {
+      showItem() {
+        signals.activeItem.value = createSelectedItem('Primary');
+      },
+      hideItem() {
+        signals.activeItem.value = null;
+      },
+      swapItem() {
+        signals.activeItem.value = createSelectedItem('Replacement');
+      },
+    };
+  });
+
+  window.HET.registerComponent('structural-if-item', ({ refs, signals, onCleanup }) => {
+    window.structuralIfMountCount += 1;
+    const mountId = String(window.structuralIfMountCount);
+    signals.mountId = window.HET.signals.signal(mountId);
+    refs.root.dataset.mountId = mountId;
+
+    onCleanup(() => {
+      window.structuralIfCleanupIds.push(mountId);
+    });
+
+    return {
+      appendMark() {
+        signals.label.value = `${signals.label.value}!`;
+      },
+    };
+  });
+</script>

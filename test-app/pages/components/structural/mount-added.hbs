@@ -1,0 +1,43 @@
+<section class="card shadow-sm border-0">
+  <div class="card-body">
+    <h1 class="h4 mb-3">{{title}}</h1>
+    <button id="add-structural-component" type="button" class="btn btn-sm btn-primary">Add component</button>
+    <div id="structural-target" class="mt-3"></div>
+    <p id="mount-added-state" class="mt-3 mb-0">pending</p>
+  </div>
+</section>
+
+<script nonce="{{{cspNonce}}}">
+  const createMountedItem = (label) => ({
+    label: window.HET.signals.signal(label),
+  });
+
+  window.HET.registerComponent('structural-mounted-host', ({ signals }) => {
+    signals.items = window.HET.signals.signal([
+      createMountedItem('Mounted after init'),
+    ]);
+  });
+
+  window.HET.registerComponent('structural-mounted-item', ({ signals }) => {
+    document.querySelector('#mount-added-state').textContent = signals.label.value;
+  });
+
+  document.querySelector('#add-structural-component').addEventListener('click', () => {
+    const host = document.createElement('section');
+    host.setAttribute('het-component', 'structural-mounted-host');
+    host.setAttribute('het-cloak', '');
+
+    const template = document.createElement('template');
+    template.setAttribute('het-for', 'items');
+    const item = document.createElement('div');
+    item.setAttribute('het-component', 'structural-mounted-item');
+    const label = document.createElement('span');
+    label.className = 'mounted-label';
+    label.setAttribute('het-text', 'label');
+    item.appendChild(label);
+    template.content.appendChild(item);
+
+    host.appendChild(template);
+    document.querySelector('#structural-target').replaceChildren(host);
+  });
+</script>

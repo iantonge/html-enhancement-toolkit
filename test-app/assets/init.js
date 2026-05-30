@@ -29,6 +29,8 @@ const trustedTypesPolicy = trustedTypes.createPolicy('het', {
       'het-model',
       'het-exports',
       'het-imports',
+      'het-for',
+      'het-if',
       'het-pane',
       'het-nav',
       'het-target',

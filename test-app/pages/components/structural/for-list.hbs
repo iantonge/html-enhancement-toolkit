@@ -1,0 +1,81 @@
+<section class="card shadow-sm border-0" het-component="structural-for-host" het-exports="items" het-cloak>
+  <div class="card-body">
+    <h1 class="h4 mb-3">{{title}}</h1>
+    <div class="d-flex gap-2 mb-3">
+      <button id="swap-list" type="button" class="btn btn-sm btn-primary" het-on="click->swapList">Swap list</button>
+      <button id="grow-list" type="button" class="btn btn-sm btn-outline-primary" het-on="click->growList">Grow list</button>
+      <button id="shrink-list" type="button" class="btn btn-sm btn-outline-secondary" het-on="click->shrinkList">Shrink list</button>
+    </div>
+
+    <ul id="for-list" class="list-unstyled mb-0">
+      <template het-for="items">
+        <li het-component="structural-for-item" het-imports="items" het-ref="root" class="mb-2 border rounded p-2">
+          <div class="d-flex align-items-center gap-2">
+            <span class="item-id" het-text="id"></span>
+            <span class="item-message" het-text="message"></span>
+            <span class="item-mount badge text-bg-secondary" het-text="mountId"></span>
+            <button type="button" class="btn btn-sm btn-outline-dark append-mark" het-on="click->appendMark">Mutate</button>
+            <button type="button" class="btn btn-sm btn-outline-danger remove-item" het-on="click->removeItem">Remove</button>
+          </div>
+        </li>
+      </template>
+    </ul>
+  </div>
+</section>
+
+<script nonce="{{{cspNonce}}}">
+  window.structuralForMountIds = [];
+  window.structuralForCleanupIds = [];
+
+  const createItem = (id, message) => ({
+    id: window.HET.signals.signal(id),
+    message: window.HET.signals.signal(message),
+  });
+
+  window.HET.registerComponent('structural-for-host', ({ signals }) => {
+    signals.items = window.HET.signals.signal([
+      createItem('a', 'Alpha'),
+      createItem('b', 'Beta'),
+    ]);
+
+    return {
+      swapList() {
+        signals.items.value = [
+          createItem('c', 'Gamma'),
+          createItem('d', 'Delta'),
+        ];
+      },
+      growList() {
+        signals.items.value = [
+          ...signals.items.value,
+          createItem('e', 'Epsilon'),
+        ];
+      },
+      shrinkList() {
+        signals.items.value = signals.items.value.slice(0, 1);
+      },
+    };
+  });
+
+  window.HET.registerComponent('structural-for-item', ({ refs, signals, onCleanup }) => {
+    const nextMountId = window.structuralForMountIds.length + 1;
+    signals.mountId = window.HET.signals.signal(String(nextMountId));
+    refs.root.dataset.mountId = String(nextMountId);
+    window.structuralForMountIds.push(nextMountId);
+
+    onCleanup(() => {
+      window.structuralForCleanupIds.push(nextMountId);
+    });
+
+    return {
+      appendMark() {
+        signals.message.value = `${signals.message.value}!`;
+      },
+      removeItem() {
+        signals.items.value = signals.items.value.filter(
+          (item) => item.id.value !== signals.id.value,
+        );
+      },
+    };
+  });
+</script>

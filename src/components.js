@@ -8,11 +8,14 @@ const PREACT_SIGNAL_BRAND = Symbol.for('preact-signals');
 const TYPE_HINTS = ['int', 'bool', 'float'];
 const EXPORTS_ATTR = 'het-exports';
 const IMPORTS_ATTR = 'het-imports';
+const IF_ATTR = 'het-if';
+const FOR_ATTR = 'het-for';
 const IMPORTED_SIGNAL_WRAPPER = Symbol('hetImportedSignalWrapper');
 const KEYBOARD_EVENT_NAMES = ['keydown', 'keyup', 'keypress'];
 const ACQUISITION_STRATEGIES = ['seed', 'sync'];
 const exportsAttrCache = new WeakMap();
 const EMPTY_EXPORTS_SET = new Set();
+const STRUCTURAL_ATTRS = [IF_ATTR, FOR_ATTR];
 
 const DIRECTIVES = [
   {
@@ -153,6 +156,9 @@ const DIRECTIVE_ATTR_NAMES = DIRECTIVES.flatMap((directive) => {
 const DIRECTIVES_SELECTOR = DIRECTIVE_ATTR_NAMES
   .map((name) => `[${escapeAttributeSelectorName(name)}]`)
   .join(', ');
+const STRUCTURAL_TEMPLATES_SELECTOR = STRUCTURAL_ATTRS
+  .map((name) => `template[${escapeAttributeSelectorName(name)}]`)
+  .join(', ');
 
 const components = new Map();
 const pendingRemovals = new Set();
@@ -236,7 +242,7 @@ function mountComponents(root) {
   removeCloakAttributes(mountedComponents);
 }
 
-function mountComponent(rootEl, setup) {
+function mountComponent(rootEl, setup, options = {}) {
   if (rootEl.__het_instance) return false;
 
   const rawSignals = {};
@@ -259,9 +265,18 @@ function mountComponent(rootEl, setup) {
   };
   const ctx = { el: rootEl, refs, signals, onCleanup };
   const boundEls = scopedQuerySelectorAll(rootEl, DIRECTIVES_SELECTOR);
+  const structuralTemplateEls = scopedQuerySelectorAll(rootEl, STRUCTURAL_TEMPLATES_SELECTOR);
   const bindings = getBindings(boundEls, componentLoggingContext);
+  const structuralBindings = getStructuralBindings(structuralTemplateEls, componentLoggingContext);
   const syncBindings = bindings.filter((binding) => binding.acquisitionStrategy === 'sync');
   const bindingsToInit = bindings.filter((binding) => binding.acquisitionStrategy);
+
+  initializeForwardedSignals(
+    options.importedSignals,
+    rawSignals,
+    signalMeta,
+    componentLoggingContext,
+  );
 
   resolveImports(
     rootEl,
@@ -272,7 +287,7 @@ function mountComponent(rootEl, setup) {
   );
 
   for (const binding of bindingsToInit) {
-    if (signalMeta[binding.source] === 'imported') {
+    if (signalMeta[binding.source] === 'imported' || signalMeta[binding.source] === 'forwarded') {
       throw new Error(
         'HET Error: Imported signal conflicts with local initialization',
         { cause: getBindingCause(binding, { signalName: binding.source }) },
@@ -316,10 +331,13 @@ function mountComponent(rootEl, setup) {
     importDeclarations,
     bindings,
     syncBindings,
+    structuralBindings,
     cleanup: () => {
       cleanups.forEach((fn) => fn());
     },
   };
+
+  initializeStructuralBindings(ctx, structuralBindings);
 
   return true;
 }
@@ -408,6 +426,124 @@ function getImportDeclarations(el, componentLoggingContext) {
       { cause: invalidImportLoggingContext },
     );
   });
+}
+
+function getStructuralBindings(templateEls, componentLoggingContext) {
+  return templateEls.map((el) => getStructuralBinding(el, componentLoggingContext));
+}
+
+function getStructuralBinding(el, componentLoggingContext) {
+  const componentRoot = getTemplateComponentRoot(el, componentLoggingContext);
+  const presentAttrs = STRUCTURAL_ATTRS.filter((attrName) => el.hasAttribute(attrName));
+
+  if (presentAttrs.length !== 1) {
+    throw new Error(
+      'HET Error: Structural template requires exactly one directive',
+      {
+        cause: {
+          ...componentLoggingContext,
+          bindingElement: el,
+        },
+      },
+    );
+  }
+
+  const attrName = presentAttrs[0];
+  const declaration = el.getAttribute(attrName) || '';
+  const bindingLoggingContext = {
+    ...componentLoggingContext,
+    bindingAttribute: attrName,
+    bindingDeclaration: declaration,
+    bindingElement: el,
+  };
+  const parsedSource = getParsedSignalExpression(
+    {
+      allowNegation: false,
+    },
+    declaration,
+    false,
+    bindingLoggingContext,
+  );
+
+  return {
+    dirName: attrName,
+    attrName,
+    el,
+    componentElement: componentLoggingContext.componentElement,
+    componentName: componentLoggingContext.componentName,
+    componentRoot,
+    source: parsedSource.source,
+    exp: declaration,
+  };
+}
+
+function getTemplateComponentRoot(templateEl, componentLoggingContext) {
+  const fragment = templateEl.content;
+  const elementChildren = Array.from(fragment.childNodes).filter(
+    (node) => node.nodeType === Node.ELEMENT_NODE,
+  );
+  const invalidContent = Array.from(fragment.childNodes).some((node) => {
+    if (node.nodeType === Node.TEXT_NODE) {
+      return node.textContent.trim().length > 0;
+    }
+    return (
+      node.nodeType !== Node.ELEMENT_NODE &&
+      node.nodeType !== Node.COMMENT_NODE
+    );
+  });
+
+  if (invalidContent || elementChildren.length !== 1) {
+    throw new Error(
+      'HET Error: Structural template must contain exactly one root element',
+      {
+        cause: {
+          ...componentLoggingContext,
+          bindingElement: templateEl,
+        },
+      },
+    );
+  }
+
+  const [componentRoot] = elementChildren;
+  if (!componentRoot.hasAttribute('het-component')) {
+    throw new Error(
+      'HET Error: Structural template root must be a component',
+      {
+        cause: {
+          ...componentLoggingContext,
+          bindingElement: templateEl,
+          structuralRootElement: componentRoot,
+        },
+      },
+    );
+  }
+
+  return componentRoot;
+}
+
+function initializeForwardedSignals(
+  importedSignals,
+  rawSignals,
+  signalMeta,
+  componentLoggingContext,
+) {
+  if (!importedSignals) return;
+
+  for (const [local, targetSignal] of Object.entries(importedSignals)) {
+    if (targetSignal?.brand !== PREACT_SIGNAL_BRAND) {
+      const invalidForwardedSignalLoggingContext = {
+        ...componentLoggingContext,
+        signalName: local,
+      };
+      throw new Error(
+        'HET Error: Structural item property must be a signal',
+        { cause: invalidForwardedSignalLoggingContext },
+      );
+    }
+
+    rawSignals[local] = createImportedSignalWrapper(targetSignal);
+    signalMeta[local] = 'forwarded';
+  }
 }
 
 function getBindings(boundEls, componentLoggingContext) {
@@ -1308,6 +1444,214 @@ function configureSignalBinding(ctx, binding) {
     const eventName = inferInputEvent(binding.key);
     binding.el.addEventListener(eventName, updateFromEl);
     ctx.onCleanup(() => binding.el.removeEventListener(eventName, updateFromEl));
+  }
+}
+
+function initializeStructuralBindings(ctx, structuralBindings) {
+  for (const binding of structuralBindings) {
+    if (binding.dirName === FOR_ATTR) {
+      initializeForBinding(ctx, binding);
+      continue;
+    }
+
+    initializeIfBinding(ctx, binding);
+  }
+}
+
+function initializeForBinding(ctx, binding) {
+  const signalRef = ctx.signals[binding.source];
+  if (!signalRef) {
+    throw new Error(
+      'HET Error: Bound signal does not exist',
+      { cause: getBindingCause(binding, { signalName: binding.source }) },
+    );
+  }
+
+  const block = createStructuralBlock(binding);
+  const dispose = effect(() => {
+    try {
+      reconcileForBlock(ctx, binding, block, signalRef.value);
+    } catch (error) {
+      onError(error);
+    }
+  });
+
+  ctx.onCleanup(() => {
+    dispose();
+    destroyStructuralBlock(block);
+  });
+}
+
+function initializeIfBinding(ctx, binding) {
+  const signalRef = ctx.signals[binding.source];
+  if (!signalRef) {
+    throw new Error(
+      'HET Error: Bound signal does not exist',
+      { cause: getBindingCause(binding, { signalName: binding.source }) },
+    );
+  }
+
+  const block = createStructuralBlock(binding);
+  const dispose = effect(() => {
+    try {
+      reconcileIfBlock(ctx, binding, block, signalRef.value);
+    } catch (error) {
+      onError(error);
+    }
+  });
+
+  ctx.onCleanup(() => {
+    dispose();
+    destroyStructuralBlock(block);
+  });
+}
+
+function createStructuralBlock(binding) {
+  return {
+    binding,
+    clones: [],
+  };
+}
+
+function reconcileForBlock(ctx, binding, block, value) {
+  if (!Array.isArray(value)) {
+    throw new Error(
+      'HET Error: het-for source must be an array',
+      { cause: getBindingCause(binding, { signalName: binding.source }) },
+    );
+  }
+
+  const nextLength = value.length;
+  for (let index = 0; index < nextLength; index += 1) {
+    const itemSignals = getForwardedSignalsForValue(value[index], binding);
+    const existingClone = block.clones[index];
+
+    if (existingClone) {
+      retargetForwardedSignals(existingClone, itemSignals, binding);
+      continue;
+    }
+
+    block.clones.push(createStructuralClone(ctx, binding, itemSignals, block.clones.at(-1)?.rootEl));
+  }
+
+  while (block.clones.length > nextLength) {
+    destroyStructuralClone(block.clones.pop());
+  }
+}
+
+function reconcileIfBlock(ctx, binding, block, value) {
+  if (!value) {
+    while (block.clones.length) {
+      destroyStructuralClone(block.clones.pop());
+    }
+    return;
+  }
+
+  const itemSignals = getForwardedSignalsForValue(value, binding);
+  if (block.clones[0]) {
+    retargetForwardedSignals(block.clones[0], itemSignals, binding);
+    return;
+  }
+
+  block.clones.push(createStructuralClone(ctx, binding, itemSignals, undefined));
+}
+
+function getForwardedSignalsForValue(value, binding) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    throw new Error(
+      `HET Error: ${binding.dirName} item must be an object`,
+      { cause: getBindingCause(binding, { signalName: binding.source }) },
+    );
+  }
+
+  const entries = Object.entries(value);
+  const signalsByName = Object.create(null);
+
+  for (const [key, candidate] of entries) {
+    if (candidate?.brand !== PREACT_SIGNAL_BRAND) {
+      throw new Error(
+        'HET Error: Structural item property must be a signal',
+        { cause: getBindingCause(binding, { signalName: key }) },
+      );
+    }
+    signalsByName[key] = candidate;
+  }
+
+  return signalsByName;
+}
+
+function createStructuralClone(ctx, binding, importedSignals, previousRootEl) {
+  const fragment = binding.el.content.cloneNode(true);
+  const rootEl = getClonedTemplateRoot(fragment);
+  const anchor = previousRootEl ? previousRootEl.nextSibling : binding.el.nextSibling;
+
+  binding.el.parentNode.insertBefore(fragment, anchor);
+
+  const component = getMountableComponent(rootEl);
+  if (!component) {
+    throw new Error(
+      'HET Error: Structural template root component is not registered',
+      {
+        cause: getBindingCause(binding, {
+          structuralRootElement: rootEl,
+          structuralRootComponentName: rootEl.getAttribute('het-component'),
+        }),
+      },
+    );
+  }
+
+  mountComponent(rootEl, component.setup, { importedSignals });
+  mountComponents(rootEl);
+  removeCloakAttributes([rootEl]);
+
+  return {
+    rootEl,
+    forwardedNames: Object.keys(importedSignals),
+  };
+}
+
+function getClonedTemplateRoot(fragment) {
+  return Array.from(fragment.childNodes).find((node) => node.nodeType === Node.ELEMENT_NODE);
+}
+
+function retargetForwardedSignals(clone, nextSignals, binding) {
+  const instance = clone.rootEl.__het_instance;
+  if (!instance) return;
+
+  const nextNames = Object.keys(nextSignals);
+  const previousNames = clone.forwardedNames;
+
+  if (
+    previousNames.length !== nextNames.length ||
+    previousNames.some((name) => !Object.prototype.hasOwnProperty.call(nextSignals, name))
+  ) {
+    throw new Error(
+      'HET Error: Structural clone signal shape changed',
+      { cause: getBindingCause(binding, { signalName: binding.source }) },
+    );
+  }
+
+  for (const name of nextNames) {
+    const wrapper = instance.rawSignals[name];
+    if (!wrapper?.[IMPORTED_SIGNAL_WRAPPER]) {
+      throw new Error(
+        'HET Error: Structural clone is missing forwarded signal wrapper',
+        { cause: getBindingCause(binding, { signalName: name }) },
+      );
+    }
+    wrapper.setTarget(nextSignals[name]);
+  }
+}
+
+function destroyStructuralClone(clone) {
+  if (!clone?.rootEl) return;
+  destroyComponent(clone.rootEl);
+  clone.rootEl.remove();
+}
+
+function destroyStructuralBlock(block) {
+  while (block.clones.length) {
+    destroyStructuralClone(block.clones.pop());
   }
 }
 

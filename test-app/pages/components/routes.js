@@ -13,6 +13,7 @@ import mutationObserverRoutes from './mutation-observer/routes.js';
 import negationRoutes from './negation/routes.js';
 import registrationRoutes from './registration/routes.js';
 import scopedRefsRoutes from './scoped-refs/routes.js';
+import structuralRoutes from './structural/routes.js';
 
 const router = Router();
 
@@ -35,5 +36,6 @@ router.use('/mutation-observer', mutationObserverRoutes);
 router.use('/negation', negationRoutes);
 router.use('/registration', registrationRoutes);
 router.use('/scoped-refs', scopedRefsRoutes);
+router.use('/structural', structuralRoutes);
 
 export default router;

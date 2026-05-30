@@ -200,6 +200,20 @@ HET does not provide styles for cloaked elements, so bring your own CSS. To pres
 </div>
 ```
 
+### Structural templates
+
+Use `<template het-for="items">` or `<template het-if="selectedItem">` when a component needs to stamp a small number of child component instances from existing signals instead of manually creating DOM nodes in `setup`.
+
+These directives are intentionally narrow:
+
+- They are only supported on `<template>`.
+- The template content must contain exactly one root element with `het-component`.
+- `het-for` expects a signal whose value is an array.
+- `het-if` expects a signal whose value is falsy or an object.
+- Forwarded item properties must already be signals; HET does not convert plain values into signals.
+
+This is meant for small, bounded DOM regions such as notifications, tabs, or menus. It is not intended as a general client-side rendering system for large lists.
+
 ### Binding syntax
 
 Binding attributes connect an element property, attribute, class, model value, or event to a signal or component method.
@@ -238,6 +252,8 @@ Negation and acquisition cannot be combined in the same declaration.
 | [`het-component`](#components) | Component root | Optional component name | No | No | No | No | Mounts the registered component with that name, or mounts anonymously when empty. |
 | [`het-ref`](#het-ref) | DOM ref | Ref name | No | No | No | No | Exposed on `setup({ refs })` for the owning component scope. |
 | [`het-cloak`](#het-cloak) | Mount cloak | Boolean attribute | No | No | No | No | Removed after the component mount batch completes. |
+| [`het-for`](#structural-templates} | Structural list template | `signal` | No | No | No | No | `<template>` only. Requires a single `het-component` root. Forwards signal-valued item properties into each clone. |
+| [`het-if`](#structural-templates} | Structural conditional template | `signal` | No | No | No | No | `<template>` only. Requires a single `het-component` root. Forwards signal-valued object properties into the stamped clone. |
 | [`het-text`](#het-text) | Text binding | `signal` | No | `het-text:seed`, `het-text:sync` | Yes | Yes | Sugar for `textContent`. |
 | [`het-props`](#het-props) | Property binding | `property=signal` | Yes | `het-props:seed`, `het-props:sync` | Yes | Yes | - |
 | [`het-attrs`](#het-attrs) | Attribute binding | `attribute=signal` | Yes | `het-attrs:seed`, `het-attrs:sync` | Yes | Yes | - |
@@ -1846,6 +1862,8 @@ const trustedTypesPolicy = trustedTypes.createPolicy('het', {
         'het-model',
         'het-exports',
         'het-imports',
+        'het-for',
+        'het-if',
         'het-pane',
         'het-nav',
         'het-target',
