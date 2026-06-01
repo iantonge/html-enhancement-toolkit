@@ -1,0 +1,192 @@
+# API Reference
+
+This section collects the JavaScript entry points and initialization options for lookup after the core HTML attributes are familiar.
+
+## `init(config)`
+
+Initialize HET. This mounts registered components, starts component mutation observation, installs request enhancement listeners, and connects request-driven content loads to component synchronization.
+
+`config` is optional, and every config property is optional. Omitted properties use the defaults described below. `init` does not return a value.
+
+### Config options
+
+#### `onError(error)`
+
+Handle internal errors with your own logging or reporting. Signature: `(error: Error | DOMException | unknown) => void`. Default: log and continue. Return value is ignored.
+
+HET-created errors use the message prefix `HET Error:` and may include structured diagnostic data on `error.cause`. See the [error reference](errors.md).
+
+```js
+HET.init({
+  onError: (error) => {
+    console.error(error, error.cause);
+    // Forward to your telemetry here
+  },
+});
+```
+
+#### `busyClass`
+
+Override the CSS class HET applies to a busy target pane while a request is in flight. Default: `"het-busy"`.
+
+```js
+HET.init({
+  busyClass: 'is-loading',
+});
+```
+
+#### `headContentSelectors`
+
+Controls which `<head>` elements HET synchronizes from responses during `het-nav` navigations. Default:
+
+```js
+[
+  'title',
+  'meta[name]',
+  'meta[property]',
+  'link[rel="canonical"]',
+  'link[rel="alternate"]',
+  'script[type="application/ld+json"]',
+]
+```
+
+Example limiting updates to `<title>` only:
+
+```js
+HET.init({
+  headContentSelectors: ['title'],
+});
+```
+
+#### `nonce`
+
+Adds a nonce value to enhanced fetch requests using the configured nonce header name. Default: unset.
+
+This is mainly useful for nonce-protected inline `<style>` blocks in swapped HTML. HET parses response HTML with browser APIs and does not execute scripts from swapped content.
+
+```js
+HET.init({
+  nonce: 'server-generated-nonce',
+});
+```
+
+#### `nonceHeader`
+
+Overrides the request header name used for `nonce`. Default: `"X-HET-Nonce"`.
+
+```js
+HET.init({
+  nonce: 'server-generated-nonce',
+  nonceHeader: 'X-CSP-Nonce',
+});
+```
+
+#### `trustedTypesPolicy`
+
+[Trusted Types](https://developer.mozilla.org/en-US/docs/Web/API/Trusted_Types_API) policy object used to transform response HTML before parsing. Default: unset. If provided, HET calls `trustedTypesPolicy.createHTML(responseHtml)`.
+
+[DOMPurify](https://github.com/cure53/DOMPurify) is a suitable sanitizer for this. If you use head updates, configure it to keep the document structure and allow head elements and attributes.
+
+```js
+import DOMPurify from 'dompurify';
+
+const trustedTypesPolicy = trustedTypes.createPolicy('het', {
+  createHTML: (html) =>
+    DOMPurify.sanitize(html, {
+      RETURN_TRUSTED_TYPE: false,
+      WHOLE_DOCUMENT: true,
+      ADD_TAGS: ['html', 'head', 'body', 'meta', 'title', 'link', 'style'],
+      ADD_ATTR: [
+        'het-component',
+        'het-ref',
+        'het-on',
+        'het-props',
+        'het-attrs',
+        'het-bool-attrs',
+        'het-class',
+        'het-model',
+        'het-exports',
+        'het-imports',
+        'het-for',
+        'het-if',
+        'het-pane',
+        'het-nav',
+        'het-target',
+        'het-select',
+        'het-also',
+        'het-background',
+        'het-cloak',
+        'name',
+        'content',
+        'property',
+        'rel',
+        'href',
+        'type',
+        'charset',
+        'http-equiv',
+        'nonce',
+        'autofocus',
+      ],
+    }),
+});
+
+HET.init({
+  trustedTypesPolicy,
+});
+```
+
+Note: Trusted Types is broadly available in current browsers as of February 2026, but may not be supported in older browsers. A polyfill is available from <https://github.com/w3c/trusted-types>
+
+#### `replaceContent`
+
+Function to customize how HET swaps a matched element with its replacement.
+Default: replace the matched element with an imported clone of the response element.
+This is called for the target pane, `het-select` replacements, and `het-also` replacements.
+Return the element that remains in the document after the replacement. HET uses this returned element for autofocus handling and post-load lifecycle and sync behavior.
+
+We recommend using a DOM morphing library such as [Idiomorph](https://github.com/bigskysoftware/idiomorph) for smoother updates.
+
+```js
+HET.init({
+  replaceContent: (currentEl, replacementEl) => {
+    Idiomorph.morph(currentEl, replacementEl);
+    return currentEl;
+  },
+});
+```
+
+## `destroy()`
+
+Destroy mounted components, run their cleanup callbacks, abort in-flight enhanced requests, and remove HET's document and window event listeners.
+
+`destroy` accepts no parameters and does not return a value.
+
+## `registerComponent(name, setup)`
+
+Register a component setup function for elements whose `het-component` value matches `name`.
+
+Parameters:
+
+- `name`: the string used by `het-component`.
+- `setup`: an optional function. HET calls `setup(context)` when a matching component mounts.
+
+`setup(context)` receives:
+
+- `el`: the component root element.
+- `refs`: elements in this component scope marked with `het-ref`.
+- `signals`: the component signal registry.
+- `onCleanup(fn)`: register cleanup work to run when the component is destroyed.
+
+`setup` may return an object of methods for `het-on` bindings. `registerComponent` does not return a value.
+
+## Signal helpers
+
+In the IIFE build, HET exposes Preact Signals helpers on `HET.signals`:
+
+- `signal(initialValue)`
+- `computed(fn)`
+- `effect(fn)`
+- `batch(fn)`
+- `untracked(fn)`
+
+The ESM build does not re-export these helpers; import them from `@preact/signals-core`.
