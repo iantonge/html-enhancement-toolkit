@@ -56,6 +56,12 @@ router.get('/model-seed', (request, response) => {
   });
 });
 
+router.get('/sync-after-destroy', (request, response) => {
+  response.render('components/acquisition/sync-after-destroy', {
+    title: 'sync after destroy',
+  });
+});
+
 router.get('/bool-false', (request, response) => {
   response.render('components/acquisition/bool-false', {
     title: 'bool false parsing',

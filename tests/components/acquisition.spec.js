@@ -77,6 +77,21 @@ test.describe('components acquisition and sync expressions', () => {
     await expect(page.locator('#model-seed-value')).toHaveText('Updated');
   });
 
+  test('does not process :sync updates after HET.destroy()', async ({ page }) => {
+    await page.goto('/components/acquisition/sync-after-destroy');
+    await expect(page.locator('#sync-destroy-value')).toHaveText('alpha');
+
+    await page.evaluate(() => {
+      window.HET.destroy();
+      const input = document.getElementById('sync-destroy-input');
+      input.value = 'beta';
+      const root = document.getElementById('sync-destroy-root');
+      root.dispatchEvent(new CustomEvent('het:sync', { bubbles: true }));
+    });
+
+    await expect(page.locator('#sync-destroy-value')).toHaveText('alpha');
+  });
+
   test('parses "false" as false with $bool', async ({ page }) => {
     await page.goto('/components/acquisition/bool-false');
     await expect(page.locator('#bool-false-value')).toHaveText('false');
