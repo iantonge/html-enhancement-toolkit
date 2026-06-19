@@ -20,4 +20,10 @@ router.get('/destroy', (request, response) => {
   });
 });
 
+router.get('/invalid-cleanup', (request, response) => {
+  response.render('components/lifecycle/invalid-cleanup', {
+    title: 'Invalid cleanup callback',
+  });
+});
+
 export default router;

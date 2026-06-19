@@ -47,6 +47,13 @@ test.describe('components lifecycle and registration', () => {
     await expect(page.locator('#cleanup-count')).toHaveText('Cleanup count: 1');
   });
 
+  test('reports error when a cleanup callback is not a function', async ({ page }) => {
+    await page.goto('/components/lifecycle/invalid-cleanup');
+    await page.waitForFunction(() =>
+      window.hetErrors.some((error) => error.message === 'HET Error: Cleanup callback must be a function'),
+    );
+  });
+
   test('throws when registering a component without a name', async ({ page }) => {
     await page.goto('/components/registration/register-without-name');
     await page.waitForFunction(() =>
