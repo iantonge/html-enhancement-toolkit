@@ -26,6 +26,12 @@ router.get('/explicit-sources', (request, response) => {
   });
 });
 
+router.get('/invalid-sync-model', (request, response) => {
+  response.render('components/acquisition/invalid-sync-model', {
+    title: 'Invalid sync on het-model',
+  });
+});
+
 router.get('/duplicate-seed-signal', (request, response) => {
   response.render('components/acquisition/duplicate-seed-signal', {
     title: 'Duplicate seed signal',
