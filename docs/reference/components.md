@@ -95,7 +95,7 @@ Supported syntax:
 - signal identifiers such as `count`
 - dot member access such as `$target.value`
 - primitive literals: strings, numbers, booleans, `null`
-- unary `-`
+- unary `!` and `-`
 - binary `+`, `-`, `*`, `/`, `%`
 - comparisons: `===`, `!==`, `<`, `<=`, `>`, `>=`
 - logical `&&`, `||`
@@ -161,7 +161,7 @@ Examples:
 Bindings that support multiple declarations use top-level semicolons:
 
 ```html
-<button het-bool-attrs="disabled=isInvalid || loading"></button>
+<button het-bool-attrs="disabled=!valid || loading"></button>
 ```
 
 Whitespace alone does not separate declarations.

@@ -67,7 +67,7 @@ function validateExpressionAst(node, metadata, bindingLoggingContext) {
       }
       return;
     case 'UnaryExpression':
-      if (node.operator !== '-') {
+      if (node.operator !== '!' && node.operator !== '-') {
         throwInvalidBindingExpression(bindingLoggingContext, 'Invalid expression');
       }
       validateExpressionAst(node.argument, metadata, bindingLoggingContext);
@@ -198,7 +198,7 @@ function evaluateExpressionNode(node, runtimeContext) {
       return node.value;
     case 'UnaryExpression': {
       const value = evaluateExpressionNode(node.argument, runtimeContext);
-      return -value;
+      return node.operator === '!' ? !value : -value;
     }
     case 'BinaryExpression':
       return evaluateBinaryExpression(
