@@ -8,6 +8,13 @@ test.describe('components het-props', () => {
     await expect(page.locator('#count-value')).toHaveText('1');
   });
 
+  test('binds negated signal values to element properties', async ({ page }) => {
+    await page.goto('/components/het-props/negation');
+    await expect(page.locator('#prop-negation-target')).toBeVisible();
+    await page.click('#hide-target');
+    await expect(page.locator('#prop-negation-target')).toBeHidden();
+  });
+
   test('allows a trailing semicolon in multi-binding attributes', async ({ page }) => {
     await page.goto('/components/het-props/trailing-semicolon');
     await expect(page.locator('#trailing-semicolon-output')).toHaveText('3');

@@ -1,0 +1,21 @@
+<section class="card shadow-sm border-0">
+  <div class="card-body">
+    <h1 class="h4 mb-3">{{title}}</h1>
+    <div het-component="het-props-negation">
+      <button id="hide-target" type="button" het-on="click->hide">Hide</button>
+      <p id="prop-negation-target" het-props="hidden=!isVisible" class="mb-0 text-muted">
+        Visibility target
+      </p>
+    </div>
+  </div>
+</section>
+<script nonce="{{{cspNonce}}}">
+  window.HET.registerComponent('het-props-negation', ({ signals }) => {
+    signals.isVisible = window.HET.signals.signal(true);
+    return {
+      hide() {
+        signals.isVisible.value = false;
+      },
+    };
+  });
+</script>
