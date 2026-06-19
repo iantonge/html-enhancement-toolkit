@@ -101,7 +101,7 @@ function reconcileForBlock(ctx, binding, block, value, mountApi) {
   }
 
   for (let index = block.activeCount - 1; index >= nextLength; index -= 1) {
-    finalizeStructuralCloneUnmount(block, block.clones[index], mountApi);
+    scheduleStructuralCloneUnmount(block, block.clones[index], mountApi);
   }
 
   block.activeCount = nextLength;

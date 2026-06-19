@@ -1,0 +1,67 @@
+<script nonce="{{{cspNonce}}}">
+  window.hetInitConfig = {
+    structuralUnmountDelay: 120,
+  };
+</script>
+<section class="card shadow-sm border-0" het-component="structural-for-delayed-host" het-exports="items" het-mount-pending>
+  <div class="card-body">
+    <h1 class="h4 mb-3">{{title}}</h1>
+    <div class="d-flex gap-2 mb-3">
+      <button id="shrink-list" type="button" class="btn btn-sm btn-outline-secondary" het-on="click->shrinkList">Shrink list</button>
+      <button id="regrow-list" type="button" class="btn btn-sm btn-outline-primary" het-on="click->regrowList">Regrow list</button>
+    </div>
+
+    <ul id="for-list" class="list-unstyled mb-0">
+      <template het-for="items">
+        <li het-component="structural-for-delayed-item" het-imports="items" het-ref="root" class="mb-2 border rounded p-2">
+          <div class="d-flex align-items-center gap-2">
+            <span class="item-id" het-text="id"></span>
+            <span class="item-message" het-text="message"></span>
+            <span class="item-mount badge text-bg-secondary" het-text="mountId"></span>
+          </div>
+        </li>
+      </template>
+    </ul>
+  </div>
+</section>
+
+<script nonce="{{{cspNonce}}}">
+  window.structuralForDelayedMountIds = [];
+  window.structuralForDelayedCleanupIds = [];
+
+  const createItem = (id, message) => ({
+    id: window.HET.signals.signal(id),
+    message: window.HET.signals.signal(message),
+  });
+
+  window.HET.registerComponent('structural-for-delayed-host', ({ signals }) => {
+    signals.items = window.HET.signals.signal([
+      createItem('a', 'Alpha'),
+      createItem('b', 'Beta'),
+      createItem('c', 'Gamma'),
+    ]);
+
+    return {
+      shrinkList() {
+        signals.items.value = signals.items.value.slice(0, 1);
+      },
+      regrowList() {
+        signals.items.value = [
+          createItem('a', 'Alpha'),
+          createItem('d', 'Delta'),
+        ];
+      },
+    };
+  });
+
+  window.HET.registerComponent('structural-for-delayed-item', ({ refs, signals, onCleanup }) => {
+    const nextMountId = window.structuralForDelayedMountIds.length + 1;
+    signals.mountId = window.HET.signals.signal(String(nextMountId));
+    refs.root.dataset.mountId = String(nextMountId);
+    window.structuralForDelayedMountIds.push(nextMountId);
+
+    onCleanup(() => {
+      window.structuralForDelayedCleanupIds.push(nextMountId);
+    });
+  });
+</script>

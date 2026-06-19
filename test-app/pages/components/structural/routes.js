@@ -26,6 +26,12 @@ router.get('/if-toggle-delayed', (request, response) => {
   });
 });
 
+router.get('/for-list-delayed', (request, response) => {
+  response.render('components/structural/for-list-delayed', {
+    title: 'het-for delayed unmount',
+  });
+});
+
 router.get('/invalid-non-array', (request, response) => {
   response.render('components/structural/invalid-non-array', {
     title: 'Invalid het-for source',

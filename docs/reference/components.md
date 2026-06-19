@@ -384,7 +384,7 @@ Prefer ordinary visibility bindings such as `het-bool-attrs="hidden=isHidden"` w
 
 This feature is structural-only and exit-only:
 
-- it applies to clones created by `het-if`
+- it applies to clones created by `het-if` and `het-for`
 - it does not add enter hooks or enter classes
 - it does not affect `destroy()` or other non-structural teardown paths
 

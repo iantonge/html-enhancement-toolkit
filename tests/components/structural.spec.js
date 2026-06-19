@@ -92,6 +92,34 @@ test.describe('components structural templates', () => {
     ).toEqual([]);
   });
 
+  test('het-for defers trailing removals and reuses pending clones when the list regrows', async ({ page }) => {
+    await page.goto('/components/structural/for-list-delayed');
+
+    await expect(page.locator('#for-list > li')).toHaveCount(3);
+    await expect(page.locator('#for-list .item-mount')).toHaveText(['1', '2', '3']);
+
+    await page.click('#shrink-list');
+    await expect(page.locator('#for-list > li')).toHaveCount(3);
+    await expect(page.locator('#for-list .het-unmounting')).toHaveCount(2);
+    await expect.poll(
+      () => page.evaluate(() => window.structuralForDelayedCleanupIds.slice()),
+    ).toEqual([]);
+
+    await page.click('#regrow-list');
+    await expect(page.locator('#for-list .item-message')).toHaveText(['Alpha', 'Delta', 'Gamma']);
+    await expect(page.locator('#for-list .item-mount').nth(0)).toHaveText('1');
+    await expect(page.locator('#for-list .item-mount').nth(1)).toHaveText('2');
+    await expect(page.locator('#for-list .het-unmounting')).toHaveCount(1);
+
+    await page.waitForTimeout(150);
+    await expect(page.locator('#for-list > li')).toHaveCount(2);
+    await expect(page.locator('#for-list .item-message')).toHaveText(['Alpha', 'Delta']);
+    await expect(page.locator('#for-list .item-mount')).toHaveText(['1', '2']);
+    await expect.poll(
+      () => page.evaluate(() => window.structuralForDelayedCleanupIds.slice()),
+    ).toEqual([3]);
+  });
+
   test('reports error when het-for source is not an array', async ({ page }) => {
     await page.goto('/components/structural/invalid-non-array');
     await page.waitForFunction(() =>
