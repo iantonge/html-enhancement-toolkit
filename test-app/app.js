@@ -48,6 +48,7 @@ app.use(
   })
 );
 
+app.use('/css', express.static(path.join(__dirname, '../node_modules/bootstrap/dist/css')));
 app.use('/assets', express.static(path.join(__dirname, 'assets')));
 
 app.use('/', pageRoutes);
