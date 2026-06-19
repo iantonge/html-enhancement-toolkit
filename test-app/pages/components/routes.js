@@ -1,5 +1,7 @@
 import { Router } from 'express';
 
+import lifecycleRoutes from './lifecycle/routes.js';
+
 const router = Router();
 
 router.get('/', (request, response) => {
@@ -7,5 +9,7 @@ router.get('/', (request, response) => {
     title: 'Components',
   });
 });
+
+router.use('/lifecycle', lifecycleRoutes);
 
 export default router;
