@@ -100,4 +100,21 @@ test.describe('components het-exports / het-imports', () => {
     );
   });
 
+  test('re-resolves imported signals after reparenting on het:sync', async ({ page }) => {
+    await page.goto('/components/het-imports/reparent-sync');
+
+    await expect(page.locator('#reparent-value')).toHaveText('0');
+
+    await page.click('#increment-a');
+    await expect(page.locator('#reparent-value')).toHaveText('1');
+
+    await page.click('#move-to-b');
+    await expect(page.locator('#reparent-value')).toHaveText('10');
+
+    await page.click('#increment-b');
+    await expect(page.locator('#reparent-value')).toHaveText('11');
+
+    await page.click('#move-to-a');
+    await expect(page.locator('#reparent-value')).toHaveText('1');
+  });
 });

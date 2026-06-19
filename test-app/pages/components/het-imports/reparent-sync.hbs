@@ -1,0 +1,68 @@
+<section class="card shadow-sm border-0">
+  <div class="card-body">
+    <h1 class="h4 mb-3">{{title}}</h1>
+    <div class="row g-3">
+      <div class="col-md-6">
+        <div het-component="imports-parent-a" het-exports="count" class="border rounded p-3">
+          <h2 class="h6">Parent A</h2>
+          <button id="increment-a" type="button" het-on="click->increment" class="btn btn-sm btn-primary">
+            Increment A
+          </button>
+          <div id="slot-a" class="mt-3">
+            <div id="movable-child" het-component="imports-child-retarget" het-imports="count">
+              <p id="reparent-value" het-text="count" class="mb-0 text-muted"></p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div het-component="imports-parent-b" het-exports="count" class="border rounded p-3">
+          <h2 class="h6">Parent B</h2>
+          <button id="increment-b" type="button" het-on="click->increment" class="btn btn-sm btn-primary">
+            Increment B
+          </button>
+          <div id="slot-b" class="mt-3"></div>
+        </div>
+      </div>
+    </div>
+    <div class="mt-3 d-flex gap-2">
+      <button id="move-to-a" type="button" class="btn btn-sm btn-outline-secondary">Move to A</button>
+      <button id="move-to-b" type="button" class="btn btn-sm btn-outline-secondary">Move to B</button>
+    </div>
+  </div>
+</section>
+<script nonce="{{{cspNonce}}}">
+  const syncMovedChild = (slotId) => {
+    const slot = document.getElementById(slotId);
+    const child = document.getElementById('movable-child');
+    slot.appendChild(child);
+    child.dispatchEvent(new CustomEvent('het:sync', { bubbles: true }));
+  };
+
+  window.HET.registerComponent('imports-parent-a', ({ signals }) => {
+    signals.count = window.HET.signals.signal(0);
+    return {
+      increment() {
+        signals.count.value += 1;
+      },
+    };
+  });
+
+  window.HET.registerComponent('imports-parent-b', ({ signals }) => {
+    signals.count = window.HET.signals.signal(10);
+    return {
+      increment() {
+        signals.count.value += 1;
+      },
+    };
+  });
+
+  window.HET.registerComponent('imports-child-retarget', ({ signals }) => {
+    if (!signals.count) {
+      throw new Error('HET test error: missing imported count on reparent');
+    }
+  });
+
+  document.getElementById('move-to-a').addEventListener('click', () => syncMovedChild('slot-a'));
+  document.getElementById('move-to-b').addEventListener('click', () => syncMovedChild('slot-b'));
+</script>

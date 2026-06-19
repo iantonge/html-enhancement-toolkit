@@ -50,4 +50,10 @@ router.get('/signal-name-conflict', (request, response) => {
   });
 });
 
+router.get('/reparent-sync', (request, response) => {
+  response.render('components/het-imports/reparent-sync', {
+    title: 'Import retargets after reparent sync',
+  });
+});
+
 export default router;
