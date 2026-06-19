@@ -25,6 +25,60 @@ HET.init({
 });
 ```
 
+#### `trustedTypesPolicy`
+
+[Trusted Types](https://developer.mozilla.org/en-US/docs/Web/API/Trusted_Types_API) policy object used to transform response HTML before parsing. Default: unset. If provided, HET calls `trustedTypesPolicy.createHTML(responseHtml)`.
+
+[DOMPurify](https://github.com/cure53/DOMPurify) is a suitable sanitizer for this. Configure it to keep the document structure and allow HET elements and attributes.
+
+```js
+import DOMPurify from 'dompurify';
+
+const trustedTypesPolicy = trustedTypes.createPolicy('het', {
+  createHTML: (html) =>
+    DOMPurify.sanitize(html, {
+      RETURN_TRUSTED_TYPE: false,
+      WHOLE_DOCUMENT: true,
+      ADD_TAGS: ['html', 'head', 'body', 'style'],
+      ADD_ATTR: [
+        'het-component',
+        'het-ref',
+        'het-on',
+        'het-props',
+        'het-attrs',
+        'het-bool-attrs',
+        'het-class',
+        'het-model',
+        'het-exports',
+        'het-imports',
+        'het-for',
+        'het-if',
+        'het-unmount-delay',
+        'het-pane',
+        'het-target',
+        'het-select',
+        'het-also',
+        'het-mount-pending',
+        'name',
+        'content',
+        'property',
+        'rel',
+        'href',
+        'type',
+        'charset',
+        'http-equiv',
+        'nonce',
+      ],
+    }),
+});
+
+HET.init({
+  trustedTypesPolicy,
+});
+```
+
+Note: Trusted Types is broadly available in current browsers as of February 2026, but may not be supported in older browsers. A polyfill is available from <https://github.com/w3c/trusted-types>
+
 #### `structuralUnmountDelay`
 
 Delay, in milliseconds, before HET destroys structural clones that were removed by `het-if` or `het-for`. Default: `0`.

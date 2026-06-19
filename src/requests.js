@@ -7,6 +7,7 @@ const replaceContent = (elToReplace, replacementEl) => {
   elToReplace.replaceWith(importedNode);
   return importedNode;
 };
+let trustedTypesPolicy;
 
 const clickPipeline = async (event) => {
   let ctx;
@@ -61,7 +62,8 @@ const fetchAndSwap = async (
   const finalResponse = await fetch(request);
   const swapLoggingContext = { ...requestLoggingContext };
   const responseHtml = await finalResponse.text();
-  const parsedDocument = parser.parseFromString(responseHtml, 'text/html');
+  const htmlForParse = trustedTypesPolicy?.createHTML(responseHtml) ?? responseHtml;
+  const parsedDocument = parser.parseFromString(htmlForParse, 'text/html');
   const candidates = parsedDocument.querySelectorAll(`[het-pane="${target.name}"]`);
   if (candidates.length === 0)
     throw new Error(
@@ -505,6 +507,7 @@ const getTarget = (targetName, loggingContext) => {
 
 export function init(config) {
   onError = config?.onError ?? onError;
+  trustedTypesPolicy = config?.trustedTypesPolicy ?? trustedTypesPolicy;
   document.addEventListener('click', clickPipeline);
   document.addEventListener('submit', submitPipeline);
 }

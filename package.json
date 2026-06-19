@@ -14,11 +14,13 @@
     "@playwright/test": "^1.61.0",
     "@preact/signals-core": "^1.14.3",
     "bootstrap": "^5.3.8",
+    "dompurify": "^3.4.11",
     "esbuild": "^0.28.1",
     "express": "^5.2.1",
     "hbs": "^4.2.1",
     "helmet": "^8.2.0",
-    "multer": "^2.2.0"
+    "multer": "^2.2.0",
+    "trusted-types": "^2.0.0"
   },
   "dependencies": {
     "jsep": "^1.4.0"
