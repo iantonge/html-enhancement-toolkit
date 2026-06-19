@@ -1,0 +1,11 @@
+<section id="main-pane" het-pane="main" class="card shadow-sm border-0">
+  <div class="card-body">
+    <h1 id="sync-title" class="h4 mb-3">{{title}}</h1>
+    <div id="sync-component" het-component="integration-sync" het-mount-pending>
+      <input id="sync-input" class="form-control" het-sync="query=$props.value" value="beta">
+      <p id="sync-value" het-props="textContent=query" class="mt-2 text-muted mb-3"></p>
+      <input id="sync-flag" type="checkbox" het-sync="isActive=$bool($attrs.dataActive)" data-active="true">
+      <span id="sync-indicator" het-bool-attrs="hidden=isActive">Inactive</span>
+    </div>
+  </div>
+</section>

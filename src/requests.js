@@ -73,7 +73,11 @@ const fetchAndSwap = async (
     );
   }
   const newContent = candidates[0];
-  replaceContent(target.el, newContent);
+  const loadedContent = replaceContent(target.el, newContent);
+  const afterLoadContentEvent = new CustomEvent('het:afterLoadContent', {
+    bubbles: true,
+  });
+  loadedContent.dispatchEvent(afterLoadContentEvent);
   return;
 };
 

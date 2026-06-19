@@ -7,6 +7,7 @@
 - [Forms](#forms)
 - [Panes](#panes)
 - [Server contract](#server-contract)
+- [Lifecycle events](#lifecycle-events)
 
 ## Core attributes
 
@@ -60,5 +61,15 @@ If the pane is missing or duplicated in either place, HET throws an error.
 ## Server contract
 
 Responses must be HTML containing exactly one matching target pane, regardless of HTTP status code.
+
+## Lifecycle events
+
+HET dispatches lifecycle events around fetch and content loading.
+
+Content-load events bubble from the target pane or inserted pane.
+
+| Event | Cancelable | Detail | Notes |
+| --- | --- | --- | --- |
+| `het:afterLoadContent` | No | None | Dispatched after target replacement. |
 
 For request diagnostics and full `error.cause` fields, see the [error reference](errors.md#request-errors).
