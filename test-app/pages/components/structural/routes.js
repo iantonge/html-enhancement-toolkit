@@ -8,4 +8,10 @@ router.get('/', (request, response) => {
   });
 });
 
+router.get('/for-list', (request, response) => {
+  response.render('components/structural/for-list', {
+    title: 'het-for list reuse',
+  });
+});
+
 export default router;
