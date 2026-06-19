@@ -125,7 +125,10 @@ const getSubmitContext = (event) => {
   const form = event.target;
   const submitter = event.submitter;
   const formMethod = (form.getAttribute('method') || 'GET').toUpperCase();
-  const resolvedMethod = formMethod;
+  const submitterMethod = submitter?.hasAttribute('formmethod')
+    ? submitter.getAttribute('formmethod').toUpperCase()
+    : undefined;
+  const resolvedMethod = submitterMethod || formMethod;
   const formAction = form.getAttribute('action') || window.location.href;
   const submitterAction = submitter?.hasAttribute('formaction')
     ? submitter.getAttribute('formaction')
@@ -147,6 +150,9 @@ const getSubmitContext = (event) => {
   }
   if (submitterAction) {
     loggingContext.submitterAction = submitterAction;
+  }
+  if (submitterMethod) {
+    loggingContext.submitterMethod = submitterMethod;
   }
   const resolvedActionUrl = new URL(resolvedAction, window.location.href);
   if (resolvedActionUrl.origin !== window.location.origin)
