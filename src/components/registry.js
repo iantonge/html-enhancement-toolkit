@@ -1,6 +1,9 @@
 const components = new Map();
 
 function registerComponent(name, setup) {
+  if (!name) {
+    throw new Error('HET Error: Component name is required');
+  }
   components.set(name, setup);
 }
 

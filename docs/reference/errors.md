@@ -11,6 +11,24 @@ Each section below covers one exact error message with:
 
 `error.cause` varies by error family. The component-side errors below document the structured fields that current HET code attaches.
 
+## Registration
+
+### `HET Error: Component name is required`
+
+`registerComponent()` was called without a component name.
+
+```js
+HET.registerComponent('', () => ({}));
+```
+
+Fix the code by passing the component name that your HTML uses in `het-component`.
+
+```js
+HET.registerComponent('counter', () => ({}));
+```
+
+This error does not include a structured `cause`.
+
 ## Binding Syntax
 
 ### `HET Error: Signal name is required`
