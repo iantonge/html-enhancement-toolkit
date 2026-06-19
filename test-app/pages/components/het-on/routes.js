@@ -14,4 +14,10 @@ router.get('/invokes-method', (request, response) => {
   });
 });
 
+router.get('/assigns-signal', (request, response) => {
+  response.render('components/het-on/assigns-signal', {
+    title: 'Assigns signal',
+  });
+});
+
 export default router;
