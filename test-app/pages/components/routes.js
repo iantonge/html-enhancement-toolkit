@@ -4,6 +4,7 @@ import acquisitionRoutes from './acquisition/routes.js';
 import hetImportsRoutes from './het-imports/routes.js';
 import hetModelRoutes from './het-model/routes.js';
 import hetOnRoutes from './het-on/routes.js';
+import hetPropsRoutes from './het-props/routes.js';
 import lifecycleRoutes from './lifecycle/routes.js';
 import registrationRoutes from './registration/routes.js';
 
@@ -19,6 +20,7 @@ router.use('/acquisition', acquisitionRoutes);
 router.use('/het-imports', hetImportsRoutes);
 router.use('/het-model', hetModelRoutes);
 router.use('/het-on', hetOnRoutes);
+router.use('/het-props', hetPropsRoutes);
 router.use('/lifecycle', lifecycleRoutes);
 router.use('/registration', registrationRoutes);
 
