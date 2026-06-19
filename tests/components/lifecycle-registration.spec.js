@@ -7,6 +7,38 @@ test.describe('components lifecycle and registration', () => {
     await expect(page.locator('#setup-count')).toHaveText('Setup count: 1');
   });
 
+  test('mounts anonymous component during init', async ({ page }) => {
+    await page.goto('/components/registration/anonymous');
+    await expect(page.locator('#anonymous-output')).toHaveText('Anonymous mounted');
+  });
+
+  test('omits component name from anonymous component error causes', async ({ page }) => {
+    await page.goto('/components/registration/anonymous-error');
+    await page.waitForFunction(() =>
+      window.hetErrors.some((error) => error.message === 'HET Error: het-text binding requires an expression'),
+    );
+
+    const cause = await page.evaluate(() => {
+      const { componentElement, bindingElement, ...serializableCause } =
+        window.hetErrors.at(-1).cause;
+      return {
+        ...serializableCause,
+        hasComponentName: Object.hasOwn(window.hetErrors.at(-1).cause, 'componentName'),
+        componentElementId: componentElement.id,
+        bindingElementId: bindingElement.id,
+      };
+    });
+
+    expect(cause).toEqual({
+      hasComponentName: false,
+      componentElementId: 'anonymous-error-root',
+      bindingAttribute: 'het-text',
+      bindingDeclaration: '',
+      bindingErrorReason: 'het-text binding requires an expression',
+      bindingElementId: 'anonymous-error-binding',
+    });
+  });
+
   test('throws when registering a component without a name', async ({ page }) => {
     await page.goto('/components/registration/register-without-name');
     await page.waitForFunction(() =>
