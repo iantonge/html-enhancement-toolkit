@@ -20,6 +20,12 @@ router.get('/destroy', (request, response) => {
   });
 });
 
+router.get('/mount-pending', (request, response) => {
+  response.render('components/lifecycle/mount-pending', {
+    title: 'Mount pending',
+  });
+});
+
 router.get('/invalid-cleanup', (request, response) => {
   response.render('components/lifecycle/invalid-cleanup', {
     title: 'Invalid cleanup callback',

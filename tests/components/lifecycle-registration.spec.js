@@ -61,6 +61,31 @@ test.describe('components lifecycle and registration', () => {
     );
   });
 
+  test('removes het-mount-pending after initial component mount', async ({ page }) => {
+    await page.goto('/components/lifecycle/mount-pending');
+
+    await expect(page.locator('#mount-pending-root')).toHaveText('Mounted');
+    await expect(page.locator('#mount-pending-root')).not.toHaveAttribute('het-mount-pending', '');
+  });
+
+  test('removes het-mount-pending after nested import/export components mount', async ({ page }) => {
+    await page.goto('/components/lifecycle/mount-pending');
+
+    await expect(page.locator('#imported-value')).toHaveText('parent value');
+    await expect(page.locator('#mount-pending-parent')).not.toHaveAttribute('het-mount-pending', '');
+    await expect(page.locator('#mount-pending-child')).not.toHaveAttribute('het-mount-pending', '');
+  });
+
+  test('keeps het-mount-pending when a component cannot mount', async ({ page }) => {
+    await page.goto('/components/lifecycle/mount-pending');
+
+    await expect(page.locator('#unregistered-root')).toHaveAttribute('het-mount-pending', '');
+    await expect(page.locator('#throwing-root')).toHaveAttribute('het-mount-pending', '');
+    await page.waitForFunction(() =>
+      window.hetErrors.some((error) => error.message === 'HET test error: mount-pending setup failed'),
+    );
+  });
+
   test('default onError logs errors with cause and continues', async ({ page }) => {
     await page.goto('/');
 

@@ -1,0 +1,35 @@
+<section class="card shadow-sm border-0">
+  <div class="card-body">
+    <h1 class="h4 mb-3">{{title}}</h1>
+
+    <div id="mount-pending-root" het-component="mount-pending-basic" het-mount-pending></div>
+
+    <div id="mount-pending-parent" het-component="mount-pending-parent" het-exports="count" het-mount-pending>
+      <div id="mount-pending-child" het-component="mount-pending-child" het-imports="count" het-mount-pending>
+        <p id="imported-value" het-text="count" class="mb-0 text-muted"></p>
+      </div>
+    </div>
+
+    <div id="unregistered-root" het-component="mount-pending-unregistered" het-mount-pending></div>
+    <div id="throwing-root" het-component="mount-pending-throwing" het-mount-pending></div>
+  </div>
+</section>
+<script nonce="{{{cspNonce}}}">
+  window.HET.registerComponent('mount-pending-basic', ({ el }) => {
+    el.textContent = 'Mounted';
+  });
+
+  window.HET.registerComponent('mount-pending-parent', ({ signals }) => {
+    signals.count = window.HET.signals.signal('parent value');
+  });
+
+  window.HET.registerComponent('mount-pending-child', ({ signals }) => {
+    if (!signals.count) {
+      throw new Error('HET test error: missing imported count');
+    }
+  });
+
+  window.HET.registerComponent('mount-pending-throwing', () => {
+    throw new Error('HET test error: mount-pending setup failed');
+  });
+</script>
