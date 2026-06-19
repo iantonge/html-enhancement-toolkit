@@ -85,7 +85,7 @@ HET bindings support a limited subset of JavaScript for pure, side-effect-free e
 
 Expressions are used by:
 
-- output bindings such as `het-text`
+- output bindings such as `het-text` and `het-props`
 - assignment-style `het-on`
 - `het-seed`
 - `het-sync`
@@ -141,7 +141,7 @@ Examples:
 Bindings that support multiple declarations use top-level semicolons:
 
 ```html
-<button het-on="click->increment; keydown.enter->increment"></button>
+<div het-props="textContent=label; title=label"></div>
 ```
 
 Whitespace alone does not separate declarations.
@@ -154,9 +154,18 @@ Output bindings evaluate signal-only expressions and write the result to the DOM
 ### `het-text`
 
 Use `het-text` to bind an expression to an element's `textContent`.
+It is sugar for `het-props="textContent=expression"`.
 
 ```html
 <p het-text="count === 1 ? 'item' : 'items'"></p>
+```
+
+### `het-props`
+
+Use `het-props` to bind expressions to element properties such as `textContent`, `value`, and `checked`.
+
+```html
+<div het-props="textContent=count; title=count === 1 ? 'item' : 'items'"></div>
 ```
 
 ## Input and event bindings
@@ -180,7 +189,7 @@ Typed variants apply coercion when reading from the control into the signal:
 - `het-model:float`
 - `het-model:bool`
 
-For explicit non-model patterns, combine `het-text`, `het-on`, and `het-seed` / `het-sync`.
+For explicit non-model patterns, combine `het-props`, `het-on`, and `het-seed` / `het-sync`.
 
 ### `het-on`
 
@@ -309,6 +318,7 @@ Bindings declared in HTML are cleaned up automatically.
 | Attribute | Purpose | Multiple declarations | Notes |
 | --- | --- | --- | --- |
 | `het-text` | Write expression to `textContent` | No | Output expression only. |
+| `het-props` | Write expressions to DOM properties | Yes | Semicolon-separated declarations. |
 | `het-model` | Two-way control binding | No | Always seeded from the control. |
 | `het-model:int` | Two-way control binding with integer coercion | No | Reads with `$int` semantics. |
 | `het-model:float` | Two-way control binding with float coercion | No | Reads with `$float` semantics. |

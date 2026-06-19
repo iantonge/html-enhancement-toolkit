@@ -31,6 +31,38 @@ This error does not include a structured `cause`.
 
 ## Binding Syntax
 
+### `HET Error: Binding declaration must contain exactly one "="`
+
+A `het-props` binding did not contain exactly one top-level `=` between its target and expression.
+
+```html
+<div het-component>
+  <span het-props="textContent"></span>
+</div>
+```
+
+Fix the declaration so it has one target and one expression.
+
+```html
+<span het-props="textContent=count"></span>
+```
+
+### `HET Error: Binding declaration requires a target and source`
+
+A binding used `=` but left the target or expression empty.
+
+```html
+<div het-component>
+  <span het-props="textContent="></span>
+</div>
+```
+
+Fix the declaration by filling in both sides.
+
+```html
+<span het-props="textContent=count"></span>
+```
+
 ### `HET Error: Signal name is required`
 
 A declaration that expects a signal name provided an empty or invalid identifier.
@@ -198,21 +230,21 @@ An optional trailing semicolon by itself is allowed.
 
 ```html
 <div het-component>
-  <button het-on="click->save; ; keydown.enter->save"></button>
+  <div het-props="textContent=label; ; title=label"></div>
 </div>
 ```
 
 Fix the declaration by removing the empty segment.
 
 ```html
-<button het-on="click->save; keydown.enter->save"></button>
+<div het-props="textContent=label; title=label"></div>
 ```
 
 This error attaches the normal structured binding `cause`.
 
 ### `HET Error: Output binding expression cannot use contextual values`
 
-An output binding such as `het-text` used contextual snapshot values like `$target`, `$event`, or `$props`.
+An output binding such as `het-text` or `het-props` used contextual snapshot values like `$target`, `$event`, or `$props`.
 
 ```html
 <div het-component>

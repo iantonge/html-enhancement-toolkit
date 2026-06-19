@@ -29,6 +29,7 @@ const DIRECTIVES = [
   },
   {
     name: 'het-text',
+    keyRequired: false,
     sourceType: SIGNAL_SOURCE_TYPE,
     allowMultiple: false,
     write: (el, key, value) => {
@@ -37,7 +38,17 @@ const DIRECTIVES = [
     defaultKey: 'textContent',
   },
   {
+    name: 'het-props',
+    keyRequired: true,
+    sourceType: SIGNAL_SOURCE_TYPE,
+    allowMultiple: true,
+    write: (el, key, value) => {
+      el[key] = value;
+    },
+  },
+  {
     name: 'het-model',
+    keyRequired: false,
     sourceType: SIGNAL_SOURCE_TYPE,
     allowMultiple: false,
     write: (el, key, value) => {

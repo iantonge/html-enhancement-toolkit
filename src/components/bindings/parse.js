@@ -164,6 +164,23 @@ function getParsedSignalBinding(
     key = inferModelKey(el);
     acquisitionStrategy = 'seed';
     expressionMetadata = undefined;
+  } else if (directive.keyRequired) {
+    const splitIndex = getTopLevelAssignmentIndex(declaration);
+    if (splitIndex === -1) {
+      throwInvalidBindingExpression(
+        bindingLoggingContext,
+        'Binding declaration must contain exactly one "="',
+      );
+    }
+    key = declaration.slice(0, splitIndex).trim();
+    const sourceExpression = declaration.slice(splitIndex + 1).trim();
+    if (!key || !sourceExpression) {
+      throwInvalidBindingExpression(
+        bindingLoggingContext,
+        'Binding declaration requires a target and source',
+      );
+    }
+    expressionMetadata = getExpressionMetadata(sourceExpression, bindingLoggingContext);
   } else {
     throwInvalidBindingExpression(
       bindingLoggingContext,
