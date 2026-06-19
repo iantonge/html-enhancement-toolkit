@@ -100,6 +100,14 @@ const fetchAndSwap = async (
     swapLoggingContext.effectiveTargetPaneName = finalTarget.name;
     swapLoggingContext.effectiveTargetPaneElement = finalTarget.el;
   }
+  const selectHeaderProvided = finalResponse.headers.has('X-HET-Select-Override');
+  const selectOverride = finalResponse.headers.get('X-HET-Select-Override');
+  const finalSelect = getFinalSelect(
+    select,
+    selectHeaderProvided,
+    selectOverride,
+    swapLoggingContext,
+  );
   const responseHtml = await finalResponse.text();
   const htmlForParse = trustedTypesPolicy?.createHTML(responseHtml) ?? responseHtml;
   const parsedDocument = parser.parseFromString(htmlForParse, 'text/html');
@@ -129,7 +137,7 @@ const fetchAndSwap = async (
     ...swapLoggingContext,
     requestDirectiveAttribute: also ? 'het-also' : '',
   };
-  if (!select || select.length === 0) {
+  if (!finalSelect || finalSelect.length === 0) {
     if (also && also.length) {
       alsoElements = applyAlsoReplacements(
         also,
@@ -153,13 +161,16 @@ const fetchAndSwap = async (
     ...swapLoggingContext,
     requestDirectiveAttribute: select ? 'het-select' : '',
   };
+  if (selectHeaderProvided) {
+    selectLoggingContext.responseSelectHeader = selectOverride;
+  }
   validateSelectedIds(
-    select,
+    finalSelect,
     finalTarget.el,
     newContent,
     selectLoggingContext,
   );
-  for (const id of select) {
+  for (const id of finalSelect) {
     const currentEl = getDescendantById(finalTarget.el, id);
     const replacement = getDescendantById(newContent, id);
     insertedElements.push(replaceContent(currentEl, replacement));
@@ -181,6 +192,21 @@ const fetchAndSwap = async (
   });
   loadedContent.dispatchEvent(afterLoadContentEvent);
   return;
+};
+
+const getFinalSelect = (
+  select,
+  selectHeaderProvided,
+  selectOverride,
+  swapLoggingContext,
+) => {
+  if (!selectHeaderProvided) return select;
+  if ((selectOverride ?? '').trim() === '') return undefined;
+  const selectOverrideLoggingContext = {
+    ...swapLoggingContext,
+    requestDirectiveAttribute: 'X-HET-Select-Override',
+  };
+  return getSelectIds(selectOverride, selectOverrideLoggingContext);
 };
 
 const getFinalTarget = (target, targetOverride, requestLoggingContext) => {

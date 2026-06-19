@@ -115,6 +115,10 @@ Responses must be HTML containing exactly one matching target pane, regardless o
 | Header | Effect |
 | --- | --- |
 | `X-HET-Target-Override` | Replace a different pane than originally targeted. The override pane must exist in the current document and response. |
+| `X-HET-Select-Override` | Override `het-select` ids. Use a whitespace-separated list of ids; an empty value clears selection and performs a full pane replacement. |
+
+When using `X-HET-Target-Override`, it is usually safer to also clear selection (`X-HET-Select-Override: ""`) unless the selected ids are guaranteed to exist in the overridden target pane.
+
 ## Request coordination
 
 HET coordinates in-flight requests by target pane so overlapping updates do not race and leave the UI in an inconsistent state.
