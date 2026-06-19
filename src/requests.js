@@ -680,6 +680,7 @@ const updateInteractiveElements = (container, requestId, func) => {
 };
 
 const disableElement = (el, requestId) => {
+  if (el.disabled) return;
   el.disabled = true;
   el.setAttribute('data-het-disabled', requestId);
 };

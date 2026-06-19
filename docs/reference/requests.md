@@ -152,7 +152,7 @@ When an enhanced request starts, HET marks the target pane as busy:
 - Adds the `het-busy` CSS class.
 - If the request is initiated by a form submission, disables controls for that form.
 
-When the request finishes or is aborted, HET removes the busy markers and re-enables form controls.
+When the request finishes or is aborted, HET removes the busy markers and only re-enables form controls that HET disabled for that specific request.
 
 ## Request coordination
 
