@@ -71,7 +71,9 @@ const submitPipeline = async (event) => {
     requestCoordination.toAbort.forEach((controller) => controller.abort());
     const requestId = getRequestId();
     startUiFeedback(ctx.target.el, requestId);
-    updateForm(ctx.form, requestId, disableElement);
+    if (!ctx.isBackgroundSubmission) {
+      updateForm(ctx.form, requestId, disableElement);
+    }
     inFlightRequests.set(ctx.target.el, ctx.abortController);
     try {
       const response = await fetchAndSwap(
@@ -91,7 +93,9 @@ const submitPipeline = async (event) => {
       if (error.name !== 'AbortError') throw error;
     } finally {
       inFlightRequests.delete(ctx.target.el);
-      updateForm(ctx.form, requestId, enableElement);
+      if (!ctx.isBackgroundSubmission) {
+        updateForm(ctx.form, requestId, enableElement);
+      }
       endUiFeedback(ctx.target.el, requestId);
     }
   } catch (error) {
@@ -445,6 +449,7 @@ const getSubmitContext = (event) => {
     getEffectiveDirectiveValue(form, submitter, 'het-also'),
     alsoLoggingContext,
   );
+  const isBackgroundSubmission = form.hasAttribute('het-background');
   const resolvedActionUrl = new URL(resolvedAction, window.location.href);
   if (resolvedActionUrl.origin !== window.location.origin)
     throw new Error(
@@ -472,6 +477,7 @@ const getSubmitContext = (event) => {
     abortController,
     select,
     also,
+    isBackgroundSubmission,
     initiator: form,
     submitter,
     loggingContext,

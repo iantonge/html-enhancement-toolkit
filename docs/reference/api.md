@@ -105,6 +105,7 @@ const trustedTypesPolicy = trustedTypes.createPolicy('het', {
         'het-target',
         'het-select',
         'het-also',
+        'het-background',
         'het-mount-pending',
         'name',
         'content',

@@ -23,6 +23,7 @@
 | `het-target` | Same-origin links, forms, submit buttons | Pane name | No | On forms, a submitter with `het-target` overrides the form value. |
 | `het-select` | Links, forms, submit buttons | Element id list | Yes | Replaces matching descendants inside the target pane. On forms, a submitter with `het-select` overrides the form value; an empty submitter value clears the form value. |
 | `het-also` | Links, forms, submit buttons | Element id list | Yes | Replaces matching elements outside the target pane. On forms, a submitter with `het-also` overrides the form value; an empty submitter value clears the form value. |
+| `het-background` | Forms | Boolean attribute | No | Skips form disabling for that submission; the target pane is still marked busy. |
 
 ## Links
 
@@ -54,6 +55,7 @@ Add `het-target="<pane-name>"` to a same-origin form to submit it with `fetch` a
 - `het-target` on the clicked submit button overrides `het-target` on the form.
 - `het-select` and `het-also` on the clicked submit button override the form attributes. Use empty submitter attributes (`het-select=""`, `het-also=""`) to clear form-level partial or additional replacements for that submission.
 - Do not put `het-target` on cross-origin form submissions; HET treats that as an error.
+- If `het-background` is present on the form, HET does not disable the form while the request is in flight. The target pane is still marked busy.
 
 ## Panes
 
@@ -150,7 +152,7 @@ When an enhanced request starts, HET marks the target pane as busy:
 
 - Sets `aria-busy="true"` on the target pane.
 - Adds the `het-busy` CSS class.
-- If the request is initiated by a form submission, disables controls for that form.
+- If the request is initiated by a form submission, disables controls for that form unless the form has `het-background`.
 
 When the request finishes or is aborted, HET removes the busy markers and only re-enables form controls that HET disabled for that specific request.
 
