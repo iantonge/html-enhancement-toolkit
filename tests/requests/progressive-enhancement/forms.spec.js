@@ -11,6 +11,16 @@ test.describe('form progressive enhancement (core)', () => {
     expect(content).toContain('GET form submitted');
   });
 
+  test('uses formaction when provided', async ({ page }) => {
+    await page.goto('/requests/progressive-enhancement/forms/formaction');
+    await Promise.all([
+      page.waitForSelector('#response-message'),
+      page.click('#formaction-submit'),
+    ]);
+    const content = await page.textContent('#response-message');
+    expect(content).toContain('Another GET form submitted');
+  });
+
   test('includes submitter name/value in request', async ({ page }) => {
     await page.goto('/requests/progressive-enhancement/forms/additional');
     await Promise.all([
@@ -99,6 +109,7 @@ test.describe('form progressive enhancement (core)', () => {
       formElementId: window.hetErrors.at(-1).cause.formElement.id,
       submitterElementId: window.hetErrors.at(-1).cause.submitterElement.id,
       formAction: window.hetErrors.at(-1).cause.formAction,
+      submitterAction: window.hetErrors.at(-1).cause.submitterAction,
       formTargetName: window.hetErrors.at(-1).cause.formTargetName,
       resolvedTargetName: window.hetErrors.at(-1).cause.resolvedTargetName,
       resolvedActionUrl: window.hetErrors.at(-1).cause.resolvedActionUrl,
@@ -106,7 +117,8 @@ test.describe('form progressive enhancement (core)', () => {
     expect(cause).toEqual({
       formElementId: 'form',
       submitterElementId: 'external-submit',
-      formAction: 'https://example.com/submit',
+      formAction: '/requests/progressive-enhancement/forms/get-form',
+      submitterAction: 'https://example.com/submit',
       formTargetName: 'main',
       resolvedTargetName: 'main',
       resolvedActionUrl: 'https://example.com/submit',

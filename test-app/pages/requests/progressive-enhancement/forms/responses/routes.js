@@ -12,6 +12,14 @@ router.get('/get-form', (request, response) => {
   });
 });
 
+router.get('/another-get-form', (request, response) => {
+  const someField = request.query['some-field'] ?? '';
+  response.render('requests/progressive-enhancement/forms/responses/another-get-form', {
+    title: 'Form Progressive Enhancement (Core)',
+    message: `Another GET form submitted: ${someField}`,
+  });
+});
+
 router.get('/default-form', (request, response) => {
   const someField = request.query['some-field'] ?? '';
   response.render('requests/progressive-enhancement/forms/responses/default-form', {

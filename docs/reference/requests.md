@@ -40,7 +40,7 @@ Add `het-target="<pane-name>"` to a same-origin form to submit it with `fetch` a
 </form>
 ```
 
-- HET respects native form defaults, default `method`/`action`, and submitter name/value pairs.
+- HET respects native form defaults and submitter overrides: `formaction`, default `method`/`action`, and submitter name/value pairs.
 - HET submits `GET` forms as query strings and submits non-GET forms as `application/x-www-form-urlencoded`.
 - Do not put `het-target` on cross-origin form submissions; HET treats that as an error.
 

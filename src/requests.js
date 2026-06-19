@@ -127,7 +127,10 @@ const getSubmitContext = (event) => {
   const formMethod = (form.getAttribute('method') || 'GET').toUpperCase();
   const resolvedMethod = formMethod;
   const formAction = form.getAttribute('action') || window.location.href;
-  const resolvedAction = formAction;
+  const submitterAction = submitter?.hasAttribute('formaction')
+    ? submitter.getAttribute('formaction')
+    : undefined;
+  const resolvedAction = submitterAction || formAction;
   const loggingContext = {
     formElement: form,
     resolvedTargetName: targetName,
@@ -141,6 +144,9 @@ const getSubmitContext = (event) => {
   }
   if (formTargetName) {
     loggingContext.formTargetName = formTargetName;
+  }
+  if (submitterAction) {
+    loggingContext.submitterAction = submitterAction;
   }
   const resolvedActionUrl = new URL(resolvedAction, window.location.href);
   if (resolvedActionUrl.origin !== window.location.origin)
