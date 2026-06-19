@@ -4,6 +4,7 @@ import duplicatePaneRoutes from './duplicate-pane-form/routes.js';
 import duplicateTargetResponseRoutes from './duplicate-target-response/routes.js';
 import internalRoutes from './internal/routes.js';
 import internalSpanRoutes from './internal-span/routes.js';
+import missingTargetResponseRoutes from './missing-target-response/routes.js';
 import responsesRoutes from './responses/routes.js';
 
 const router = Router();
@@ -18,6 +19,7 @@ router.use(duplicatePaneRoutes);
 router.use(duplicateTargetResponseRoutes);
 router.use(internalRoutes);
 router.use(internalSpanRoutes);
+router.use(missingTargetResponseRoutes);
 router.use(responsesRoutes);
 
 export default router;

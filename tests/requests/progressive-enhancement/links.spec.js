@@ -1,6 +1,36 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('link progressive enhancement (core)', () => {
+  test('throws when response does not include the target pane', async ({
+    page,
+  }) => {
+    await page.goto('/requests/progressive-enhancement/links/missing-target-response');
+    await page.click('#link');
+    await page.waitForFunction(() =>
+      window.hetErrors.some((error) => error.message === 'HET Error: Target pane not found in server response',),
+    );
+    const errors = await page.evaluate(() => window.hetErrors.map((error) => error.message));
+    expect(errors).toContain(
+      'HET Error: Target pane not found in server response',
+    );
+    const cause = await page.evaluate(() => ({
+      linkElementId: window.hetErrors.at(-1).cause.linkElement.id,
+      linkTargetName: window.hetErrors.at(-1).cause.linkTargetName,
+      resolvedTargetName: window.hetErrors.at(-1).cause.resolvedTargetName,
+      targetPane: window.hetErrors.at(-1).cause.targetPaneElement.getAttribute('het-pane'),
+      requestUrl: window.hetErrors.at(-1).cause.requestUrl,
+      requestMethod: window.hetErrors.at(-1).cause.requestMethod,
+    }));
+    expect(cause).toEqual({
+      linkElementId: 'link',
+      linkTargetName: 'main',
+      resolvedTargetName: 'main',
+      targetPane: 'main',
+      requestUrl: 'http://127.0.0.1:3000/requests/progressive-enhancement/links/responses/no-target',
+      requestMethod: 'GET',
+    });
+  });
+
   test('throws when response includes duplicate target panes', async ({
     page,
   }) => {

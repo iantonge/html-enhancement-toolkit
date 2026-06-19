@@ -8,6 +8,12 @@ router.get('/responses/internal-link', (request, response) => {
   });
 });
 
+router.get('/responses/no-target', (request, response) => {
+  response.render('requests/progressive-enhancement/links/responses/no-target', {
+    title: 'Link Progressive Enhancement (Core)',
+  });
+});
+
 router.get('/responses/duplicate-target', (request, response) => {
   response.render('requests/progressive-enhancement/links/responses/duplicate-target', {
     title: 'Link Progressive Enhancement (Core)',
