@@ -4,6 +4,7 @@
     <div het-component="het-props-write-error">
       <p
         id="error-target"
+        het-ref="target"
         het-props="customValue=count"
         class="mb-0 text-muted">
         pending
@@ -12,8 +13,8 @@
   </div>
 </section>
 <script nonce="{{{cspNonce}}}">
-  window.HET.registerComponent('het-props-write-error', ({ signals }) => {
-    Object.defineProperty(document.getElementById('error-target'), 'customValue', {
+  window.HET.registerComponent('het-props-write-error', ({ refs, signals }) => {
+    Object.defineProperty(refs.target, 'customValue', {
       configurable: true,
       set() {
         throw new Error('HET test error: write failed');

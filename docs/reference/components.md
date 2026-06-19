@@ -35,6 +35,23 @@ Set a value to mount a registered component by name, or leave the attribute empt
 
 Register named components before calling `init()`. Anonymous roots are useful when HTML bindings, imports, exports, sync, and cleanup use the normal component lifecycle without a registered setup function.
 
+### `het-ref`
+
+Use `het-ref` to expose DOM element references in `setup({ refs })`.
+The `refs` object includes elements marked with `het-ref` on the component root and its descendants, but excludes elements inside nested `[het-component]` subtrees.
+
+```html
+<div het-component="profileForm">
+  <input het-ref="emailInput" type="email">
+</div>
+```
+
+```js
+HET.registerComponent('profileForm', ({ refs }) => {
+  refs.emailInput?.focus();
+});
+```
+
 ### `het-mount-pending`
 
 Use `het-mount-pending` to mark a component root until its component mount batch completes, then HET removes the attribute automatically. This can drive CSS that should only apply before HET has finished mounting the component and its nested components.

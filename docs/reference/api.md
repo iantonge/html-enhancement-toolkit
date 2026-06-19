@@ -43,6 +43,7 @@ Parameters:
 `setup(context)` receives:
 
 - `el`: the component root element.
+- `refs`: elements in this component scope marked with `het-ref`.
 - `signals`: the component signal registry.
 - `onCleanup(fn)`: register cleanup work to run when the component is destroyed.
 

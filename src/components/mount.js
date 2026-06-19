@@ -50,6 +50,12 @@ function mountComponent(rootEl, setup, options = {}) {
   const componentLoggingContext = getComponentCause(rootEl);
   const signals = createSignalsProxy(rawSignals, componentLoggingContext);
   const importDeclarations = getImportDeclarations(rootEl, componentLoggingContext);
+  const refs = Object.fromEntries(
+    scopedQuerySelectorAll(rootEl, '[het-ref]').map((refEl) => [
+      refEl.getAttribute('het-ref'),
+      refEl,
+    ]),
+  );
   const cleanups = [];
   const onCleanup = (fn) => {
     if (typeof fn !== 'function') {
@@ -60,7 +66,7 @@ function mountComponent(rootEl, setup, options = {}) {
     }
     cleanups.push(fn);
   };
-  const ctx = { el: rootEl, signals, onCleanup };
+  const ctx = { el: rootEl, refs, signals, onCleanup };
   const boundEls = scopedQuerySelectorAll(rootEl, DIRECTIVES_SELECTOR);
   const bindings = getBindings(boundEls, componentLoggingContext);
   const syncBindings = bindings.filter((binding) => binding.acquisitionStrategy === 'sync');
