@@ -4,8 +4,8 @@ import {
   registerComponent,
 } from './components.js';
 
-function init() {
-  initComponents();
+function init(config) {
+  initComponents(config);
 }
 
 function destroy() {

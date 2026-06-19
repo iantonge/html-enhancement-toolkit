@@ -1,11 +1,12 @@
-import { handleError } from './error-handler.js';
+import { setOnError, handleError } from './error-handler.js';
 import {
   destroyComponent,
   mountComponents,
 } from './mount.js';
 import { initializeSyncEvents, destroySyncEvents } from './sync.js';
 
-function init() {
+function init(config) {
+  setOnError(config?.onError);
   try {
     mountComponents(document);
     initializeSyncEvents();

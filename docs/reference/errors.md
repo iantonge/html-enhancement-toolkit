@@ -1,7 +1,7 @@
 # Error Reference
 
 HET-created errors use the `HET Error:` prefix.
-Runtime errors are logged with their structured `cause`.
+Most runtime errors are delivered to `init({ onError })`; `registerComponent()` validation errors are thrown directly.
 
 Each section below covers one exact error message with:
 

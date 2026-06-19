@@ -7,7 +7,7 @@ test.describe('components lifecycle and registration', () => {
     await expect(page.locator('#setup-count')).toHaveText('Setup count: 1');
   });
 
-  test('default error logging includes cause and continues', async ({ page }) => {
+  test('default onError logs errors with cause and continues', async ({ page }) => {
     await page.goto('/');
 
     const logged = await page.evaluate(async () => {

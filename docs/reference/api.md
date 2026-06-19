@@ -2,11 +2,28 @@
 
 This section collects the JavaScript entry points and initialization options for lookup after the core HTML attributes are familiar.
 
-## `init()`
+## `init(config)`
 
 Initialize HET. This mounts registered components.
 
-`init` accepts no parameters and does not return a value.
+`config` is optional, and every config property is optional. Omitted properties use the defaults described below. `init` does not return a value.
+
+### Config options
+
+#### `onError(error)`
+
+Handle internal errors with your own logging or reporting. Signature: `(error: Error | DOMException | unknown) => void`. Default: log and continue. Return value is ignored.
+
+HET-created errors use the message prefix `HET Error:` and may include structured diagnostic data on `error.cause`. See the [error reference](errors.md).
+
+```js
+HET.init({
+  onError: (error) => {
+    console.error(error, error.cause);
+    // Forward to your telemetry here
+  },
+});
+```
 
 ## `destroy()`
 
