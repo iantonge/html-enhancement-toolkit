@@ -27,4 +27,26 @@ test.describe('components structural templates', () => {
     expect(cleanupIds).toEqual([3, 2]);
   });
 
+  test('het-if mounts, unmounts, and reuses the existing clone when the source stays truthy', async ({ page }) => {
+    await page.goto('/components/structural/if-toggle');
+
+    await expect(page.locator('#if-host > article')).toHaveCount(0);
+
+    await page.click('#show-item');
+    await expect(page.locator('#if-host .if-label')).toHaveText('Primary');
+    await expect(page.locator('#if-host .if-mount')).toHaveText('1');
+
+    await page.click('#if-mutate');
+    await expect(page.locator('#if-host .if-label')).toHaveText('Primary!');
+
+    await page.click('#swap-item');
+    await expect(page.locator('#if-host .if-label')).toHaveText('Replacement');
+    await expect(page.locator('#if-host .if-mount')).toHaveText('1');
+
+    await page.click('#hide-item');
+    await expect(page.locator('#if-host > article')).toHaveCount(0);
+    const cleanupIds = await page.evaluate(() => window.structuralIfCleanupIds.slice());
+    expect(cleanupIds).toEqual(['1']);
+  });
+
 });

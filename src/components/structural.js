@@ -1,10 +1,18 @@
 import { effect } from '@preact/signals-core';
+import {
+  FOR_ATTR,
+} from './constants.js';
 import { handleError } from './error-handler.js';
 import { getBindingCause } from './logging.js';
 
 function initializeStructuralBindings(ctx, structuralBindings, mountApi) {
   for (const binding of structuralBindings) {
-    initializeForBinding(ctx, binding, mountApi);
+    if (binding.dirName === FOR_ATTR) {
+      initializeForBinding(ctx, binding, mountApi);
+      continue;
+    }
+
+    initializeIfBinding(ctx, binding, mountApi);
   }
 }
 
@@ -21,6 +29,30 @@ function initializeForBinding(ctx, binding, mountApi) {
   const dispose = effect(() => {
     try {
       reconcileForBlock(ctx, binding, block, signalRef.value, mountApi);
+    } catch (error) {
+      handleError(error);
+    }
+  });
+
+  ctx.onCleanup(() => {
+    dispose();
+    destroyStructuralBlock(block, mountApi);
+  });
+}
+
+function initializeIfBinding(ctx, binding, mountApi) {
+  const signalRef = ctx.signals[binding.source];
+  if (!signalRef) {
+    throw new Error(
+      'HET Error: Bound signal does not exist',
+      { cause: getBindingCause(binding, { signalName: binding.source }) },
+    );
+  }
+
+  const block = createStructuralBlock(binding);
+  const dispose = effect(() => {
+    try {
+      reconcileIfBlock(ctx, binding, block, signalRef.value, mountApi);
     } catch (error) {
       handleError(error);
     }
@@ -68,6 +100,26 @@ function reconcileForBlock(ctx, binding, block, value, mountApi) {
   }
 
   block.activeCount = nextLength;
+}
+
+function reconcileIfBlock(ctx, binding, block, value, mountApi) {
+  if (!value) {
+    if (block.clones[0]) {
+      finalizeStructuralCloneUnmount(block, block.clones[0], mountApi);
+    }
+    block.activeCount = 0;
+    return;
+  }
+
+  const itemSignals = getForwardedSignalsForValue(value, binding);
+  if (block.clones[0]) {
+    retargetForwardedSignals(block.clones[0], itemSignals);
+    block.activeCount = 1;
+    return;
+  }
+
+  block.clones.push(createStructuralClone(ctx, binding, itemSignals, undefined, mountApi));
+  block.activeCount = 1;
 }
 
 function getForwardedSignalsForValue(value, binding) {

@@ -399,7 +399,7 @@ Fix the component by choosing either imported ownership or local acquisition, no
 
 ### `HET Error: Structural template requires exactly one directive`
 
-A `<template>` did not declare `het-for`.
+A `<template>` used neither `het-if` nor `het-for`, or used both at once.
 
 ### `HET Error: Structural template must contain exactly one root element`
 
@@ -416,6 +416,10 @@ The structural template root named a component that was not registered.
 ### `HET Error: het-for item must be an object`
 
 One `het-for` item was not an object.
+
+### `HET Error: het-if item must be an object`
+
+`het-if` received a truthy non-object value where forwarded signal objects are required.
 
 ### `HET Error: Structural item property must be a signal`
 

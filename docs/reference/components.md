@@ -358,13 +358,20 @@ If multiple ancestors export the same signal name, HET resolves to the nearest e
 
 ## Structural templates
 
-HET supports `het-for` on `<template>` elements.
+HET supports two structural directives on `<template>` elements:
+
+- `het-if`
+- `het-for`
 
 Each structural template must:
 
 - use exactly one structural directive
 - contain exactly one root element
 - use a root element that is itself a component
+
+### `het-if`
+
+`het-if="signalName"` mounts the template root when the signal value is truthy and removes it when the signal value is falsy.
 
 ### `het-for`
 
@@ -415,4 +422,5 @@ Bindings declared in HTML are cleaned up automatically.
 | `het-sync` | Re-read DOM snapshots on mount and `het:sync` | Yes | Semicolon-separated declarations. |
 | `het-exports` | Export signals to descendants | Yes | Whitespace-separated signal names. |
 | `het-imports` | Import nearest exported signals | Yes | Whitespace-separated declarations. |
+| `het-if` | Structural conditional template | No | `<template>` only. |
 | `het-for` | Structural repeated template | No | `<template>` only. |

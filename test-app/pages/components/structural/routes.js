@@ -14,4 +14,10 @@ router.get('/for-list', (request, response) => {
   });
 });
 
+router.get('/if-toggle', (request, response) => {
+  response.render('components/structural/if-toggle', {
+    title: 'het-if toggle',
+  });
+});
+
 export default router;
