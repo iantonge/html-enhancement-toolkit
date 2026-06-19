@@ -86,4 +86,11 @@ test.describe('components het-exports / het-imports', () => {
     });
   });
 
+  test('reports error when imported and local signals conflict', async ({ page }) => {
+    await page.goto('/components/het-imports/signal-name-conflict');
+    await page.waitForFunction(() =>
+      window.hetErrors.some((error) => error.message === 'HET Error: Imported signal conflicts with local initialization'),
+    );
+  });
+
 });

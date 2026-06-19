@@ -329,4 +329,9 @@ An ancestor exported the requested name, but the signal itself was not available
 
 Fix the exporting component by creating or acquiring the exported signal.
 
+### `HET Error: Imported signal conflicts with local initialization`
+
+A component tried to import a signal name and also initialize that same local name with `het-seed`.
+
+Fix the component by choosing either imported ownership or local acquisition, not both.
 

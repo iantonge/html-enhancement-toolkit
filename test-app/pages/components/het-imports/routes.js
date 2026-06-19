@@ -38,4 +38,10 @@ router.get('/export-missing-signal', (request, response) => {
   });
 });
 
+router.get('/signal-name-conflict', (request, response) => {
+  response.render('components/het-imports/signal-name-conflict', {
+    title: 'Import and local signal conflict',
+  });
+});
+
 export default router;
