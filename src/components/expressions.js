@@ -121,7 +121,16 @@ function validateIdentifierNode(node, metadata, bindingLoggingContext) {
 
 function validateMemberExpression(node, metadata, bindingLoggingContext) {
   if (node.computed) {
-    throwInvalidBindingExpression(bindingLoggingContext, 'Invalid expression');
+    if (
+      node.object.type !== 'Identifier' ||
+      !['$attrs', '$boolAttrs', '$classes'].includes(node.object.name) ||
+      node.property.type !== 'Literal' ||
+      typeof node.property.value !== 'string'
+    ) {
+      throwInvalidBindingExpression(bindingLoggingContext, 'Invalid expression');
+    }
+    metadata.hasContextuals = true;
+    return;
   }
 
   if (node.property.type !== 'Identifier') {
@@ -294,7 +303,10 @@ function getContextualValue(name, runtimeContext) {
   if (name === '$target') return runtimeContext.event?.target ?? runtimeContext.binding.el;
   if (name === '$currentTarget') return runtimeContext.event?.currentTarget ?? runtimeContext.binding.el;
   if (name === '$text') return runtimeContext.binding.el.textContent;
-  return createPropsSnapshot(runtimeContext.binding.el);
+  if (name === '$props') return createPropsSnapshot(runtimeContext.binding.el);
+  if (name === '$attrs') return createAttrsSnapshot(runtimeContext.binding.el);
+  if (name === '$boolAttrs') return createBoolAttrsSnapshot(runtimeContext.binding.el);
+  return createClassesSnapshot(runtimeContext.binding.el);
 }
 
 function createPropsSnapshot(el) {
@@ -304,6 +316,37 @@ function createPropsSnapshot(el) {
       return el[property];
     },
   });
+}
+
+function createAttrsSnapshot(el) {
+  return new Proxy({}, {
+    get(_target, property) {
+      if (typeof property !== 'string') return undefined;
+      return el.getAttribute(camelToKebab(property));
+    },
+  });
+}
+
+function createBoolAttrsSnapshot(el) {
+  return new Proxy({}, {
+    get(_target, property) {
+      if (typeof property !== 'string') return undefined;
+      return el.hasAttribute(camelToKebab(property));
+    },
+  });
+}
+
+function createClassesSnapshot(el) {
+  return new Proxy({}, {
+    get(_target, property) {
+      if (typeof property !== 'string') return undefined;
+      return el.classList.contains(property);
+    },
+  });
+}
+
+function camelToKebab(value) {
+  return value.replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase();
 }
 
 export {

@@ -15,6 +15,9 @@ const CONTEXTUAL_IDENTIFIERS = new Set([
   '$currentTarget',
   '$text',
   '$props',
+  '$attrs',
+  '$boolAttrs',
+  '$classes',
 ]);
 const INTRINSIC_IDENTIFIERS = new Set(['$int', '$float', '$bool']);
 const EMPTY_EXPORTS_SET = new Set();

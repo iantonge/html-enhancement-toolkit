@@ -244,7 +244,7 @@ This error attaches the normal structured binding `cause`.
 
 ### `HET Error: Output binding expression cannot use contextual values`
 
-An output binding such as `het-text` or `het-props` used contextual snapshot values like `$target`, `$event`, or `$props`.
+An output binding such as `het-text` or `het-props` used contextual snapshot values like `$target`, `$event`, or `$attrs`.
 
 ```html
 <div het-component>

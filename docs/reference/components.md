@@ -112,6 +112,9 @@ HET provides these contextual snapshot values:
 - `$currentTarget`
 - `$text`
 - `$props`
+- `$attrs`
+- `$boolAttrs`
+- `$classes`
 
 These values are snapshots by design. They are not reactive state.
 
@@ -119,6 +122,22 @@ Context semantics:
 
 - `$text` reads `element.textContent`
 - `$props.foo` reads `element.foo`
+- `$attrs.foo` reads `getAttribute("foo")`
+- `$boolAttrs.foo` reads `hasAttribute("foo")`
+- `$classes.foo` reads `classList.contains("foo")`
+- `$classes["foo-bar"]` reads `classList.contains("foo-bar")`
+
+`$classes`, `$attrs`, and `$boolAttrs` support bracket access, and only with a string literal name.
+
+For `$attrs` and `$boolAttrs`, dot-property names use mechanical camelCase-to-kebab-case mapping:
+
+- `$attrs.dataPrice` reads `data-price`
+- `$attrs.ariaExpanded` reads `aria-expanded`
+- `$attrs["ariaExpanded"]` reads `aria-expanded`
+- `$attrs["aria-expanded"]` reads `aria-expanded`
+- `$attrs["foo:bar"]` reads `foo:bar`
+
+`$boolAttrs` uses the same attribute name mapping and returns true or false based on whether the attribute exists.
 
 ### Contextual functions
 
@@ -133,7 +152,8 @@ Examples:
 ```html
 <input het-on="input->quantity=$int($target.value)">
 <output het-seed="count=$int($text)" het-text="count">0</output>
-<input het-seed="price=$float($props.value)" value="3.50">
+<div het-seed="price=$float($attrs.dataPrice)"></div>
+<button het-on="click->expanded=$bool($attrs.ariaExpanded)"></button>
 ```
 
 ### Multi-binding syntax
@@ -149,7 +169,7 @@ An optional trailing semicolon is allowed.
 
 ## Output bindings
 
-Output bindings evaluate signal-only expressions and write the result to the DOM. Output expressions must not use contextual values such as `$target` or `$props`.
+Output bindings evaluate signal-only expressions and write the result to the DOM. Output expressions must not use contextual values such as `$target` or `$attrs`.
 
 ### `het-text`
 
@@ -239,7 +259,11 @@ Use `het-seed` to create local signals from DOM snapshots before `setup` runs.
 Multiple acquisitions use semicolons:
 
 ```html
-<input value="ready" het-seed="status=$props.value">
+<div
+  data-status="ready"
+  hidden
+  het-seed="status=$attrs.dataStatus; isHidden=$boolAttrs.hidden">
+</div>
 ```
 
 A signal may have only one acquisition source.

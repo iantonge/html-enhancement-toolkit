@@ -5,8 +5,9 @@
       <input
         id="assignment-input"
         value="5"
+        data-label="ready"
         class="form-control"
-        het-on="input->count=$int($target.value); input->label='ready'; input->copy=label; input->status='done'; input->enabled=$bool('true')">
+        het-on="input->count=$int($target.value); input->label=$attrs.dataLabel; input->copy=label; input->status='done'; input->enabled=$bool('true')">
       <p id="assignment-count" het-props="textContent=count" class="mt-2 mb-0 text-muted"></p>
       <p id="assignment-label" het-props="textContent=label" class="mb-0 text-muted"></p>
       <p id="assignment-copy" het-props="textContent=copy" class="mb-0 text-muted"></p>
