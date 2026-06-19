@@ -74,4 +74,11 @@ test.describe('components het-model', () => {
     );
   });
 
+  test('reports error for explicit property het-model expression', async ({ page }) => {
+    await page.goto('/components/het-model/invalid-property-expression');
+    await page.waitForFunction(() =>
+      window.hetErrors.some((error) => error.message === 'HET Error: het-model binding must be a signal name'),
+    );
+  });
+
 });

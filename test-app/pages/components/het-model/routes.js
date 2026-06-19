@@ -44,4 +44,10 @@ router.get('/invalid-expression-extra-equals', (request, response) => {
   });
 });
 
+router.get('/invalid-property-expression', (request, response) => {
+  response.render('components/het-model/invalid-property-expression', {
+    title: 'Invalid property expression',
+  });
+});
+
 export default router;
