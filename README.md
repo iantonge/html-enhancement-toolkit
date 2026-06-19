@@ -89,7 +89,7 @@ HET.init();
 HET is built around a few small primitives:
 
 - `het-component` mounts a small reactive component on existing HTML instead of taking over the whole page.
-- Signals hold component state. They can be created in `setup` or acquired from the DOM with `het-seed`.
+- Signals hold component state. They can be created in `setup`, acquired from the DOM with `het-seed`, or imported from an ancestor component.
 - Component bindings use a limited subset of JavaScript expressions. HET parses and interprets those expressions itself instead of executing arbitrary JavaScript.
 - `het-seed` reads an initial value from the DOM once.
 

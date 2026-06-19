@@ -7,6 +7,7 @@
 - [Limited JavaScript expressions](#limited-javascript-expressions)
 - [Output bindings](#output-bindings)
 - [Input and event bindings](#input-and-event-bindings)
+- [Signal sharing](#signal-sharing)
 - [Component lifecycle notes](#component-lifecycle-notes)
 - [Component attribute support](#component-attribute-support)
 
@@ -32,8 +33,9 @@ Signals can come from three places:
 
 - Local signals initialized in `setup`, such as `signals.count = HET.signals.signal(0)`.
 - Acquired signals created from DOM values with `het-seed` before `setup` runs.
+- Imported signals declared with `het-imports`.
 
-Initialize only the local signals your component owns. Do not initialize signals that are acquired from the DOM.
+Initialize only the local signals your component owns. Do not initialize signals that are acquired from the DOM or imported from an ancestor.
 
 In the IIFE build, HET exposes these Preact Signals helpers on `HET.signals`:
 
@@ -209,6 +211,33 @@ Multiple acquisitions use semicolons:
 
 A signal may have only one acquisition source.
 
+## Signal sharing
+
+### `het-exports`
+
+Use `het-exports` on a component root to expose named signals to descendant components.
+The value is a whitespace-separated signal name list.
+
+```html
+<section het-component="searchPage" het-exports="query">
+  ...
+</section>
+```
+
+### `het-imports`
+
+Use `het-imports` on a descendant component root to import the nearest matching exported signal.
+The value is a whitespace-separated declaration list.
+
+- `localName` imports a signal under the same name
+- `localName=sourceName` imports it under an alias
+
+```html
+<aside het-component="searchSidebar" het-imports="sidebarQuery=query"></aside>
+```
+
+If multiple ancestors export the same signal name, HET resolves to the nearest exporting ancestor.
+
 ## Component lifecycle notes
 
 - HET mounts component roots in depth order so parents mount before descendants.
@@ -227,3 +256,5 @@ A signal may have only one acquisition source.
 | `het-model:bool` | Two-way control binding with boolean coercion | No | Reads with `$bool` semantics. |
 | `het-on` | Event handlers and event-time assignments | Yes | Semicolon-separated declarations. |
 | `het-seed` | Create signals from DOM snapshots before setup | Yes | Semicolon-separated declarations. |
+| `het-exports` | Export signals to descendants | Yes | Whitespace-separated signal names. |
+| `het-imports` | Import nearest exported signals | Yes | Whitespace-separated declarations. |

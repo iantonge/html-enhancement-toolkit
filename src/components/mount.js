@@ -7,6 +7,11 @@ import { getBindingInputValue } from './expressions.js';
 import { getComponentCause, getBindingCause } from './logging.js';
 import { getMountableComponent } from './registry.js';
 import { getBindings } from './bindings/parse.js';
+import {
+  getImportDeclarations,
+  initializeForwardedSignals,
+  resolveImports,
+} from './imports.js';
 import { initializeBindings } from './runtime.js';
 
 function mountComponents(root) {
@@ -31,7 +36,7 @@ function mountComponents(root) {
   }
 }
 
-function mountComponent(rootEl, setup) {
+function mountComponent(rootEl, setup, options = {}) {
   if (rootEl.__het_instance) return false;
 
   const rawSignals = {};
@@ -39,6 +44,7 @@ function mountComponent(rootEl, setup) {
   const signalInitBindings = Object.create(null);
   const componentLoggingContext = getComponentCause(rootEl);
   const signals = createSignalsProxy(rawSignals, componentLoggingContext);
+  const importDeclarations = getImportDeclarations(rootEl, componentLoggingContext);
   const cleanups = [];
   const addCleanup = (fn) => cleanups.push(fn);
   const setupCtx = { el: rootEl, signals };
@@ -47,7 +53,28 @@ function mountComponent(rootEl, setup) {
   const bindings = getBindings(boundEls, componentLoggingContext);
   const bindingsToInit = bindings.filter((binding) => binding.acquisitionStrategy);
 
+  initializeForwardedSignals(
+    options.importedSignals,
+    rawSignals,
+    signalMeta,
+    componentLoggingContext,
+  );
+
+  resolveImports(
+    rootEl,
+    importDeclarations,
+    rawSignals,
+    signalMeta,
+    componentLoggingContext,
+  );
+
   for (const binding of bindingsToInit) {
+    if (signalMeta[binding.source] === 'imported' || signalMeta[binding.source] === 'forwarded') {
+      throw new Error(
+        'HET Error: Imported signal conflicts with local initialization',
+        { cause: getBindingCause(binding, { signalName: binding.source }) },
+      );
+    }
     if (rawSignals[binding.source]) {
       const existingBinding = signalInitBindings[binding.source];
       throw new Error(
@@ -76,6 +103,7 @@ function mountComponent(rootEl, setup) {
     signals,
     rawSignals,
     signalMeta,
+    importDeclarations,
     bindings,
     cleanup: () => {
       cleanups.forEach((fn) => fn());
