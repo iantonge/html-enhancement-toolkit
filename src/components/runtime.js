@@ -8,6 +8,7 @@ import { handleError } from './error-handler.js';
 import {
   assertExpressionSignalsExist,
   getBindingInputValue,
+  inferInputEvent,
 } from './expressions.js';
 import { getBindingCause } from './logging.js';
 
@@ -147,6 +148,23 @@ function configureSignalBinding(ctx, binding) {
     }
   });
   ctx.addCleanup(dispose);
+
+  if (binding.dirName === 'het-model') {
+    const updateFromEl = () => {
+      try {
+        const nextValue = getBindingInputValue(ctx, binding);
+        if (boundSignal.value !== nextValue) {
+          boundSignal.value = nextValue;
+        }
+      } catch (error) {
+        handleError(error);
+      }
+    };
+
+    const eventName = inferInputEvent(binding.key);
+    binding.el.addEventListener(eventName, updateFromEl);
+    ctx.addCleanup(() => binding.el.removeEventListener(eventName, updateFromEl));
+  }
 }
 
 export {

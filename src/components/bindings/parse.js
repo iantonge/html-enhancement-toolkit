@@ -5,11 +5,12 @@ import {
   FUNC_SOURCE_TYPE,
   INTRINSIC_IDENTIFIERS,
   KEYBOARD_EVENT_NAMES,
+  MODEL_TYPES,
   READ_SOURCE_TYPE,
   SIGNAL_SOURCE_TYPE,
 } from '../constants.js';
 import { DIRECTIVE_BY_NAME } from '../directives.js';
-import { getExpressionMetadata } from '../expressions.js';
+import { getExpressionMetadata, inferModelKey } from '../expressions.js';
 import { throwInvalidBindingExpression } from '../logging.js';
 
 function getBindings(boundEls, componentLoggingContext) {
@@ -24,6 +25,7 @@ function getBindings(boundEls, componentLoggingContext) {
         parsedAttr.acquisitionStrategy,
         el,
         componentLoggingContext,
+        parsedAttr.modelType,
       ));
     }
   }
@@ -45,6 +47,14 @@ function getParsedDirectiveAttributeName(attrName) {
   const suffix = attrName.slice(separatorIndex + 1);
   const directive = DIRECTIVE_BY_NAME[baseName];
 
+  if (baseName === 'het-model' && MODEL_TYPES.includes(suffix)) {
+    return {
+      directive,
+      attrName,
+      modelType: suffix,
+    };
+  }
+
   if (!directive || !ACQUISITION_STRATEGIES.includes(suffix)) {
     return undefined;
   }
@@ -62,6 +72,7 @@ function getParsedBindingDeclarations(
   acquisitionStrategy,
   el,
   componentLoggingContext,
+  modelType,
 ) {
   const rawAttr = el.getAttribute(attrName) || '';
   const bindingLoggingContext = {
@@ -93,6 +104,7 @@ function getParsedBindingDeclarations(
     el,
     declaration,
     componentLoggingContext,
+    modelType,
   ));
 }
 
@@ -114,6 +126,7 @@ function getParsedSignalBinding(
   el,
   declaration,
   componentLoggingContext,
+  modelType,
 ) {
   const bindingLoggingContext = {
     ...componentLoggingContext,
@@ -134,6 +147,23 @@ function getParsedSignalBinding(
     }
     key = directive.defaultKey;
     expressionMetadata = getExpressionMetadata(declaration, bindingLoggingContext);
+  } else if (directive.name === 'het-model') {
+    if (!declaration) {
+      throwInvalidBindingExpression(
+        bindingLoggingContext,
+        'het-model binding requires a signal name',
+      );
+    }
+    if (findTopLevelOperatorIndex(declaration, '=') !== -1) {
+      throwInvalidBindingExpression(
+        bindingLoggingContext,
+        'het-model binding must be a signal name',
+      );
+    }
+    source = getValidatedSignalIdentifier(declaration, bindingLoggingContext);
+    key = inferModelKey(el);
+    acquisitionStrategy = 'seed';
+    expressionMetadata = undefined;
   } else {
     throwInvalidBindingExpression(
       bindingLoggingContext,
@@ -143,6 +173,7 @@ function getParsedSignalBinding(
 
   if (
     directive.sourceType === SIGNAL_SOURCE_TYPE &&
+    directive.name !== 'het-model' &&
     expressionMetadata.hasContextuals
   ) {
     throw new Error(
@@ -164,6 +195,7 @@ function getParsedSignalBinding(
     acquisitionStrategy,
     exp: declaration,
     expression: expressionMetadata,
+    modelType,
   };
 }
 

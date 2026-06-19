@@ -19,14 +19,14 @@ A declaration that expects a signal name provided an empty or invalid identifier
 
 ```html
 <div het-component="counter">
-  <span het-seed="=$text"></span>
+  <input het-model="">
 </div>
 ```
 
 Fix the declaration by naming the signal.
 
 ```html
-<span het-seed="count=$text"></span>
+<input het-model="count">
 ```
 
 ### `HET Error: het-text binding requires an expression`

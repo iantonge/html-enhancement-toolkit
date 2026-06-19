@@ -135,6 +135,27 @@ Use `het-text` to bind an expression to an element's `textContent`.
 
 ## Input and event bindings
 
+### `het-model`
+
+Use `het-model` for two-way signal binding on standard form controls.
+HET infers `value` for most controls and `checked` for checkbox/radio inputs.
+It listens for `input` on `value` bindings and `change` on `checked` bindings.
+The signal is always seeded from the control before `setup` runs.
+
+```html
+<input het-model="name" value="Ada">
+<input het-model:int="age" value="37">
+<input type="checkbox" het-model:bool="isEnabled">
+```
+
+Typed variants apply coercion when reading from the control into the signal:
+
+- `het-model:int`
+- `het-model:float`
+- `het-model:bool`
+
+For explicit non-model patterns, combine `het-text`, `het-on`, and `het-seed`.
+
 ### `het-on`
 
 Use `het-on` to bind DOM events to methods returned from `setup`, or to assign signal values when an event fires.
@@ -200,5 +221,9 @@ A signal may have only one acquisition source.
 | Attribute | Purpose | Multiple declarations | Notes |
 | --- | --- | --- | --- |
 | `het-text` | Write expression to `textContent` | No | Output expression only. |
+| `het-model` | Two-way control binding | No | Always seeded from the control. |
+| `het-model:int` | Two-way control binding with integer coercion | No | Reads with `$int` semantics. |
+| `het-model:float` | Two-way control binding with float coercion | No | Reads with `$float` semantics. |
+| `het-model:bool` | Two-way control binding with boolean coercion | No | Reads with `$bool` semantics. |
 | `het-on` | Event handlers and event-time assignments | Yes | Semicolon-separated declarations. |
 | `het-seed` | Create signals from DOM snapshots before setup | Yes | Semicolon-separated declarations. |

@@ -3,6 +3,7 @@ const FUNC_SOURCE_TYPE = 1;
 const ASSIGNMENT_SOURCE_TYPE = 2;
 const READ_SOURCE_TYPE = 3;
 const PREACT_SIGNAL_BRAND = Symbol.for('preact-signals');
+const MODEL_TYPES = ['int', 'bool', 'float'];
 const KEYBOARD_EVENT_NAMES = ['keydown', 'keyup', 'keypress'];
 const ACQUISITION_STRATEGIES = ['seed'];
 const FORBIDDEN_MEMBER_NAMES = new Set(['__proto__', 'prototype', 'constructor']);
@@ -23,6 +24,7 @@ export {
   FUNC_SOURCE_TYPE,
   INTRINSIC_IDENTIFIERS,
   KEYBOARD_EVENT_NAMES,
+  MODEL_TYPES,
   PREACT_SIGNAL_BRAND,
   READ_SOURCE_TYPE,
   SIGNAL_SOURCE_TYPE,

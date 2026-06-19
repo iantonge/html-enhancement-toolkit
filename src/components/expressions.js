@@ -8,6 +8,21 @@ import { getBindingCause, throwInvalidBindingExpression } from './logging.js';
 
 const expressionCache = new Map();
 
+function inferModelKey(el) {
+  if (
+    el instanceof HTMLInputElement &&
+    (el.type === 'checkbox' || el.type === 'radio')
+  ) {
+    return 'checked';
+  }
+
+  return 'value';
+}
+
+function inferInputEvent(key) {
+  return key === 'checked' ? 'change' : 'input';
+}
+
 function getExpressionMetadata(expression, bindingLoggingContext) {
   const cached = expressionCache.get(expression);
   if (cached) return cached;
@@ -147,6 +162,10 @@ function assertExpressionSignalsExist(binding, signals) {
 }
 
 function getBindingInputValue(ctx, binding, event) {
+  if (binding.dirName === 'het-model') {
+    return coerceValue(binding.el[binding.key], binding.modelType);
+  }
+
   return evaluateBindingExpression(binding, ctx, event);
 }
 
@@ -257,6 +276,19 @@ function getIntrinsic(name) {
   return (value) => value === true || value === 'true';
 }
 
+function coerceValue(rawValue, modelType) {
+  if (modelType === 'int') {
+    return parseInt(rawValue, 10);
+  }
+  if (modelType === 'float') {
+    return parseFloat(rawValue);
+  }
+  if (modelType === 'bool') {
+    return rawValue === true || rawValue === 'true';
+  }
+  return rawValue;
+}
+
 function getContextualValue(name, runtimeContext) {
   if (name === '$event') return runtimeContext.event;
   if (name === '$target') return runtimeContext.event?.target ?? runtimeContext.binding.el;
@@ -279,4 +311,6 @@ export {
   evaluateBindingExpression,
   getBindingInputValue,
   getExpressionMetadata,
+  inferInputEvent,
+  inferModelKey,
 };

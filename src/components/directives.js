@@ -1,4 +1,5 @@
 import {
+  MODEL_TYPES,
   READ_SOURCE_TYPE,
   SIGNAL_SOURCE_TYPE,
   FUNC_SOURCE_TYPE,
@@ -29,12 +30,28 @@ const DIRECTIVES = [
     },
     defaultKey: 'textContent',
   },
+  {
+    name: 'het-model',
+    sourceType: SIGNAL_SOURCE_TYPE,
+    allowMultiple: false,
+    write: (el, key, value) => {
+      el[key] = value;
+    },
+  },
 ];
 
 const DIRECTIVE_BY_NAME = Object.fromEntries(
   DIRECTIVES.map((directive) => [directive.name, directive]),
 );
-const DIRECTIVE_ATTR_NAMES = DIRECTIVES.map((directive) => directive.name);
+const DIRECTIVE_ATTR_NAMES = DIRECTIVES.flatMap((directive) => {
+  if (directive.name === 'het-model') {
+    return [
+      directive.name,
+      ...MODEL_TYPES.map((type) => `${directive.name}:${type}`),
+    ];
+  }
+  return [directive.name];
+});
 const DIRECTIVES_SELECTOR = DIRECTIVE_ATTR_NAMES
   .map((name) => `[${escapeAttributeSelectorName(name)}]`)
   .join(', ');
