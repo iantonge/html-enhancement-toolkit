@@ -39,6 +39,14 @@ test.describe('components lifecycle and registration', () => {
     });
   });
 
+  test('runs cleanup callbacks on destroy', async ({ page }) => {
+    await page.goto('/components/lifecycle/destroy');
+    await page.evaluate(() => {
+      window.HET.destroy();
+    });
+    await expect(page.locator('#cleanup-count')).toHaveText('Cleanup count: 1');
+  });
+
   test('throws when registering a component without a name', async ({ page }) => {
     await page.goto('/components/registration/register-without-name');
     await page.waitForFunction(() =>

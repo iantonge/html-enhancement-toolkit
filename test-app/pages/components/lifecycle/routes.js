@@ -14,4 +14,10 @@ router.get('/mount', (request, response) => {
   });
 });
 
+router.get('/destroy', (request, response) => {
+  response.render('components/lifecycle/destroy', {
+    title: 'Component destroy',
+  });
+});
+
 export default router;
