@@ -231,7 +231,7 @@ function configureStructuralTeardown(config) {
 function scheduleStructuralCloneUnmount(block, clone, mountApi) {
   if (!clone || clone.isPendingUnmount) return;
 
-  const delay = getStructuralUnmountDelay();
+  const delay = getStructuralUnmountDelay(clone.rootEl);
   if (delay <= 0) {
     finalizeStructuralCloneUnmount(block, clone, mountApi);
     return;
@@ -275,8 +275,14 @@ function cancelStructuralCloneUnmount(clone) {
   }
 }
 
-function getStructuralUnmountDelay() {
-  return structuralUnmountDelay;
+function getStructuralUnmountDelay(rootEl) {
+  const override = rootEl.getAttribute('het-unmount-delay');
+  if (override === null) {
+    return structuralUnmountDelay;
+  }
+
+  const parsedOverride = Number(override);
+  return Number.isFinite(parsedOverride) ? parsedOverride : structuralUnmountDelay;
 }
 
 export {

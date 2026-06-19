@@ -92,6 +92,25 @@ test.describe('components structural templates', () => {
     ).toEqual([]);
   });
 
+  test('het-if supports per-root unmount delay overrides', async ({ page }) => {
+    await page.goto('/components/structural/if-toggle-override');
+
+    await page.click('#show-item');
+    await expect(page.locator('#if-host .if-mount')).toHaveText('1');
+
+    await page.click('#hide-item');
+    await expect(page.locator('#if-host > article')).toHaveClass(/pending-unmount/);
+
+    await page.waitForTimeout(100);
+    await expect(page.locator('#if-host > article')).toHaveCount(1);
+
+    await page.waitForTimeout(160);
+    await expect(page.locator('#if-host > article')).toHaveCount(0);
+    await expect.poll(
+      () => page.evaluate(() => window.structuralIfOverrideCleanupIds.slice()),
+    ).toEqual(['1']);
+  });
+
   test('het-for defers trailing removals and reuses pending clones when the list regrows', async ({ page }) => {
     await page.goto('/components/structural/for-list-delayed');
 

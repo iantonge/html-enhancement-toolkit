@@ -1,0 +1,64 @@
+<script nonce="{{{cspNonce}}}">
+  window.hetInitConfig = {
+    structuralUnmountDelay: 40,
+    structuralUnmountClass: 'pending-unmount',
+  };
+</script>
+<section class="card shadow-sm border-0" het-component="structural-if-override-host" het-mount-pending>
+  <div class="card-body">
+    <h1 class="h4 mb-3">{{title}}</h1>
+    <div class="d-flex gap-2 mb-3">
+      <button id="show-item" type="button" class="btn btn-sm btn-primary" het-on="click->showItem">Show</button>
+      <button id="hide-item" type="button" class="btn btn-sm btn-outline-secondary" het-on="click->hideItem">Hide</button>
+    </div>
+
+    <div id="if-host">
+      <template het-if="activeItem">
+        <article
+          het-component="structural-if-override-item"
+          het-ref="root"
+          het-unmount-delay="220"
+          class="border rounded p-3"
+        >
+          <div class="d-flex gap-2 align-items-center">
+            <strong class="if-label" het-text="label"></strong>
+            <span class="if-mount badge text-bg-secondary" het-text="mountId"></span>
+          </div>
+        </article>
+      </template>
+    </div>
+  </div>
+</section>
+
+<script nonce="{{{cspNonce}}}">
+  window.structuralIfOverrideCleanupIds = [];
+  window.structuralIfOverrideMountCount = 0;
+
+  const createSelectedItem = (label) => ({
+    label: window.HET.signals.signal(label),
+  });
+
+  window.HET.registerComponent('structural-if-override-host', ({ signals }) => {
+    signals.activeItem = window.HET.signals.signal(null);
+
+    return {
+      showItem() {
+        signals.activeItem.value = createSelectedItem('Override');
+      },
+      hideItem() {
+        signals.activeItem.value = null;
+      },
+    };
+  });
+
+  window.HET.registerComponent('structural-if-override-item', ({ refs, signals, onCleanup }) => {
+    window.structuralIfOverrideMountCount += 1;
+    const mountId = String(window.structuralIfOverrideMountCount);
+    signals.mountId = window.HET.signals.signal(mountId);
+    refs.root.dataset.mountId = mountId;
+
+    onCleanup(() => {
+      window.structuralIfOverrideCleanupIds.push(mountId);
+    });
+  });
+</script>

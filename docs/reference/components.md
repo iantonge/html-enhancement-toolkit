@@ -382,6 +382,22 @@ Each array item must be an object whose properties are Preact signals. HET forwa
 
 Prefer ordinary visibility bindings such as `het-bool-attrs="hidden=isHidden"` when the DOM should stay mounted. Structural directives create and destroy component instances.
 
+### `het-unmount-delay`
+
+Use `het-unmount-delay="milliseconds"` on the root element inside a structural template to override the global `init({ structuralUnmountDelay })` value for that clone.
+
+```html
+<template het-if="activeItem">
+  <article het-component="notification-card" het-unmount-delay="200"></article>
+</template>
+```
+
+Precedence is:
+
+- `het-unmount-delay` on the structural clone root
+- `init({ structuralUnmountDelay })`
+- `0`
+
 This feature is structural-only and exit-only:
 
 - it applies to clones created by `het-if` and `het-for`

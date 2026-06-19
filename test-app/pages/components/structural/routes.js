@@ -26,6 +26,12 @@ router.get('/if-toggle-delayed', (request, response) => {
   });
 });
 
+router.get('/if-toggle-override', (request, response) => {
+  response.render('components/structural/if-toggle-override', {
+    title: 'het-if delayed unmount override',
+  });
+});
+
 router.get('/for-list-delayed', (request, response) => {
   response.render('components/structural/for-list-delayed', {
     title: 'het-for delayed unmount',
