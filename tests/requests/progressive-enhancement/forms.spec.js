@@ -11,6 +11,16 @@ test.describe('form progressive enhancement (core)', () => {
     expect(content).toContain('GET form submitted');
   });
 
+  test('includes submitter name/value in request', async ({ page }) => {
+    await page.goto('/requests/progressive-enhancement/forms/additional');
+    await Promise.all([
+      page.waitForSelector('#response-message'),
+      page.click('#additional-submit'),
+    ]);
+    const content = await page.textContent('#response-message');
+    expect(content).toContain('some value');
+  });
+
   test('intercepts form with method POST', async ({ page }) => {
     await page.goto('/requests/progressive-enhancement/forms/post');
     await Promise.all([

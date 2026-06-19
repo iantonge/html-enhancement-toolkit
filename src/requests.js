@@ -148,7 +148,7 @@ const getSubmitContext = (event) => {
       'HET Error: Cross-origin form submissions cannot be progressively enhanced',
       { cause: { ...loggingContext } },
     );
-  const formData = new FormData(form);
+  const formData = new FormData(form, submitter);
   const request =
     resolvedMethod === 'GET'
       ? buildGetRequest(resolvedActionUrl, formData)

@@ -4,9 +4,11 @@ const router = Router();
 
 router.get('/get-form', (request, response) => {
   const someField = request.query['some-field'] ?? '';
+  const additional = request.query['additional-value'];
+  const suffix = additional ? ` - ${additional}` : '';
   response.render('requests/progressive-enhancement/forms/responses/get-form', {
     title: 'Form Progressive Enhancement (Core)',
-    message: `GET form submitted: ${someField}`,
+    message: `GET form submitted: ${someField}${suffix}`,
   });
 });
 
@@ -39,9 +41,11 @@ router.get('/duplicate-target', (request, response) => {
 
 router.post('/post-form', (request, response) => {
   const someField = request.body['some-field'] ?? '';
+  const additional = request.body['additional-value'];
+  const suffix = additional ? ` - ${additional}` : '';
   response.render('requests/progressive-enhancement/forms/responses/post-form', {
     title: 'Form Progressive Enhancement (Core)',
-    message: `POST form submitted: ${someField}`,
+    message: `POST form submitted: ${someField}${suffix}`,
   });
 });
 
