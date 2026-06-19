@@ -439,3 +439,14 @@ HET expected a forwarded-signal wrapper on a structural clone but did not find o
 
 Fix structural-template errors by keeping template roots valid, component-backed, and driven by objects whose properties are signals.
 
+## Requests
+
+The request-related errors below are unchanged by the component expression rewrite. Use the request reference for the underlying behavior and treat these messages as pane-targeting and partial-update diagnostics.
+
+### Target panes
+
+- `HET Error: Target pane not found on the page`
+- `HET Error: Multiple target panes found on the page`
+- `HET Error: Target pane not found in server response`
+- `HET Error: Multiple target panes found in server response`
+

@@ -4,7 +4,7 @@ This section collects the JavaScript entry points and initialization options for
 
 ## `init(config)`
 
-Initialize HET. This mounts registered components and starts component mutation observation.
+Initialize HET. This mounts registered components, starts component mutation observation, and installs request enhancement listeners.
 
 `config` is optional, and every config property is optional. Omitted properties use the defaults described below. `init` does not return a value.
 
@@ -50,7 +50,7 @@ HET.init({
 
 ## `destroy()`
 
-Destroy mounted components, run their cleanup callbacks, and remove HET's document and window event listeners.
+Destroy mounted components, run their cleanup callbacks, abort in-flight enhanced requests, and remove HET's document and window event listeners.
 
 `destroy` accepts no parameters and does not return a value.
 

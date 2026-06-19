@@ -1,11 +1,14 @@
 # html-enhancement-toolkit
 
-HET (HTML Enhancement Toolkit) is a lightweight, HTML-first enhancement library for server-rendered applications that need small reactive components without adopting a single-page application (SPA) architecture.
+HET (HTML Enhancement Toolkit) is a lightweight, HTML-first enhancement library for server-rendered applications that need progressive navigation and small reactive components without adopting a single-page application (SPA) architecture.
 
 HET is a good fit when you want:
 
-- **Component islands for server-rendered apps:** HET mounts small signal-driven components on existing HTML instead of moving rendering and routing into a client-side SPA.
+- **Progressive enhancement for server-rendered apps:** HET enhances regular links, forms, and HTML responses instead of moving rendering and routing into a client-side SPA.
+- **Navigation and components together:** HET pairs pane-based request enhancement with small signal-driven components for interactive server-rendered pages.
+- **Opinionated defaults over configuration sprawl:** Navigation, request coordination, UI feedback, and sync behavior are designed to reduce repeated per-link and per-form configuration.
 - **Strict-CSP-conscious interactivity:** Component behavior is wired through normal JavaScript functions and signal bindings, without requiring `unsafe-eval` or similar CSP compromises.
+- **Safer content-loading defaults:** HET uses browser-native HTML parsing and DOM replacement, supports Trusted Types policies and nonce headers, and avoids evaluating swapped scripts or component expressions.
 - **Explicit, readable wiring:** Refs, event handlers, bindings, imports, and exports are declared with predictable `het-*` attributes and ordinary JavaScript.
 
 HET is probably not the right fit when you need:
@@ -13,11 +16,14 @@ HET is probably not the right fit when you need:
 - **Browser-owned application state:** Most state lives in the browser and changes independently of the server.
 - **Rich client-side application behavior:** You need client-side routing, offline-first workflows, or complex browser-owned UI state.
 - **Large client-rendered DOM regions:** Components need to generate or rewrite large portions of DOM instead of tweaking existing HTML.
+- **Maximum per-request configurability:** You need fine-grained per-link or per-form control over every request behavior.
+- **Unstable server-rendered targets:** Your server cannot return HTML with stable target panes.
 
 ## Documentation
 
-- [Reference index](docs/README.md): component, API, and error reference docs.
+- [Reference index](docs/README.md): component, request, API, and error reference docs.
 - [Component reference](docs/reference/components.md): component roots, signals, bindings, imports/exports, structural templates, and lifecycle notes.
+- [Request reference](docs/reference/requests.md)
 - [API reference](docs/reference/api.md)
 - [Error reference](docs/reference/errors.md)
 
@@ -59,6 +65,19 @@ init();
 
 The ESM build exports `init`, `destroy`, and `registerComponent`.
 
+### First enhanced page
+
+HET enhances normal links and forms. A link with `het-target` fetches its URL and replaces the matching `het-pane` from the response.
+
+```html
+<main het-pane="main" het-nav>
+  <h1>Dashboard</h1>
+  <a href="/reports" het-target="main">Reports</a>
+</main>
+```
+
+When HET is running, clicking the link fetches `/reports`, finds `het-pane="main"` in the response, swaps the pane, and updates browser history because the pane also has `het-nav`.
+
 ### First component
 
 Register a component before calling `init()`, then attach it to existing HTML with `het-component`.
@@ -88,6 +107,9 @@ HET.init();
 
 HET is built around a few small primitives:
 
+- `het-pane` marks a server-rendered region that can be replaced from an HTML response.
+- `het-target` opts a link, form, or submit button into enhanced requests and names the pane to update.
+- `het-nav` marks a pane whose enhanced requests should also update browser history and configured head content.
 - `het-component` mounts a small reactive component on existing HTML instead of taking over the whole page.
 - Signals hold component state. They can be created in `setup`, acquired from the DOM with `het-seed` or `het-sync`, or imported from an ancestor component.
 - Component bindings use a limited subset of JavaScript expressions. HET parses and interprets those expressions itself instead of executing arbitrary JavaScript.
