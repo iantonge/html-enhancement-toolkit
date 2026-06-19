@@ -9,6 +9,22 @@ test.describe('components acquisition and sync expressions', () => {
     await expect(page.locator('#seed-count')).toHaveText('8');
   });
 
+  test('coerces values using $int, $float, and $bool intrinsics', async ({ page }) => {
+    await page.goto('/components/acquisition/type-hints');
+
+    await expect(page.locator('#int-value')).toHaveText('7');
+    await expect(page.locator('#float-value')).toHaveText('3.5');
+    await expect(page.locator('#bool-value')).toHaveText('true');
+
+    await page.click('#int-inc');
+    await page.click('#float-inc');
+    await page.click('#bool-toggle');
+
+    await expect(page.locator('#int-value')).toHaveText('8');
+    await expect(page.locator('#float-value')).toHaveText('4');
+    await expect(page.locator('#bool-value')).toHaveText('false');
+  });
+
   test('supports contextual reads and het-text bindings', async ({ page }) => {
     await page.goto('/components/acquisition/explicit-sources');
 

@@ -14,6 +14,12 @@ router.get('/seed', (request, response) => {
   });
 });
 
+router.get('/type-hints', (request, response) => {
+  response.render('components/acquisition/type-hints', {
+    title: 'Type hints',
+  });
+});
+
 router.get('/explicit-sources', (request, response) => {
   response.render('components/acquisition/explicit-sources', {
     title: 'Explicit read sources',
