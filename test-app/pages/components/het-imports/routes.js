@@ -26,4 +26,10 @@ router.get('/missing-parent', (request, response) => {
   });
 });
 
+router.get('/parent-not-mounted', (request, response) => {
+  response.render('components/het-imports/parent-not-mounted', {
+    title: 'Exporting parent not mounted',
+  });
+});
+
 export default router;

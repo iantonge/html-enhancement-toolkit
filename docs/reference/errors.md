@@ -317,4 +317,10 @@ signals.count = HET.signals.signal(1);
 
 Fix the component tree by exporting the signal from an ancestor or by removing the import.
 
+### `HET Error: Exporting ancestor component is not mounted`
+
+An import resolved to an ancestor component element, but that exporting component was not mounted when the child tried to import from it.
+
+Fix the mount order or export configuration so the ancestor component is mounted normally.
+
 

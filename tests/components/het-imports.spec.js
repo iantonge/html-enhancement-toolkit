@@ -40,4 +40,27 @@ test.describe('components het-exports / het-imports', () => {
     });
   });
 
+  test('reports error when nearest exporting parent exists but is not mounted', async ({ page }) => {
+    await page.goto('/components/het-imports/parent-not-mounted');
+    await page.waitForFunction(() =>
+      window.hetErrors.some((error) => error.message === 'HET Error: Exporting ancestor component is not mounted'),
+    );
+    const cause = await page.evaluate(() => ({
+      componentName: window.hetErrors.at(-1).cause.componentName,
+      bindingAttribute: window.hetErrors.at(-1).cause.bindingAttribute,
+      importLocalSignalName: window.hetErrors.at(-1).cause.importLocalSignalName,
+      importSourceSignalName: window.hetErrors.at(-1).cause.importSourceSignalName,
+      exportingComponentName: window.hetErrors.at(-1).cause.exportingComponentName,
+      parentExports: window.hetErrors.at(-1).cause.exportingComponentElement.getAttribute('het-exports'),
+    }));
+    expect(cause).toEqual({
+      componentName: 'imports-parent-not-mounted-child',
+      bindingAttribute: 'het-imports',
+      importLocalSignalName: 'count',
+      importSourceSignalName: 'count',
+      exportingComponentName: 'imports-unregistered-parent',
+      parentExports: 'count',
+    });
+  });
+
 });
