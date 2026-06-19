@@ -65,6 +65,7 @@ Register a component before calling `init()`, then attach it to existing HTML wi
 
 ```html
 <div het-component="counter">
+  <button type="button" het-on="click->increment">+</button>
   <output het-text="count"></output>
 </div>
 ```
@@ -72,6 +73,12 @@ Register a component before calling `init()`, then attach it to existing HTML wi
 ```js
 HET.registerComponent('counter', ({ signals }) => {
   signals.count = HET.signals.signal(0);
+
+  return {
+    increment() {
+      signals.count.value += 1;
+    },
+  };
 });
 
 HET.init();

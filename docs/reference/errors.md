@@ -46,6 +46,22 @@ Fix the binding by supplying an expression.
 ```
 
 
+### `HET Error: Event assignment requires a signal name and source`
+
+An assignment-style `het-on` declaration used `=` but left the signal name or expression empty.
+
+```html
+<div het-component="counter">
+  <input het-on="input->count=">
+</div>
+```
+
+Fix the binding by filling in both sides.
+
+```html
+<input het-on="input->count=$target.value">
+```
+
 ### `HET Error: Read binding must contain exactly one "="`
 
 A `het-seed` declaration did not contain exactly one top-level `=` between the signal name and expression.
@@ -84,14 +100,14 @@ The expression parser or validator rejected the declaration. This includes malfo
 
 ```html
 <div het-component="counter">
-  <span het-seed="count=window.alert(1)"></span>
+  <button het-on="click->count=window.alert(1)"></button>
 </div>
 ```
 
 Fix the declaration by using HET's limited subset of JavaScript expressions only.
 
 ```html
-<span het-seed="count=$int($text)"></span>
+<button het-on="click->count=$int($target.value)"></button>
 ```
 
 ### `HET Error: Empty binding declaration`
@@ -101,14 +117,14 @@ An optional trailing semicolon by itself is allowed.
 
 ```html
 <div het-component="counter">
-  <span het-seed="count=$text; ; status='ready'"></span>
+  <button het-on="click->save; ; keydown.enter->save"></button>
 </div>
 ```
 
 Fix the declaration by removing the empty segment.
 
 ```html
-<span het-seed="count=$text; status='ready'"></span>
+<button het-on="click->save; keydown.enter->save"></button>
 ```
 
 This error attaches the normal structured binding `cause`.
@@ -123,7 +139,7 @@ An output binding such as `het-text` used contextual snapshot values like `$targ
 </div>
 ```
 
-Fix the binding by reading from the DOM in `het-seed` first.
+Fix the binding by reading from the DOM in `het-seed` or an event-time `het-on` assignment first.
 
 ```html
 <input het-seed="message=$props.value">

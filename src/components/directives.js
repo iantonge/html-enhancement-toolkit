@@ -1,6 +1,7 @@
 import {
   READ_SOURCE_TYPE,
   SIGNAL_SOURCE_TYPE,
+  FUNC_SOURCE_TYPE,
 } from './constants.js';
 
 function escapeAttributeSelectorName(name) {
@@ -8,6 +9,11 @@ function escapeAttributeSelectorName(name) {
 }
 
 const DIRECTIVES = [
+  {
+    name: 'het-on',
+    sourceType: FUNC_SOURCE_TYPE,
+    allowMultiple: true,
+  },
   {
     name: 'het-seed',
     sourceType: READ_SOURCE_TYPE,

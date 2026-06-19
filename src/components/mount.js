@@ -66,12 +66,13 @@ function mountComponent(rootEl, setup) {
     signalMeta[binding.source] = 'local';
     signalInitBindings[binding.source] = binding;
   }
-  if (setup) setup(setupCtx);
+  const methods = (setup && setup(setupCtx)) || {};
 
-  initializeBindings(runtimeCtx, bindings);
+  initializeBindings(runtimeCtx, bindings, methods);
 
   rootEl.__het_instance = {
     rootEl,
+    methods,
     signals,
     rawSignals,
     signalMeta,

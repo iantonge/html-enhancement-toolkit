@@ -28,7 +28,7 @@ Parameters:
 - `el`: the component root element.
 - `signals`: the component signal registry.
 
-`registerComponent` does not return a value.
+`setup` may return an object of methods for `het-on` bindings. `registerComponent` does not return a value.
 
 ## Signal helpers
 

@@ -19,6 +19,7 @@ Use `het-component` to mark a component root and mount a registered component by
 ```html
 <div het-component="counter">
   <output het-seed="count=$int($text)" het-text="count">0</output>
+  <button type="button" het-on="click->count = count + 1">+</button>
 </div>
 ```
 
@@ -60,6 +61,7 @@ HET bindings support a limited subset of JavaScript for pure, side-effect-free e
 Expressions are used by:
 
 - output bindings such as `het-text`
+- assignment-style `het-on`
 - `het-seed`
 
 Supported syntax:
@@ -103,6 +105,7 @@ HET exposes three built-in conversion functions:
 Examples:
 
 ```html
+<input het-on="input->quantity=$int($target.value)">
 <output het-seed="count=$int($text)" het-text="count">0</output>
 <input het-seed="price=$float($props.value)" value="3.50">
 ```
@@ -112,7 +115,7 @@ Examples:
 Bindings that support multiple declarations use top-level semicolons:
 
 ```html
-<span het-seed="count=$int($text); status='ready'"></span>
+<button het-on="click->increment; keydown.enter->increment"></button>
 ```
 
 Whitespace alone does not separate declarations.
@@ -129,6 +132,44 @@ Use `het-text` to bind an expression to an element's `textContent`.
 ```html
 <p het-text="count === 1 ? 'item' : 'items'"></p>
 ```
+
+## Input and event bindings
+
+### `het-on`
+
+Use `het-on` to bind DOM events to methods returned from `setup`, or to assign signal values when an event fires.
+
+Method form:
+
+```html
+<button het-on="click->increment">+</button>
+```
+
+Assignment form:
+
+```html
+<input het-on="input->count=$int($target.value)">
+```
+
+Multiple handlers use top-level semicolons:
+
+```html
+<button het-on="click->increment; keydown.enter->increment"></button>
+```
+
+Supported event modifiers:
+
+- `prevent`
+- `stop`
+- `once`
+- `capture`
+- `debounce(ms)`
+- `throttle(ms)`
+- `esc`
+- `enter`
+- `space`
+
+Handlers are methods returned from `setup`. Define them with method syntax by default. HET invokes them with the returned methods object as `this`.
 
 ### `het-seed`
 
@@ -159,4 +200,5 @@ A signal may have only one acquisition source.
 | Attribute | Purpose | Multiple declarations | Notes |
 | --- | --- | --- | --- |
 | `het-text` | Write expression to `textContent` | No | Output expression only. |
+| `het-on` | Event handlers and event-time assignments | Yes | Semicolon-separated declarations. |
 | `het-seed` | Create signals from DOM snapshots before setup | Yes | Semicolon-separated declarations. |

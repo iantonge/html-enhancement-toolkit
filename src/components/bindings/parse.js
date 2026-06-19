@@ -1,7 +1,10 @@
 import {
   ACQUISITION_STRATEGIES,
+  ASSIGNMENT_SOURCE_TYPE,
   CONTEXTUAL_IDENTIFIERS,
+  FUNC_SOURCE_TYPE,
   INTRINSIC_IDENTIFIERS,
+  KEYBOARD_EVENT_NAMES,
   READ_SOURCE_TYPE,
   SIGNAL_SOURCE_TYPE,
 } from '../constants.js';
@@ -70,6 +73,12 @@ function getParsedBindingDeclarations(
   const declarations = directive.allowMultiple
     ? getSplitBindingDeclarations(rawAttr, bindingLoggingContext)
     : [rawAttr];
+
+  if (directive.name === 'het-on') {
+    return declarations.map((declaration) =>
+      getParsedEventDeclaration(attrName, el, declaration, componentLoggingContext),
+    );
+  }
 
   if (directive.name === 'het-seed') {
     return declarations.map((declaration) =>
@@ -158,6 +167,87 @@ function getParsedSignalBinding(
   };
 }
 
+function getParsedEventDeclaration(
+  attrName,
+  el,
+  declaration,
+  componentLoggingContext,
+) {
+  const bindingLoggingContext = {
+    ...componentLoggingContext,
+    bindingAttribute: attrName,
+    bindingDeclaration: declaration,
+    bindingElement: el,
+  };
+  const arrowIndex = findTopLevelOperatorIndex(declaration, '->');
+  if (arrowIndex === -1) {
+    throwInvalidBindingExpression(
+      bindingLoggingContext,
+      'Event binding must contain exactly one "->"',
+    );
+  }
+  if (findTopLevelOperatorIndex(declaration.slice(arrowIndex + 2), '->') !== -1) {
+    throwInvalidBindingExpression(
+      bindingLoggingContext,
+      'Event binding must contain exactly one "->"',
+    );
+  }
+
+  const eventExpression = declaration.slice(0, arrowIndex).trim();
+  const actionExpression = declaration.slice(arrowIndex + 2).trim();
+
+  if (!eventExpression || !actionExpression) {
+    throwInvalidBindingExpression(
+      bindingLoggingContext,
+      'Event binding requires an event and action',
+    );
+  }
+
+  const parsedEvent = getParsedEventExpression(
+    eventExpression,
+    bindingLoggingContext,
+  );
+  const assignmentIndex = getTopLevelAssignmentIndex(actionExpression);
+
+  if (assignmentIndex === -1) {
+    return {
+      dirName: 'het-on',
+      attrName,
+      el,
+      componentElement: componentLoggingContext.componentElement,
+      componentName: componentLoggingContext.componentName,
+      key: parsedEvent.name,
+      eventModifiers: parsedEvent.modifiers,
+      source: actionExpression,
+      sourceType: FUNC_SOURCE_TYPE,
+      exp: declaration,
+    };
+  }
+
+  const source = actionExpression.slice(0, assignmentIndex).trim();
+  const assignmentExpression = actionExpression.slice(assignmentIndex + 1).trim();
+  if (!source || !assignmentExpression) {
+    throwInvalidBindingExpression(
+      bindingLoggingContext,
+      'Event assignment requires a signal name and source',
+    );
+  }
+
+  return {
+    dirName: 'het-on',
+    attrName,
+    el,
+    componentElement: componentLoggingContext.componentElement,
+    componentName: componentLoggingContext.componentName,
+    key: parsedEvent.name,
+    eventModifiers: parsedEvent.modifiers,
+    source: getValidatedSignalIdentifier(source, bindingLoggingContext),
+    sourceType: ASSIGNMENT_SOURCE_TYPE,
+    expression: getExpressionMetadata(assignmentExpression, bindingLoggingContext),
+    exp: declaration,
+  };
+}
+
 function getParsedReadDeclaration(
   directive,
   attrName,
@@ -200,6 +290,167 @@ function getParsedReadDeclaration(
     acquisitionStrategy: directive.acquisitionStrategy,
     exp: declaration,
   };
+}
+
+function getParsedEventExpression(eventExpression, bindingLoggingContext) {
+  const parts = eventExpression.split('.');
+  const parsedModifiers = [];
+
+  if (parts.some((part) => part.length === 0)) {
+    throwInvalidBindingExpression(
+      bindingLoggingContext,
+      'Event modifier cannot be empty',
+    );
+  }
+
+  while (parts.length > 1) {
+    const parsedModifier = getParsedEventModifier(
+      parts.at(-1),
+      bindingLoggingContext,
+    );
+    if (!parsedModifier) break;
+    parsedModifiers.unshift(parsedModifier);
+    parts.pop();
+  }
+
+  const eventName = parts.join('.');
+  if (!eventName) {
+    throwInvalidBindingExpression(
+      bindingLoggingContext,
+      'Event name is required',
+    );
+  }
+
+  return {
+    name: eventName,
+    modifiers: getValidatedEventModifiers(
+      eventName,
+      parsedModifiers,
+      bindingLoggingContext,
+    ),
+  };
+}
+
+function getParsedEventModifier(modifierExpression, bindingLoggingContext) {
+  if (
+    modifierExpression === 'prevent' ||
+    modifierExpression === 'stop' ||
+    modifierExpression === 'once' ||
+    modifierExpression === 'capture' ||
+    modifierExpression === 'esc' ||
+    modifierExpression === 'enter' ||
+    modifierExpression === 'space'
+  ) {
+    return { name: modifierExpression };
+  }
+
+  if (
+    modifierExpression.startsWith('debounce') ||
+    modifierExpression.startsWith('throttle')
+  ) {
+    return getParsedTimingModifier(modifierExpression, bindingLoggingContext);
+  }
+
+  return undefined;
+}
+
+function getParsedTimingModifier(modifierExpression, bindingLoggingContext) {
+  const match = /^(debounce|throttle)\((\d+)\)$/.exec(modifierExpression);
+  if (!match) {
+    const invalidModifierLoggingContext = {
+      ...bindingLoggingContext,
+      eventModifier: modifierExpression,
+    };
+    throw new Error(
+      'HET Error: Invalid event modifier',
+      { cause: invalidModifierLoggingContext },
+    );
+  }
+
+  const delay = parseInt(match[2], 10);
+  if (delay <= 0) {
+    const invalidModifierLoggingContext = {
+      ...bindingLoggingContext,
+      eventModifier: modifierExpression,
+    };
+    throw new Error(
+      'HET Error: Invalid event modifier',
+      { cause: invalidModifierLoggingContext },
+    );
+  }
+
+  return {
+    name: match[1],
+    delay,
+  };
+}
+
+function getValidatedEventModifiers(
+  eventName,
+  parsedModifiers,
+  bindingLoggingContext,
+) {
+  const modifiers = {
+    prevent: false,
+    stop: false,
+    once: false,
+    capture: false,
+    debounce: undefined,
+    throttle: undefined,
+    key: undefined,
+  };
+
+  for (const modifier of parsedModifiers) {
+    if (modifier.name === 'prevent') modifiers.prevent = true;
+    if (modifier.name === 'stop') modifiers.stop = true;
+    if (modifier.name === 'once') modifiers.once = true;
+    if (modifier.name === 'capture') modifiers.capture = true;
+
+    if (modifier.name === 'debounce' || modifier.name === 'throttle') {
+      if (modifiers.debounce || modifiers.throttle) {
+        const duplicateTimingLoggingContext = {
+          ...bindingLoggingContext,
+          eventModifier: modifier.name,
+        };
+        throw new Error(
+          'HET Error: Invalid event modifier',
+          { cause: duplicateTimingLoggingContext },
+        );
+      }
+      modifiers[modifier.name] = modifier.delay;
+    }
+
+    if (
+      modifier.name === 'esc' ||
+      modifier.name === 'enter' ||
+      modifier.name === 'space'
+    ) {
+      if (modifiers.key) {
+        const duplicateKeyLoggingContext = {
+          ...bindingLoggingContext,
+          eventModifier: modifier.name,
+        };
+        throw new Error(
+          'HET Error: Invalid event modifier',
+          { cause: duplicateKeyLoggingContext },
+        );
+      }
+      modifiers.key = modifier.name;
+    }
+  }
+
+  if (modifiers.key && !KEYBOARD_EVENT_NAMES.includes(eventName)) {
+    const invalidKeyLoggingContext = {
+      ...bindingLoggingContext,
+      eventModifier: modifiers.key,
+    };
+    throw new Error(
+      'HET Error: Invalid event modifier',
+      { cause: invalidKeyLoggingContext },
+    );
+  }
+
+  return modifiers;
 }
 
 function splitTopLevel(value, separator) {
