@@ -22,4 +22,40 @@ test.describe('components het-on', () => {
     await expect(page.locator('#assignment-enabled')).toHaveText('true');
   });
 
+  test('supports prevent, stop, capture, debounce, throttle, and key filters', async ({ page }) => {
+    await page.goto('/components/het-on/modifiers');
+
+    await page.click('#modifier-submit');
+    await expect(page.locator('#modifier-submitted')).toHaveText('true');
+    expect(page.url()).toContain('/components/het-on/modifiers');
+
+    await page.click('#stop-child');
+    await expect(page.locator('#modifier-child-clicks')).toHaveText('1');
+    await expect(page.locator('#modifier-parent-clicks')).toHaveText('0');
+
+    await page.click('#capture-child');
+    await expect(page.locator('#modifier-capture-order')).toHaveText('parent child');
+
+    await page.fill('#debounce-input', 'alpha');
+    await expect(page.locator('#modifier-debounced')).toHaveText('alpha');
+
+    await page.click('#throttle-button');
+    await expect(page.locator('#modifier-throttled')).toHaveText('1');
+    await page.click('#throttle-button');
+    await expect(page.locator('#modifier-throttled')).toHaveText('1');
+    await page.waitForTimeout(350);
+    await page.click('#throttle-button');
+    await expect(page.locator('#modifier-throttled')).toHaveText('2');
+
+    await page.focus('#key-input');
+    await page.keyboard.press('KeyA');
+    await expect(page.locator('#modifier-key')).toHaveText('');
+    await page.keyboard.press('Escape');
+    await expect(page.locator('#modifier-key')).toHaveText('esc');
+    await page.keyboard.press('Enter');
+    await expect(page.locator('#modifier-key')).toHaveText('enter');
+    await page.keyboard.press('Space');
+    await expect(page.locator('#modifier-key')).toHaveText('space');
+  });
+
 });

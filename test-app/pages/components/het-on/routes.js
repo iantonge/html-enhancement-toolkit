@@ -20,4 +20,10 @@ router.get('/assigns-signal', (request, response) => {
   });
 });
 
+router.get('/modifiers', (request, response) => {
+  response.render('components/het-on/modifiers', {
+    title: 'Modifiers',
+  });
+});
+
 export default router;

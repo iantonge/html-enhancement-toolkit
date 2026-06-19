@@ -1,0 +1,63 @@
+<section class="card shadow-sm border-0">
+  <div class="card-body">
+    <h1 class="h4 mb-3">{{title}}</h1>
+    <div het-component="het-on-modifiers">
+      <form id="modifier-form" action="/components/het-on" het-on="submit.prevent->submitted=true">
+        <button id="modifier-submit" type="submit" class="btn btn-sm btn-primary">Submit</button>
+      </form>
+
+      <div id="stop-parent" class="mt-3" het-on="click->incrementParent">
+        <button id="stop-child" type="button" class="btn btn-sm btn-secondary" het-on="click.stop->incrementChild">
+          Stop
+        </button>
+      </div>
+
+      <div id="capture-parent" class="mt-3" het-on="click.capture->captureOrder='parent'">
+        <button id="capture-child" type="button" class="btn btn-sm btn-secondary" het-on="click->appendChildOrder">
+          Capture
+        </button>
+      </div>
+
+      <input id="debounce-input" class="form-control mt-3" het-on="input.debounce(100)->debounced=$target.value">
+      <button id="throttle-button" type="button" class="btn btn-sm btn-secondary mt-3" het-on="click.throttle(300)->incrementThrottle">
+        Throttle
+      </button>
+      <input
+        id="key-input"
+        class="form-control mt-3"
+        het-on="keydown.esc->keyName='esc'; keydown.enter->keyName='enter'; keydown.space->keyName='space'">
+      <p id="modifier-submitted" het-text="submitted" class="mt-3 mb-0 text-muted"></p>
+      <p id="modifier-parent-clicks" het-text="parentClicks" class="mb-0 text-muted"></p>
+      <p id="modifier-child-clicks" het-text="childClicks" class="mb-0 text-muted"></p>
+      <p id="modifier-capture-order" het-text="captureOrder" class="mb-0 text-muted"></p>
+      <p id="modifier-debounced" het-text="debounced" class="mb-0 text-muted"></p>
+      <p id="modifier-throttled" het-text="throttled" class="mb-0 text-muted"></p>
+      <p id="modifier-key" het-text="keyName" class="mb-0 text-muted"></p>
+    </div>
+  </div>
+</section>
+<script nonce="{{{cspNonce}}}">
+  window.HET.registerComponent('het-on-modifiers', ({ signals }) => {
+    signals.submitted = window.HET.signals.signal(false);
+    signals.parentClicks = window.HET.signals.signal(0);
+    signals.childClicks = window.HET.signals.signal(0);
+    signals.captureOrder = window.HET.signals.signal('');
+    signals.debounced = window.HET.signals.signal('');
+    signals.throttled = window.HET.signals.signal(0);
+    signals.keyName = window.HET.signals.signal('');
+    return {
+      appendChildOrder() {
+        signals.captureOrder.value = `${signals.captureOrder.value} child`.trim();
+      },
+      incrementThrottle() {
+        signals.throttled.value += 1;
+      },
+      incrementParent() {
+        signals.parentClicks.value += 1;
+      },
+      incrementChild() {
+        signals.childClicks.value += 1;
+      },
+    };
+  });
+</script>
