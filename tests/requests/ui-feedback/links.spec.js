@@ -19,12 +19,14 @@ test.describe('link UI feedback', () => {
     await expect(target).toHaveAttribute('data-het-busy', /\d+/);
     await expect(target).toHaveClass(/het-busy/);
     await expect(target).toHaveAttribute('aria-busy', 'true');
+    await expect(page.locator('#inline-button')).toBeDisabled();
 
     releaseSlow();
     await page.waitForSelector('#main-content:has-text("Slow response.")');
     await expect(target).not.toHaveAttribute('data-het-busy', /\d+/);
     await expect(target).not.toHaveClass(/het-busy/);
     await expect(target).not.toHaveAttribute('aria-busy', 'true');
+    await expect(page.locator('#inline-button')).toBeEnabled();
   });
 
   test('does not clear busy state for a newer request', async ({ page }) => {

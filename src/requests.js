@@ -705,6 +705,7 @@ const enableElement = (el, requestId) => {
 };
 
 const startUiFeedback = (targetEl, requestId) => {
+  updateInteractiveElements(targetEl, requestId, disableElement);
   targetEl.setAttribute('data-het-busy', requestId);
   targetEl.setAttribute('aria-busy', 'true');
   targetEl.classList.add(busyClass);
@@ -712,6 +713,7 @@ const startUiFeedback = (targetEl, requestId) => {
 
 const endUiFeedback = (targetEl, requestId) => {
   if (targetEl.dataset.hetBusy !== String(requestId)) return;
+  updateInteractiveElements(targetEl, requestId, enableElement);
   targetEl.removeAttribute('data-het-busy');
   targetEl.removeAttribute('aria-busy');
   targetEl.classList.remove(busyClass);

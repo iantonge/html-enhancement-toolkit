@@ -148,13 +148,14 @@ When using `X-HET-Target-Override`, it is usually safer to also clear selection 
 
 ## UI feedback while requests are in flight
 
-When an enhanced request starts, HET marks the target pane as busy:
+When an enhanced request starts, HET marks the target pane as busy and disables interactive controls inside that pane:
 
 - Sets `aria-busy="true"` on the target pane.
 - Adds the `het-busy` CSS class.
+- Disables `input`, `button`, `select`, and `textarea` elements inside the target pane.
 - If the request is initiated by a form submission, disables controls for that form unless the form or submitter has `het-background`.
 
-When the request finishes or is aborted, HET removes the busy markers and only re-enables form controls that HET disabled for that specific request.
+When the request finishes or is aborted, HET removes the busy markers and only re-enables controls that HET disabled for that specific request.
 
 ## Request coordination
 
