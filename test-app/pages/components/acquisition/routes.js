@@ -38,4 +38,10 @@ router.get('/signal-reassignment', (request, response) => {
   });
 });
 
+router.get('/bool-false', (request, response) => {
+  response.render('components/acquisition/bool-false', {
+    title: 'bool false parsing',
+  });
+});
+
 export default router;

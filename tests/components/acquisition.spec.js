@@ -67,4 +67,11 @@ test.describe('components acquisition and sync expressions', () => {
     );
   });
 
+  test('parses "false" as false with $bool', async ({ page }) => {
+    await page.goto('/components/acquisition/bool-false');
+    await expect(page.locator('#bool-false-value')).toHaveText('false');
+
+    await page.click('#bool-false-toggle');
+    await expect(page.locator('#bool-false-value')).toHaveText('true');
+  });
 });
