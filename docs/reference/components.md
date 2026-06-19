@@ -35,6 +35,20 @@ Set a value to mount a registered component by name, or leave the attribute empt
 
 Register named components before calling `init()`. Anonymous roots are useful when HTML bindings, imports, exports, sync, and cleanup use the normal component lifecycle without a registered setup function.
 
+### `het-mount-pending`
+
+Use `het-mount-pending` to mark a component root until its component mount batch completes, then HET removes the attribute automatically. This can drive CSS that should only apply before HET has finished mounting the component and its nested components.
+
+For example, use it to hide content that would otherwise show the wrong initial state:
+
+```html
+<style>
+  [het-mount-pending] { visibility: hidden; }
+</style>
+```
+
+HET does not provide these styles. Prefer `visibility: hidden` over `display: none` when hidden content should preserve layout.
+
 ## Signals
 
 Component bindings expect Preact signal objects.

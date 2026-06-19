@@ -38,6 +38,7 @@ function mountComponents(root) {
     }
   }
 
+  removeMountPendingAttributes(mountedComponents);
 }
 
 function mountComponent(rootEl, setup, options = {}) {
@@ -126,6 +127,12 @@ function mountComponent(rootEl, setup, options = {}) {
   return true;
 }
 
+function removeMountPendingAttributes(components) {
+  for (const el of components) {
+    el.removeAttribute('het-mount-pending');
+  }
+}
+
 function destroyComponent(el) {
   el.__het_instance?.cleanup();
   delete el.__het_instance;
@@ -167,4 +174,5 @@ export {
   destroyComponent,
   mountComponent,
   mountComponents,
+  removeMountPendingAttributes,
 };
