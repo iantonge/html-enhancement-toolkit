@@ -22,4 +22,12 @@ router.get('/duplicate-target', (request, response) => {
   });
 });
 
+router.post('/post-form', (request, response) => {
+  const someField = request.body['some-field'] ?? '';
+  response.render('requests/progressive-enhancement/forms/responses/post-form', {
+    title: 'Form Progressive Enhancement (Core)',
+    message: `POST form submitted: ${someField}`,
+  });
+});
+
 export default router;

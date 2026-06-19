@@ -6,6 +6,7 @@ import externalRoutes from './external-form/routes.js';
 import getRoutes from './get/routes.js';
 import missingTargetResponseRoutes from './missing-target-response-form/routes.js';
 import noTargetRoutes from './no-target-form/routes.js';
+import postRoutes from './post/routes.js';
 import relativeActionRoutes from './relative-action-form/routes.js';
 import responsesRoutes from './responses/routes.js';
 
@@ -23,6 +24,7 @@ router.use(externalRoutes);
 router.use(getRoutes);
 router.use(missingTargetResponseRoutes);
 router.use(noTargetRoutes);
+router.use(postRoutes);
 router.use(relativeActionRoutes);
 router.use(responsesRoutes);
 

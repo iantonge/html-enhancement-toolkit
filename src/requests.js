@@ -128,7 +128,6 @@ const getSubmitContext = (event) => {
   if (!formMethod) return;
   if (!formAction) return;
   const resolvedMethod = formMethod.toUpperCase();
-  if (resolvedMethod !== 'GET') return;
   event.preventDefault();
   const resolvedAction = formAction;
   const loggingContext = {
@@ -152,7 +151,14 @@ const getSubmitContext = (event) => {
       { cause: { ...loggingContext } },
     );
   const formData = new FormData(form);
-  const request = buildGetRequest(resolvedActionUrl, formData);
+  const request =
+    resolvedMethod === 'GET'
+      ? buildGetRequest(resolvedActionUrl, formData)
+      : buildPostRequest(
+          resolvedActionUrl,
+          resolvedMethod,
+          formData,
+        );
   const target = getTarget(targetName, loggingContext);
   loggingContext.targetPaneElement = target.el;
   return {
@@ -170,6 +176,17 @@ const buildGetRequest = (actionUrl, formData) => {
   const params = new URLSearchParams(formData);
   url.search = params.size ? `?${params.toString()}` : '';
   return new Request(url.href, { method: 'GET' });
+};
+
+const buildPostRequest = (actionUrl, method, formData) => {
+  const params = new URLSearchParams(formData);
+  return new Request(actionUrl.href, {
+    method,
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+    },
+    body: params,
+  });
 };
 
 const getTarget = (targetName, loggingContext) => {

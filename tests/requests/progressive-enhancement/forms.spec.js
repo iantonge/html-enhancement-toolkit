@@ -11,6 +11,16 @@ test.describe('form progressive enhancement (core)', () => {
     expect(content).toContain('GET form submitted');
   });
 
+  test('intercepts form with method POST', async ({ page }) => {
+    await page.goto('/requests/progressive-enhancement/forms/post');
+    await Promise.all([
+      page.waitForSelector('#response-message'),
+      page.click('#submit'),
+    ]);
+    const content = await page.textContent('#response-message');
+    expect(content).toContain('POST form submitted');
+  });
+
   test('resolves relative GET form action against current document URL', async ({
     page,
   }) => {
@@ -21,6 +31,18 @@ test.describe('form progressive enhancement (core)', () => {
     ]);
     const content = await page.textContent('#response-message');
     expect(content).toContain('GET form submitted: relative get value');
+  });
+
+  test('resolves relative POST form action against current document URL', async ({
+    page,
+  }) => {
+    await page.goto('/requests/progressive-enhancement/forms/relative-action-form');
+    await Promise.all([
+      page.waitForSelector('#response-message'),
+      page.click('#post-submit'),
+    ]);
+    const content = await page.textContent('#response-message');
+    expect(content).toContain('POST form submitted: relative post value');
   });
 
   test('does not intercept forms without het-target', async ({ page }) => {
