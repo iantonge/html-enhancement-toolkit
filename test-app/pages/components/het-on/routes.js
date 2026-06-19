@@ -38,6 +38,12 @@ router.get('/assigns-signal', (request, response) => {
   });
 });
 
+router.get('/assignment-missing-source', (request, response) => {
+  response.render('components/het-on/assignment-missing-source', {
+    title: 'Assignment missing source',
+  });
+});
+
 router.get('/modifiers', (request, response) => {
   response.render('components/het-on/modifiers', {
     title: 'Modifiers',

@@ -92,6 +92,14 @@ test.describe('components het-on', () => {
     await expect(page.locator('#modifier-key')).toHaveText('space');
   });
 
+  test('reports error when assignment source signal is missing', async ({ page }) => {
+    await page.goto('/components/het-on/assignment-missing-source');
+    await page.click('#assignment-missing-source-button');
+    await page.waitForFunction(() =>
+      window.hetErrors.some((error) => error.message === 'HET Error: Bound signal does not exist'),
+    );
+  });
+
   test('reports error for invalid modifier duration', async ({ page }) => {
     await page.goto('/components/het-on/invalid-modifier-duration');
     await page.waitForFunction(() =>
