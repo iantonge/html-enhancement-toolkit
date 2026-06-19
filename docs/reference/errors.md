@@ -45,6 +45,22 @@ Fix the binding by supplying an expression.
 <span het-text="count === 1 ? 'item' : 'items'"></span>
 ```
 
+### `HET Error: het-model binding must be a signal name`
+
+`het-model` only accepts a signal name. It does not accept `=` syntax or expressions.
+
+```html
+<div het-component="counter">
+  <input het-model="value=name">
+</div>
+```
+
+Fix the binding by giving `het-model` just the signal name.
+
+```html
+<input het-model="name">
+```
+
 ### `HET Error: het-model binding requires a signal name`
 
 `het-model` was present but empty.

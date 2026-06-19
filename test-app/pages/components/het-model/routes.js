@@ -38,4 +38,10 @@ router.get('/invalid-expression-empty', (request, response) => {
   });
 });
 
+router.get('/invalid-expression-extra-equals', (request, response) => {
+  response.render('components/het-model/invalid-expression-extra-equals', {
+    title: 'Invalid expression: extra equals',
+  });
+});
+
 export default router;
