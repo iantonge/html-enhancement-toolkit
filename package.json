@@ -3,9 +3,11 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "test-app": "node ./test-app/app.js"
+    "test-app": "node ./test-app/app.js",
+    "test": "playwright test"
   },
   "devDependencies": {
+    "@playwright/test": "^1.61.0",
     "express": "^5.2.1"
   }
 }
