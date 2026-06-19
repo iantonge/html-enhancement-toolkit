@@ -1,6 +1,7 @@
 import { Router } from 'express';
 
 import acquisitionRoutes from './acquisition/routes.js';
+import hetModelRoutes from './het-model/routes.js';
 import hetOnRoutes from './het-on/routes.js';
 import lifecycleRoutes from './lifecycle/routes.js';
 
@@ -13,6 +14,7 @@ router.get('/', (request, response) => {
 });
 
 router.use('/acquisition', acquisitionRoutes);
+router.use('/het-model', hetModelRoutes);
 router.use('/het-on', hetOnRoutes);
 router.use('/lifecycle', lifecycleRoutes);
 
