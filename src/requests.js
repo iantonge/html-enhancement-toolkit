@@ -102,10 +102,18 @@ const fetchAndSwap = async (
   }
   const selectHeaderProvided = finalResponse.headers.has('X-HET-Select-Override');
   const selectOverride = finalResponse.headers.get('X-HET-Select-Override');
+  const alsoHeaderProvided = finalResponse.headers.has('X-HET-Also-Override');
+  const alsoOverride = finalResponse.headers.get('X-HET-Also-Override');
   const finalSelect = getFinalSelect(
     select,
     selectHeaderProvided,
     selectOverride,
+    swapLoggingContext,
+  );
+  const finalAlso = getFinalAlso(
+    also,
+    alsoHeaderProvided,
+    alsoOverride,
     swapLoggingContext,
   );
   const responseHtml = await finalResponse.text();
@@ -137,10 +145,13 @@ const fetchAndSwap = async (
     ...swapLoggingContext,
     requestDirectiveAttribute: also ? 'het-also' : '',
   };
+  if (alsoHeaderProvided) {
+    alsoLoggingContext.responseAlsoHeader = alsoOverride;
+  }
   if (!finalSelect || finalSelect.length === 0) {
-    if (also && also.length) {
+    if (finalAlso && finalAlso.length) {
       alsoElements = applyAlsoReplacements(
-        also,
+        finalAlso,
         finalTarget.el,
         newContent,
         responseDoc,
@@ -175,9 +186,9 @@ const fetchAndSwap = async (
     const replacement = getDescendantById(newContent, id);
     insertedElements.push(replaceContent(currentEl, replacement));
   }
-  if (also && also.length) {
+  if (finalAlso && finalAlso.length) {
     alsoElements = applyAlsoReplacements(
-      also,
+      finalAlso,
       finalTarget.el,
       newContent,
       responseDoc,
@@ -207,6 +218,21 @@ const getFinalSelect = (
     requestDirectiveAttribute: 'X-HET-Select-Override',
   };
   return getSelectIds(selectOverride, selectOverrideLoggingContext);
+};
+
+const getFinalAlso = (
+  also,
+  alsoHeaderProvided,
+  alsoOverride,
+  swapLoggingContext,
+) => {
+  if (!alsoHeaderProvided) return also;
+  if ((alsoOverride ?? '').trim() === '') return undefined;
+  const alsoOverrideLoggingContext = {
+    ...swapLoggingContext,
+    requestDirectiveAttribute: 'X-HET-Also-Override',
+  };
+  return getAlsoIds(alsoOverride, alsoOverrideLoggingContext);
 };
 
 const getFinalTarget = (target, targetOverride, requestLoggingContext) => {

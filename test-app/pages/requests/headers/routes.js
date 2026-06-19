@@ -122,6 +122,56 @@ router.get('/x-het-select-override/responses/form-clear', (request, response) =>
     });
 });
 
+router.get('/x-het-also-override', (request, response) => {
+  response.render('requests/headers/x-het-also-override/index', {
+    title: 'X-HET-Also-Override tests',
+  });
+});
+
+router.get('/x-het-also-override/link', (request, response) => {
+  response.render('requests/headers/x-het-also-override/link', {
+    title: 'X-HET-Also-Override link test',
+  });
+});
+
+router.get('/x-het-also-override/form', (request, response) => {
+  response.render('requests/headers/x-het-also-override/form', {
+    title: 'X-HET-Also-Override form test',
+  });
+});
+
+router.get('/x-het-also-override/responses/link', (request, response) => {
+  response
+    .set('X-HET-Also-Override', 'sidebar flash')
+    .render('requests/headers/x-het-also-override/responses/link', {
+      title: 'X-HET-Also-Override link response',
+    });
+});
+
+router.get('/x-het-also-override/responses/link-clear', (request, response) => {
+  response
+    .set('X-HET-Also-Override', '')
+    .render('requests/headers/x-het-also-override/responses/link', {
+      title: 'X-HET-Also-Override clear link response',
+    });
+});
+
+router.get('/x-het-also-override/responses/form', (request, response) => {
+  response
+    .set('X-HET-Also-Override', 'sidebar flash')
+    .render('requests/headers/x-het-also-override/responses/form', {
+      title: 'X-HET-Also-Override form response',
+    });
+});
+
+router.get('/x-het-also-override/responses/form-clear', (request, response) => {
+  response
+    .set('X-HET-Also-Override', '')
+    .render('requests/headers/x-het-also-override/responses/form', {
+      title: 'X-HET-Also-Override clear form response',
+    });
+});
+
 router.get('/nonce', (request, response) => {
   response.render('requests/headers/nonce/index', {
     title: 'Nonce header tests',
