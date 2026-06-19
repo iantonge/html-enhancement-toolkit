@@ -123,11 +123,10 @@ const getSubmitContext = (event) => {
   if (!targetName) return;
   const form = event.target;
   const submitter = event.submitter;
-  const formMethod = form.getAttribute('method');
+  const formMethod = (form.getAttribute('method') || 'GET').toUpperCase();
+  const resolvedMethod = formMethod;
   const formAction = form.getAttribute('action');
-  if (!formMethod) return;
   if (!formAction) return;
-  const resolvedMethod = formMethod.toUpperCase();
   event.preventDefault();
   const resolvedAction = formAction;
   const loggingContext = {

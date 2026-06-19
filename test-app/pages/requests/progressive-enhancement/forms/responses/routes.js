@@ -10,6 +10,14 @@ router.get('/get-form', (request, response) => {
   });
 });
 
+router.get('/default-form', (request, response) => {
+  const someField = request.query['some-field'] ?? '';
+  response.render('requests/progressive-enhancement/forms/responses/default-form', {
+    title: 'Form Progressive Enhancement (Core)',
+    message: `Default form submitted: ${someField}`,
+  });
+});
+
 router.get('/no-target', (request, response) => {
   response.render('requests/progressive-enhancement/forms/responses/no-target', {
     title: 'Form Progressive Enhancement (Core)',

@@ -1,5 +1,6 @@
 import { Router } from 'express';
 
+import defaultMethodRoutes from './default-method-form/routes.js';
 import duplicatePaneRoutes from './duplicate-pane-form/routes.js';
 import duplicateTargetResponseRoutes from './duplicate-target-response-form/routes.js';
 import externalRoutes from './external-form/routes.js';
@@ -18,6 +19,7 @@ router.get('/', (request, response) => {
   });
 });
 
+router.use(defaultMethodRoutes);
 router.use(duplicatePaneRoutes);
 router.use(duplicateTargetResponseRoutes);
 router.use(externalRoutes);
