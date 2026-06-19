@@ -42,6 +42,7 @@ const trustedTypesPolicy = trustedTypes.createPolicy('het', {
       'charset',
       'http-equiv',
       'nonce',
+      'autofocus',
     ],
   }),
 });

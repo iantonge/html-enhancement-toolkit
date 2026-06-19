@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import autofocusRoutes from './autofocus/routes.js';
 import disableRoutes from './disables-in-flight/routes.js';
 import headersRoutes from './headers/routes.js';
 import hetAlsoRoutes from './het-also/routes.js';
@@ -17,6 +18,7 @@ router.get('/', (request, response) => {
   response.render('requests/index', { title: 'Requests' });
 });
 
+router.use('/autofocus', autofocusRoutes);
 router.use('/disables-in-flight', disableRoutes);
 router.use('/headers', headersRoutes);
 router.use('/het-also', hetAlsoRoutes);

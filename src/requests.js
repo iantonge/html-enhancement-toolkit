@@ -250,6 +250,7 @@ const fetchAndSwap = async (
     }
     loadedContent = replaceContent(finalTarget.el, newContent);
     insertedElements.push(loadedContent);
+    focusFirstAutofocus(insertedElements);
     const afterLoadContentEvent = new CustomEvent('het:afterLoadContent', {
       detail: { alsoElements },
       bubbles: true,
@@ -285,6 +286,7 @@ const fetchAndSwap = async (
     );
     insertedElements.push(...alsoElements);
   }
+  focusFirstAutofocus(insertedElements);
   loadedContent = finalTarget.el;
   const afterLoadContentEvent = new CustomEvent('het:afterLoadContent', {
     detail: { alsoElements },
@@ -738,6 +740,18 @@ const endUiFeedback = (targetEl, requestId) => {
   targetEl.removeAttribute('data-het-busy');
   targetEl.removeAttribute('aria-busy');
   targetEl.classList.remove(busyClass);
+};
+
+const focusFirstAutofocus = (elements) => {
+  for (const element of elements) {
+    if (!element) continue;
+    const autofocusEl =
+      element.matches?.('[autofocus]') ? element : element.querySelector?.('[autofocus]');
+    if (!autofocusEl) continue;
+    autofocusEl.focus();
+    autofocusEl.removeAttribute('autofocus');
+    break;
+  }
 };
 
 const updateHistory = (target, responseUrl, select, also) => {

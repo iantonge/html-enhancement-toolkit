@@ -157,6 +157,8 @@ When an enhanced request starts, HET marks the target pane as busy and disables 
 
 When the request finishes or is aborted, HET removes the busy markers and only re-enables controls that HET disabled for that specific request.
 
+After swapping content, HET honors the first `[autofocus]` in newly inserted content, checking target replacements first and then `het-also` replacements, and removes the attribute so it does not trigger again.
+
 ## Request coordination
 
 HET coordinates in-flight requests by target pane so overlapping updates do not race and leave the UI in an inconsistent state.
@@ -176,6 +178,6 @@ Fetch events bubble from the initiator: the `a[het-target]` or `form[het-target]
 | `het:beforeFetch` | Yes | `request`, `initiator`, `target` | Listeners may replace `detail.request` before HET calls `fetch`. |
 | `het:afterFetch` | No | `response`, `initiator`, `target` | Listeners may replace `detail.response` before HET reads the response body. |
 | `het:beforeLoadContent` | Yes | `newContent` | Listeners may replace `detail.newContent` before HET swaps content. |
-| `het:afterLoadContent` | No | `alsoElements` | Dispatched after target/select/also replacements. |
+| `het:afterLoadContent` | No | `alsoElements` | Dispatched after target/select/also replacements and autofocus handling. |
 
 For request diagnostics and full `error.cause` fields, see the [error reference](errors.md#request-errors).

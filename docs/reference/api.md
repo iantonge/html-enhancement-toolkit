@@ -126,6 +126,7 @@ const trustedTypesPolicy = trustedTypes.createPolicy('het', {
         'charset',
         'http-equiv',
         'nonce',
+        'autofocus',
       ],
     }),
 });
@@ -165,7 +166,7 @@ HET.init({
 Function to customize how HET swaps a matched element with its replacement.
 Default: replace the matched element with an imported clone of the response element.
 This is called for the target pane, `het-select` replacements, and `het-also` replacements.
-Return the element that remains in the document after the replacement. HET uses this returned element for post-load lifecycle and sync behavior.
+Return the element that remains in the document after the replacement. HET uses this returned element for autofocus handling and post-load lifecycle and sync behavior.
 
 We recommend using a DOM morphing library such as [Idiomorph](https://github.com/bigskysoftware/idiomorph) for smoother updates.
 
