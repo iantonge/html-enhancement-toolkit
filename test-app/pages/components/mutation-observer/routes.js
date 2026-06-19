@@ -20,4 +20,10 @@ router.get('/unmount-removed', (request, response) => {
   });
 });
 
+router.get('/depth-order', (request, response) => {
+  response.render('components/mutation-observer/depth-order', {
+    title: 'Depth ordering',
+  });
+});
+
 export default router;

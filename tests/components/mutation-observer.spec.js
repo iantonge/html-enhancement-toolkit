@@ -21,4 +21,14 @@ test.describe('components mutation observer', () => {
     await expect(page.locator('.pending-unmount')).toHaveCount(0);
   });
 
+  test('mounts shallow-to-deep and cleans up deep-to-shallow', async ({ page }) => {
+    await page.goto('/components/mutation-observer/depth-order');
+
+    await page.click('#add-tree');
+    await expect(page.locator('#mount-order')).toHaveText('parent,child');
+
+    await page.click('#remove-tree');
+    await expect(page.locator('#cleanup-order')).toHaveText('child,parent');
+  });
+
 });

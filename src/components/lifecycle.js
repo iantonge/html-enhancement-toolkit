@@ -1,5 +1,6 @@
 import { setOnError, handleError } from './error-handler.js';
 import { getMountableComponent } from './registry.js';
+import { getNodeDepth } from './dom-scope.js';
 import {
   destroyComponent,
   mountComponent,
@@ -73,8 +74,12 @@ function initializeObserver() {
     }
 
     queueMicrotask(() => {
-      const additions = Array.from(pendingAdditions);
-      const removals = Array.from(pendingRemovals);
+      const additions = Array.from(pendingAdditions).sort(
+        (a, b) => getNodeDepth(a) - getNodeDepth(b),
+      );
+      const removals = Array.from(pendingRemovals).sort(
+        (a, b) => getNodeDepth(b) - getNodeDepth(a),
+      );
       const mountedComponents = [];
 
       for (const el of additions) {
