@@ -44,6 +44,12 @@ router.get('/modifiers', (request, response) => {
   });
 });
 
+router.get('/invalid-modifier-duration', (request, response) => {
+  response.render('components/het-on/invalid-modifier-duration', {
+    title: 'Invalid modifier duration',
+  });
+});
+
 router.get('/invalid-modifier-duplicate-timing', (request, response) => {
   response.render('components/het-on/invalid-modifier-duplicate-timing', {
     title: 'Invalid modifier duplicate timing',
