@@ -26,6 +26,33 @@ test.describe('form disables-in-flight', () => {
     await expect(page.locator('#submit')).not.toBeDisabled();
   });
 
+  test('disables external form controls while request is in flight', async ({ page }) => {
+    await page.goto('/requests/disables-in-flight/external-controls');
+
+    let releaseResponse;
+    const responseGate = new Promise((resolve) => {
+      releaseResponse = resolve;
+    });
+
+    await page.route('**/requests/disables-in-flight/child-target**', async (route) => {
+      await responseGate;
+      await route.continue();
+    });
+
+    await page.click('#associated-submit');
+
+    await expect(page.locator('#field')).toBeDisabled();
+    await expect(page.locator('#associated-field')).toBeDisabled();
+    await expect(page.locator('#associated-submit')).toBeDisabled();
+
+    releaseResponse();
+
+    await page.waitForSelector('#child-message');
+    await expect(page.locator('#field')).not.toBeDisabled();
+    await expect(page.locator('#associated-field')).not.toBeDisabled();
+    await expect(page.locator('#associated-submit')).not.toBeDisabled();
+  });
+
   test('does not enable controls that were already disabled', async ({ page }) => {
     await page.goto('/requests/disables-in-flight/pre-disabled');
 

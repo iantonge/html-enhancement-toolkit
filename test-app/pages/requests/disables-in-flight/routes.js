@@ -1,5 +1,6 @@
 import { Router } from 'express';
 
+import externalControlsRoutes from './external-controls/routes.js';
 import formControlsRoutes from './form-controls/routes.js';
 import preDisabledRoutes from './pre-disabled/routes.js';
 
@@ -18,6 +19,7 @@ router.get('/child-target', (request, response) => {
   });
 });
 
+router.use(externalControlsRoutes);
 router.use(formControlsRoutes);
 router.use(preDisabledRoutes);
 

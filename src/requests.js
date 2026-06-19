@@ -671,6 +671,11 @@ const getRequestCoordination = (targetEl) => {
 
 const updateForm = (form, requestId, func) => {
   updateInteractiveElements(form, requestId, func);
+  if (form.id) {
+    document
+      .querySelectorAll(`[form="${form.id}"]`)
+      .forEach((el) => func(el, requestId));
+  }
 };
 
 const updateInteractiveElements = (container, requestId, func) => {
