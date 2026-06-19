@@ -50,4 +50,22 @@ test.describe('request lifecycle events', () => {
     await expect(page.locator('#original-content')).toHaveText('Original lifecycle page content.');
   });
 
+  test('allows het:beforeFetch to replace the request', async ({ page }) => {
+    await page.addInitScript(() => {
+      document.addEventListener('het:beforeFetch', (event) => {
+        const url = new URL(event.detail.request.url);
+        url.searchParams.set('variant', 'alternate');
+        event.detail.request = new Request(url.toString(), {
+          method: event.detail.request.method,
+          headers: event.detail.request.headers,
+        });
+      });
+    });
+
+    await page.goto('/requests/lifecycle-events');
+    await Promise.all([
+      page.waitForSelector('#response-message:has-text("Alternate lifecycle response loaded.")'),
+      page.click('#link'),
+    ]);
+  });
 });

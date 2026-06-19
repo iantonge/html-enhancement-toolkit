@@ -156,14 +156,15 @@ const fetchAndSwap = async (
   });
   initiator.dispatchEvent(beforeFetchEvent);
   if (beforeFetchEvent.defaultPrevented) return;
+  const finalRequest = beforeFetchEvent.detail.request;
   const requestLoggingContext = {
     ...loggingContext,
-    requestUrl: request.url,
-    requestMethod: request.method,
+    requestUrl: finalRequest.url,
+    requestMethod: finalRequest.method,
     resolvedTargetName: target.name,
     targetPaneElement: target.el,
   };
-  const finalResponse = await fetch(request);
+  const finalResponse = await fetch(finalRequest);
   const targetOverride = finalResponse.headers.get('X-HET-Target-Override');
   const finalTarget = getFinalTarget(target, targetOverride, requestLoggingContext);
   const finalTargetChanged = finalTarget.el !== target.el;
