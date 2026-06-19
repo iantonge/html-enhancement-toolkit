@@ -49,4 +49,11 @@ test.describe('components structural templates', () => {
     expect(cleanupIds).toEqual(['1']);
   });
 
+  test('reports error when het-for source is not an array', async ({ page }) => {
+    await page.goto('/components/structural/invalid-non-array');
+    await page.waitForFunction(() =>
+      window.hetErrors.some((error) => error.message === 'HET Error: het-for source must be an array'),
+    );
+  });
+
 });

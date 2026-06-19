@@ -20,4 +20,10 @@ router.get('/if-toggle', (request, response) => {
   });
 });
 
+router.get('/invalid-non-array', (request, response) => {
+  response.render('components/structural/invalid-non-array', {
+    title: 'Invalid het-for source',
+  });
+});
+
 export default router;
