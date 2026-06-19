@@ -6,21 +6,25 @@ function withOptionalComponentName(cause, componentName, property = 'componentNa
 }
 
 function getComponentCause(componentElement) {
-  return {
-    componentName: componentElement.getAttribute('het-component'),
-    componentElement,
-  };
+  return withOptionalComponentName(
+    {
+      componentElement,
+    },
+    componentElement.getAttribute('het-component'),
+  );
 }
 
 function getBindingCause(binding, extra = {}) {
-  return {
-    componentName: binding.componentName,
-    componentElement: binding.componentElement,
-    bindingAttribute: binding.attrName ?? binding.dirName,
-    bindingDeclaration: binding.exp,
-    bindingElement: binding.el,
-    ...extra,
-  };
+  return withOptionalComponentName(
+    {
+      componentElement: binding.componentElement,
+      bindingAttribute: binding.attrName ?? binding.dirName,
+      bindingDeclaration: binding.exp,
+      bindingElement: binding.el,
+      ...extra,
+    },
+    binding.componentName,
+  );
 }
 
 function throwInvalidBindingExpression(bindingLoggingContext, reason = 'Invalid binding expression') {

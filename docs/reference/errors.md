@@ -36,7 +36,7 @@ This error does not include a structured `cause`.
 A declaration that expects a signal name provided an empty or invalid identifier.
 
 ```html
-<div het-component="counter">
+<div het-component>
   <input het-model="">
 </div>
 ```
@@ -52,7 +52,7 @@ Fix the declaration by naming the signal.
 `het-text` was present but empty.
 
 ```html
-<div het-component="counter">
+<div het-component>
   <span het-text=""></span>
 </div>
 ```
@@ -68,7 +68,7 @@ Fix the binding by supplying an expression.
 `het-model` only accepts a signal name. It does not accept `=` syntax or expressions.
 
 ```html
-<div het-component="counter">
+<div het-component>
   <input het-model="value=name">
 </div>
 ```
@@ -84,7 +84,7 @@ Fix the binding by giving `het-model` just the signal name.
 `het-model` was present but empty.
 
 ```html
-<div het-component="counter">
+<div het-component>
   <input het-model="">
 </div>
 ```
@@ -100,7 +100,7 @@ Fix the binding by naming the signal that should stay in sync with the control.
 A `het-on` declaration was missing `->` or used it more than once.
 
 ```html
-<div het-component="counter">
+<div het-component>
   <button het-on="click=>save"></button>
 </div>
 ```
@@ -116,7 +116,7 @@ Fix the binding by using exactly one event/action separator.
 A `het-on` declaration used `->` but left the event name or action empty.
 
 ```html
-<div het-component="counter">
+<div het-component>
   <button het-on="click->"></button>
 </div>
 ```
@@ -132,7 +132,7 @@ Fix the binding by naming both sides.
 An assignment-style `het-on` declaration used `=` but left the signal name or expression empty.
 
 ```html
-<div het-component="counter">
+<div het-component>
   <input het-on="input->count=">
 </div>
 ```
@@ -148,7 +148,7 @@ Fix the binding by filling in both sides.
 A `het-seed` or `het-sync` declaration did not contain exactly one top-level `=` between the signal name and expression.
 
 ```html
-<div het-component="counter">
+<div het-component>
   <span het-seed="count"></span>
 </div>
 ```
@@ -164,7 +164,7 @@ Fix the declaration so it has one signal target and one expression.
 A `het-seed` or `het-sync` declaration used `=` but left the signal name or expression empty.
 
 ```html
-<div het-component="counter">
+<div het-component>
   <span het-seed="count="></span>
 </div>
 ```
@@ -180,7 +180,7 @@ Fix the declaration by filling in both sides.
 The expression parser or validator rejected the declaration. This includes malformed syntax, unsupported calls, general computed access, invalid identifiers, or forbidden member access.
 
 ```html
-<div het-component="counter">
+<div het-component>
   <button het-on="click->count=window.alert(1)"></button>
 </div>
 ```
@@ -197,7 +197,7 @@ A multi-binding attribute used top-level semicolons but left one declaration emp
 An optional trailing semicolon by itself is allowed.
 
 ```html
-<div het-component="counter">
+<div het-component>
   <button het-on="click->save; ; keydown.enter->save"></button>
 </div>
 ```
@@ -215,7 +215,7 @@ This error attaches the normal structured binding `cause`.
 An output binding such as `het-text` used contextual snapshot values like `$target`, `$event`, or `$props`.
 
 ```html
-<div het-component="counter">
+<div het-component>
   <p het-text="$target.value"></p>
 </div>
 ```
@@ -232,7 +232,7 @@ Fix the binding by reading from the DOM in `het-seed`, `het-sync`, or an event-t
 An event modifier name or modifier combination was not supported.
 
 ```html
-<div het-component="counter">
+<div het-component>
   <button het-on="click.debounce->save"></button>
 </div>
 ```
@@ -247,7 +247,7 @@ Cause fields for component binding errors in this section:
 
 | `cause` property | Meaning |
 | --- | --- |
-| `componentName` | Value of the owning `het-component` attribute. |
+| `componentName` | Value of the owning `het-component` attribute, if present. |
 | `componentElement` | Component root element that was mounting. |
 | `bindingAttribute` | Binding attribute being parsed. |
 | `bindingDeclaration` | Raw binding declaration that failed. |
@@ -278,7 +278,7 @@ Fix the binding by returning the method, or by changing the binding to the metho
 A binding referenced a signal that was never created, imported, or acquired.
 
 ```html
-<div het-component="counter">
+<div het-component>
   <p het-text="count"></p>
 </div>
 ```
@@ -290,7 +290,7 @@ Fix the component by creating, importing, or acquiring the signal before the bin
 Two acquisition bindings tried to create the same local signal.
 
 ```html
-<div het-component="counter">
+<div het-component>
   <span het-seed="count=$int($text)">1</span>
   <span het-seed="count=$int($text)">2</span>
 </div>
@@ -334,7 +334,7 @@ signals.count = HET.signals.signal(1);
 `het-imports` used a malformed declaration.
 
 ```html
-<div het-component="child" het-imports="child=query=extra"></div>
+<div het-component het-imports="child=query=extra"></div>
 ```
 
 Fix the declaration by using either `localName` or `localName=sourceName`.

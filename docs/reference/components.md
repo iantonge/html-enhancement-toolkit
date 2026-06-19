@@ -15,7 +15,8 @@
 
 ### `het-component`
 
-Use `het-component` to mark a component root and mount a registered component by name.
+Use `het-component` to mark a component root.
+Set a value to mount a registered component by name, or leave the attribute empty to mount an anonymous component root when component JavaScript is unnecessary.
 
 ```html
 <div het-component="counter">
@@ -24,7 +25,14 @@ Use `het-component` to mark a component root and mount a registered component by
 </div>
 ```
 
-Register named components before calling `init()`.
+```html
+<div het-component>
+  <input value="Ready" het-model="message">
+  <output het-text="message"></output>
+</div>
+```
+
+Register named components before calling `init()`. Anonymous roots are useful when HTML bindings, imports, exports, and sync use the normal component lifecycle without a registered setup function.
 
 ## Signals
 

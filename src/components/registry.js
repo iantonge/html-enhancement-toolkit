@@ -9,6 +9,9 @@ function registerComponent(name, setup) {
 
 function getMountableComponent(el) {
   const name = el.getAttribute('het-component');
+  if (name === '') {
+    return {};
+  }
   if (!components.has(name)) {
     return undefined;
   }
