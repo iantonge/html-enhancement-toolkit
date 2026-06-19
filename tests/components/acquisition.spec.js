@@ -67,6 +67,16 @@ test.describe('components acquisition and sync expressions', () => {
     );
   });
 
+  test('seeds signals through het-model', async ({ page }) => {
+    await page.goto('/components/acquisition/model-seed');
+    await expect(page.locator('#model-seed-input')).toHaveValue('Seeded');
+    await expect(page.locator('#model-seed-value')).toHaveText('Seeded');
+
+    await page.click('#model-seed-set');
+    await expect(page.locator('#model-seed-input')).toHaveValue('Updated');
+    await expect(page.locator('#model-seed-value')).toHaveText('Updated');
+  });
+
   test('parses "false" as false with $bool', async ({ page }) => {
     await page.goto('/components/acquisition/bool-false');
     await expect(page.locator('#bool-false-value')).toHaveText('false');

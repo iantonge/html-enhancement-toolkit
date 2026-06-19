@@ -44,6 +44,12 @@ router.get('/signal-reassignment', (request, response) => {
   });
 });
 
+router.get('/model-seed', (request, response) => {
+  response.render('components/acquisition/model-seed', {
+    title: 'het-model seed',
+  });
+});
+
 router.get('/bool-false', (request, response) => {
   response.render('components/acquisition/bool-false', {
     title: 'bool false parsing',
