@@ -11,4 +11,16 @@ test.describe('link progressive enhancement (core)', () => {
     expect(content).toContain('This is an internal page.');
   });
 
+  test('intercepts internal link when clicking nested span', async ({
+    page,
+  }) => {
+    await page.goto('/requests/progressive-enhancement/links/internal-span');
+    await Promise.all([
+      page.waitForSelector('#internal-page-message'),
+      page.click('#link-span'),
+    ]);
+    const content = await page.textContent('#internal-page-message');
+    expect(content).toContain('This is an internal page.');
+  });
+
 });

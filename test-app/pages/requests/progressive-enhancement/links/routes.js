@@ -1,6 +1,7 @@
 import { Router } from 'express';
 
 import internalRoutes from './internal/routes.js';
+import internalSpanRoutes from './internal-span/routes.js';
 import responsesRoutes from './responses/routes.js';
 
 const router = Router();
@@ -12,6 +13,7 @@ router.get('/', (request, response) => {
 });
 
 router.use(internalRoutes);
+router.use(internalSpanRoutes);
 router.use(responsesRoutes);
 
 export default router;

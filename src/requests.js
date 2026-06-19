@@ -63,7 +63,7 @@ const fetchAndSwap = async (
 };
 
 const getClickContext = (event) => {
-  const link = event.target.matches('a[het-target]') ? event.target : null;
+  const link = event.target.closest('a[het-target]');
   if (!link) return;
   if (link.hasAttribute('target')) return;
   if (new URL(link.href).origin !== window.location.origin) return;
