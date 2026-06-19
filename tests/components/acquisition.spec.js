@@ -42,4 +42,11 @@ test.describe('components acquisition and sync expressions', () => {
     });
   });
 
+  test('reports error when a signal is reassigned after initialization', async ({ page }) => {
+    await page.goto('/components/acquisition/signal-reassignment');
+    await page.waitForFunction(() =>
+      window.hetErrors.some((error) => error.message === 'HET Error: Signal override after initialization'),
+    );
+  });
+
 });

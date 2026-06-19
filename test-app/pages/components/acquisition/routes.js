@@ -26,4 +26,10 @@ router.get('/duplicate-seed-signal', (request, response) => {
   });
 });
 
+router.get('/signal-reassignment', (request, response) => {
+  response.render('components/acquisition/signal-reassignment', {
+    title: 'Signal reassignment',
+  });
+});
+
 export default router;

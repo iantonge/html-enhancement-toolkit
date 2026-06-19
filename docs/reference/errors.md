@@ -168,6 +168,19 @@ Two acquisition bindings tried to create the same local signal.
 
 Fix the component by choosing one acquisition source for the signal.
 
+### `HET Error: Signal override after initialization`
+
+`setup` tried to assign the same signal name twice.
+
+```js
+HET.registerComponent('counter', ({ signals }) => {
+  signals.count = HET.signals.signal(1);
+  signals.count = HET.signals.signal(2);
+});
+```
+
+Fix the component by initializing each owned signal only once.
+
 ### `HET Error: Signal initialized with a non-signal value`
 
 `setup` assigned a plain value to `signals.<name>` instead of a Preact signal object.
