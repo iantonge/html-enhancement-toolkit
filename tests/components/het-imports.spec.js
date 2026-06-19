@@ -10,4 +10,13 @@ test.describe('components het-exports / het-imports', () => {
     await expect(page.locator('#nearest-value')).toHaveText('1');
   });
 
+  test('supports import alias declarations', async ({ page }) => {
+    await page.goto('/components/het-imports/alias');
+
+    await expect(page.locator('#alias-value')).toHaveText('0');
+
+    await page.click('#increment-alias');
+    await expect(page.locator('#alias-value')).toHaveText('1');
+  });
+
 });

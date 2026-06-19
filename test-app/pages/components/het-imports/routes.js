@@ -14,4 +14,10 @@ router.get('/nearest-ancestor', (request, response) => {
   });
 });
 
+router.get('/alias', (request, response) => {
+  response.render('components/het-imports/alias', {
+    title: 'Import alias',
+  });
+});
+
 export default router;
