@@ -1,6 +1,7 @@
 import { Router } from 'express';
 
 import duplicatePaneRoutes from './duplicate-pane-form/routes.js';
+import duplicateTargetResponseRoutes from './duplicate-target-response-form/routes.js';
 import getRoutes from './get/routes.js';
 import noTargetRoutes from './no-target-form/routes.js';
 import relativeActionRoutes from './relative-action-form/routes.js';
@@ -15,6 +16,7 @@ router.get('/', (request, response) => {
 });
 
 router.use(duplicatePaneRoutes);
+router.use(duplicateTargetResponseRoutes);
 router.use(getRoutes);
 router.use(noTargetRoutes);
 router.use(relativeActionRoutes);

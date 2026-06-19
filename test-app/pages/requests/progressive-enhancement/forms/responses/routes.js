@@ -15,4 +15,10 @@ router.get('/no-target', (request, response) => {
   });
 });
 
+router.get('/duplicate-target', (request, response) => {
+  response.render('requests/progressive-enhancement/forms/responses/duplicate-target', {
+    title: 'Form Progressive Enhancement (Core)',
+  });
+});
+
 export default router;
