@@ -60,4 +60,11 @@ test.describe('components het-model', () => {
     await expect(page.locator('#count-value')).toHaveText('12');
   });
 
+  test('reports error for empty het-model expression', async ({ page }) => {
+    await page.goto('/components/het-model/invalid-expression-empty');
+    await page.waitForFunction(() =>
+      window.hetErrors.some((error) => error.message === 'HET Error: het-model binding requires a signal name'),
+    );
+  });
+
 });

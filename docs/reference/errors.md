@@ -45,6 +45,21 @@ Fix the binding by supplying an expression.
 <span het-text="count === 1 ? 'item' : 'items'"></span>
 ```
 
+### `HET Error: het-model binding requires a signal name`
+
+`het-model` was present but empty.
+
+```html
+<div het-component="counter">
+  <input het-model="">
+</div>
+```
+
+Fix the binding by naming the signal that should stay in sync with the control.
+
+```html
+<input het-model="name">
+```
 
 ### `HET Error: Event binding must contain exactly one "->"`
 

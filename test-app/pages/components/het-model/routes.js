@@ -32,4 +32,10 @@ router.get('/radio', (request, response) => {
   });
 });
 
+router.get('/invalid-expression-empty', (request, response) => {
+  response.render('components/het-model/invalid-expression-empty', {
+    title: 'Invalid expression: empty',
+  });
+});
+
 export default router;
