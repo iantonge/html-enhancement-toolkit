@@ -96,6 +96,32 @@ test.describe('components acquisition and sync expressions', () => {
     });
   });
 
+  test('reports error for invalid acquisition expressions', async ({ page }) => {
+    await page.goto('/components/acquisition/invalid-negation');
+    await page.waitForFunction(() =>
+      window.hetErrors.some((error) => error.message === 'HET Error: Invalid expression'),
+    );
+  });
+
+  test('reports error when negation has no signal name', async ({ page }) => {
+    await page.goto('/components/acquisition/empty-negation');
+    await page.waitForFunction(() =>
+      window.hetErrors.some((error) => error.message === 'HET Error: Invalid expression'),
+    );
+    const cause = await page.evaluate(() => ({
+      componentName: window.hetErrors.at(-1).cause.componentName,
+      bindingAttribute: window.hetErrors.at(-1).cause.bindingAttribute,
+      bindingDeclaration: window.hetErrors.at(-1).cause.bindingDeclaration,
+      bindingElementId: window.hetErrors.at(-1).cause.bindingElement.id,
+    }));
+    expect(cause).toEqual({
+      componentName: 'acquisition-empty-negation',
+      bindingAttribute: 'het-props',
+      bindingDeclaration: 'hidden=!',
+      bindingElementId: 'empty-negation-value',
+    });
+  });
+
   test('reports error when a signal is reassigned after initialization', async ({ page }) => {
     await page.goto('/components/acquisition/signal-reassignment');
     await page.waitForFunction(() =>

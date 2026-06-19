@@ -62,6 +62,18 @@ router.get('/invalid-multiple-colons', (request, response) => {
   });
 });
 
+router.get('/invalid-negation', (request, response) => {
+  response.render('components/acquisition/invalid-negation', {
+    title: 'Invalid negation',
+  });
+});
+
+router.get('/empty-negation', (request, response) => {
+  response.render('components/acquisition/empty-negation', {
+    title: 'Empty negation',
+  });
+});
+
 router.get('/incomplete-acquisition', (request, response) => {
   response.render('components/acquisition/incomplete-acquisition', {
     title: 'Incomplete acquisition',
