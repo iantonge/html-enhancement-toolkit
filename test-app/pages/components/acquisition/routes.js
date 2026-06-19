@@ -32,6 +32,12 @@ router.get('/duplicate-seed-signal', (request, response) => {
   });
 });
 
+router.get('/acquisition-not-supported', (request, response) => {
+  response.render('components/acquisition/acquisition-not-supported', {
+    title: 'Acquisition not supported',
+  });
+});
+
 router.get('/signal-reassignment', (request, response) => {
   response.render('components/acquisition/signal-reassignment', {
     title: 'Signal reassignment',
