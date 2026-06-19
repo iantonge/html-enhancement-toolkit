@@ -92,6 +92,13 @@ test.describe('components het-on', () => {
     await expect(page.locator('#modifier-key')).toHaveText('space');
   });
 
+  test('reports error for duplicate timing modifiers', async ({ page }) => {
+    await page.goto('/components/het-on/invalid-modifier-duplicate-timing');
+    await page.waitForFunction(() =>
+      window.hetErrors.some((error) => error.message === 'HET Error: Invalid event modifier'),
+    );
+  });
+
   test('reports error for duplicate key modifiers', async ({ page }) => {
     await page.goto('/components/het-on/invalid-modifier-duplicate-key');
     await page.waitForFunction(() =>
