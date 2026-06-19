@@ -56,4 +56,11 @@ test.describe('components structural templates', () => {
     );
   });
 
+  test('reports error when a forwarded property is not a signal', async ({ page }) => {
+    await page.goto('/components/structural/invalid-property');
+    await page.waitForFunction(() =>
+      window.hetErrors.some((error) => error.message === 'HET Error: Structural item property must be a signal'),
+    );
+  });
+
 });

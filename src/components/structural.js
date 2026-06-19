@@ -1,6 +1,7 @@
 import { effect } from '@preact/signals-core';
 import {
   FOR_ATTR,
+  PREACT_SIGNAL_BRAND,
 } from './constants.js';
 import { handleError } from './error-handler.js';
 import { getBindingCause } from './logging.js';
@@ -130,7 +131,20 @@ function getForwardedSignalsForValue(value, binding) {
     );
   }
 
-  return value;
+  const entries = Object.entries(value);
+  const signalsByName = Object.create(null);
+
+  for (const [key, candidate] of entries) {
+    if (candidate?.brand !== PREACT_SIGNAL_BRAND) {
+      throw new Error(
+        'HET Error: Structural item property must be a signal',
+        { cause: getBindingCause(binding, { signalName: key }) },
+      );
+    }
+    signalsByName[key] = candidate;
+  }
+
+  return signalsByName;
 }
 
 function createStructuralClone(ctx, binding, importedSignals, previousRootEl, mountApi) {

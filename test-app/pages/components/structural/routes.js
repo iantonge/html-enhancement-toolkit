@@ -26,4 +26,10 @@ router.get('/invalid-non-array', (request, response) => {
   });
 });
 
+router.get('/invalid-property', (request, response) => {
+  response.render('components/structural/invalid-property', {
+    title: 'Invalid forwarded property',
+  });
+});
+
 export default router;
