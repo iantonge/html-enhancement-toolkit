@@ -311,4 +311,10 @@ signals.count = HET.signals.signal(1);
 
 ## Imports and Exports
 
+### `HET Error: Imported signal has no exporting ancestor`
+
+`het-imports` requested a signal that no ancestor component currently exports.
+
+Fix the component tree by exporting the signal from an ancestor or by removing the import.
+
 

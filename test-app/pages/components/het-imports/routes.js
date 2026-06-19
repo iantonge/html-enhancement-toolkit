@@ -20,4 +20,10 @@ router.get('/alias', (request, response) => {
   });
 });
 
+router.get('/missing-parent', (request, response) => {
+  response.render('components/het-imports/missing-parent', {
+    title: 'Missing exporting parent',
+  });
+});
+
 export default router;
