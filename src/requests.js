@@ -1,4 +1,5 @@
 const parser = new DOMParser();
+const inFlightRequests = new Map();
 let onError = (error) => {
   console.error(error, error.cause);
 };
@@ -14,16 +15,28 @@ const clickPipeline = async (event) => {
   try {
     ctx = getClickContext(event);
     if (!ctx) return;
-    await fetchAndSwap(
-      ctx.request,
-      ctx.target,
-      ctx.select,
-      ctx.also,
-      ctx.loggingContext,
-      ctx.initiator,
-    );
+    const requestCoordination = getRequestCoordination(ctx.target.el);
+    if (requestCoordination.abortThis) return;
+    requestCoordination.toAbort.forEach((controller) => controller.abort());
+    inFlightRequests.set(ctx.target.el, ctx.abortController);
+    try {
+      await fetchAndSwap(
+        ctx.request,
+        ctx.target,
+        ctx.select,
+        ctx.also,
+        ctx.loggingContext,
+        ctx.initiator,
+      );
+    } catch (error) {
+      if (error.name !== 'AbortError') throw error;
+    }
   } catch (error) {
     onError(error);
+  } finally {
+    if (ctx?.target?.el) {
+      inFlightRequests.delete(ctx.target.el);
+    }
   }
 };
 
@@ -31,14 +44,24 @@ const submitPipeline = async (event) => {
   try {
     const ctx = getSubmitContext(event);
     if (!ctx) return;
-    await fetchAndSwap(
-      ctx.request,
-      ctx.target,
-      ctx.select,
-      ctx.also,
-      ctx.loggingContext,
-      ctx.initiator,
-    );
+    const requestCoordination = getRequestCoordination(ctx.target.el);
+    if (requestCoordination.abortThis) return;
+    requestCoordination.toAbort.forEach((controller) => controller.abort());
+    inFlightRequests.set(ctx.target.el, ctx.abortController);
+    try {
+      await fetchAndSwap(
+        ctx.request,
+        ctx.target,
+        ctx.select,
+        ctx.also,
+        ctx.loggingContext,
+        ctx.initiator,
+      );
+    } catch (error) {
+      if (error.name !== 'AbortError') throw error;
+    } finally {
+      inFlightRequests.delete(ctx.target.el);
+    }
   } catch (error) {
     onError(error);
   }
@@ -185,10 +208,12 @@ const getClickContext = (event) => {
   const also = getAlsoIds(link.getAttribute('het-also'), alsoLoggingContext);
   const target = getTarget(targetName, loggingContext);
   loggingContext.targetPaneElement = target.el;
-  const request = new Request(link.href);
+  const abortController = new AbortController();
+  const request = new Request(link.href, { signal: abortController.signal });
   return {
     request,
     target,
+    abortController,
     select,
     also,
     initiator: link,
@@ -281,14 +306,16 @@ const getSubmitContext = (event) => {
       { cause: { ...loggingContext } },
     );
   const formData = new FormData(form, submitter);
+  const abortController = new AbortController();
   const request =
     resolvedMethod === 'GET'
-      ? buildGetRequest(resolvedActionUrl, formData)
+      ? buildGetRequest(resolvedActionUrl, formData, abortController)
       : buildPostRequest(
           resolvedActionUrl,
           resolvedMethod,
           formData,
           resolvedEnctype,
+          abortController,
         );
   const target = getTarget(targetName, loggingContext);
   loggingContext.targetPaneElement = target.el;
@@ -296,6 +323,7 @@ const getSubmitContext = (event) => {
     request,
     target,
     form,
+    abortController,
     select,
     also,
     initiator: form,
@@ -304,11 +332,11 @@ const getSubmitContext = (event) => {
   };
 };
 
-const buildGetRequest = (actionUrl, formData) => {
+const buildGetRequest = (actionUrl, formData, abortController) => {
   const url = new URL(actionUrl.href);
   const params = new URLSearchParams(formData);
   url.search = params.size ? `?${params.toString()}` : '';
-  return new Request(url.href, { method: 'GET' });
+  return new Request(url.href, { method: 'GET', signal: abortController.signal });
 };
 
 const buildPostRequest = (
@@ -316,11 +344,13 @@ const buildPostRequest = (
   method,
   formData,
   enctype,
+  abortController,
 ) => {
   if (enctype === 'multipart/form-data') {
     return new Request(actionUrl.href, {
       method,
       body: formData,
+      signal: abortController.signal,
     });
   }
   if (enctype === 'text/plain') {
@@ -333,6 +363,7 @@ const buildPostRequest = (
         'Content-Type': 'text/plain;charset=UTF-8',
       },
       body: textBody,
+      signal: abortController.signal,
     });
   }
   const params = new URLSearchParams(formData);
@@ -342,6 +373,7 @@ const buildPostRequest = (
       'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
     },
     body: params,
+    signal: abortController.signal,
   });
 };
 
@@ -478,6 +510,19 @@ const applyAlsoReplacements = (
   return replacements;
 };
 
+const getRequestCoordination = (targetEl) => {
+  const toAbort = [];
+  for (const [otherTarget, controller] of inFlightRequests.entries()) {
+    if (controller.signal.aborted) continue;
+    if (targetEl === otherTarget || targetEl.contains(otherTarget)) {
+      toAbort.push(controller);
+    } else if (otherTarget.contains(targetEl)) {
+      return { abortThis: true };
+    }
+  }
+  return { toAbort };
+};
+
 const getTarget = (targetName, loggingContext) => {
   const candidates = document.querySelectorAll(`[het-pane="${targetName}"]`);
   if (candidates.length === 0) {
@@ -514,6 +559,8 @@ export function init(config) {
 }
 
 export function destroy() {
+  inFlightRequests.forEach((controller) => controller.abort());
+  inFlightRequests.clear();
   document.removeEventListener('click', clickPipeline);
   document.removeEventListener('submit', submitPipeline);
 }

@@ -9,6 +9,7 @@
 - [Partial updates with `het-select`](#partial-updates-with-het-select)
 - [Additional replacements with `het-also`](#additional-replacements-with-het-also)
 - [Server contract](#server-contract)
+- [Request coordination](#request-coordination)
 - [Lifecycle events](#lifecycle-events)
 
 ## Core attributes
@@ -108,6 +109,14 @@ Use `het-also` to replace elements outside the target pane from the same respons
 ## Server contract
 
 Responses must be HTML containing exactly one matching target pane, regardless of HTTP status code.
+
+## Request coordination
+
+HET coordinates in-flight requests by target pane so overlapping updates do not race and leave the UI in an inconsistent state.
+
+- If a pane request is in flight, a new request to the same pane cancels the earlier one.
+- If a child pane request is in flight, a new request to an ancestor pane cancels the child request.
+- If a parent pane request is in flight, new requests targeting panes inside it are ignored.
 
 ## Lifecycle events
 
