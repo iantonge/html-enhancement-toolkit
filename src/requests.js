@@ -139,7 +139,10 @@ const getSubmitContext = (event) => {
   const resolvedAction = submitterAction || formAction;
   const formEnctype =
     form.getAttribute('enctype') || 'application/x-www-form-urlencoded';
-  const resolvedEnctype = formEnctype.toLowerCase();
+  const submitterEnctype = submitter?.hasAttribute('formenctype')
+    ? submitter.getAttribute('formenctype')
+    : undefined;
+  const resolvedEnctype = (submitterEnctype || formEnctype).toLowerCase();
   const loggingContext = {
     formElement: form,
     resolvedTargetName: targetName,
@@ -164,6 +167,9 @@ const getSubmitContext = (event) => {
   }
   if (submitterMethod) {
     loggingContext.submitterMethod = submitterMethod;
+  }
+  if (submitterEnctype) {
+    loggingContext.submitterEnctype = submitterEnctype;
   }
   const resolvedActionUrl = new URL(resolvedAction, window.location.href);
   if (resolvedActionUrl.origin !== window.location.origin)

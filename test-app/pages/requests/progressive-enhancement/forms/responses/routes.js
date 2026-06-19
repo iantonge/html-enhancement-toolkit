@@ -66,6 +66,24 @@ router.post('/enctype-multipart', (request, response) => {
   });
 });
 
+router.post('/enctype-override', (request, response) => {
+  const someField = request.body['some-field'] ?? '';
+  const contentType = request.get('content-type') ?? '';
+  response.render('requests/progressive-enhancement/forms/responses/post-form', {
+    title: 'Form Progressive Enhancement (Core)',
+    message: `Override form submitted: ${someField} (${contentType})`,
+  });
+});
+
+router.post('/enctype-submitter-multipart', (request, response) => {
+  const someField = request.body['some-field'] ?? '';
+  const contentType = request.get('content-type') ?? '';
+  response.render('requests/progressive-enhancement/forms/responses/post-form', {
+    title: 'Form Progressive Enhancement (Core)',
+    message: `Submitter enctype submitted: ${someField} (${contentType})`,
+  });
+});
+
 router.get('/child-target', (request, response) => {
   response.render('requests/progressive-enhancement/forms/responses/child-target', {
     title: 'Form Progressive Enhancement (Core)',

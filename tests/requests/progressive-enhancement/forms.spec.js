@@ -86,6 +86,30 @@ test.describe('form progressive enhancement (core)', () => {
     expect(content).toContain('multipart/form-data');
   });
 
+  test('submitter enctype overrides form enctype', async ({ page }) => {
+    await page.goto('/requests/progressive-enhancement/forms/enctype-override-form');
+    await Promise.all([
+      page.waitForSelector('#response-message'),
+      page.click('#override-submit'),
+    ]);
+    const content = await page.textContent('#response-message');
+    expect(content).toContain('Override form submitted: override value');
+    expect(content).toContain('application/x-www-form-urlencoded');
+  });
+
+  test('submitter enctype can set multipart on default form', async ({
+    page,
+  }) => {
+    await page.goto('/requests/progressive-enhancement/forms/submitter-enctype-form');
+    await Promise.all([
+      page.waitForSelector('#response-message'),
+      page.click('#submitter-enctype-submit'),
+    ]);
+    const content = await page.textContent('#response-message');
+    expect(content).toContain('Submitter enctype submitted: submitter enctype value');
+    expect(content).toContain('multipart/form-data');
+  });
+
   test('does not intercept forms without het-target', async ({ page }) => {
     await page.goto('/requests/progressive-enhancement/forms/no-target-form');
     await Promise.all([
