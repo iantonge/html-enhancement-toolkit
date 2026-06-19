@@ -1,6 +1,7 @@
 const parser = new DOMParser();
 const inFlightRequests = new Map();
 let historyStateReplaced = false;
+let currentHistoryUrl = window.location.href;
 let onError = (error) => {
   console.error(error, error.cause);
 };
@@ -43,7 +44,7 @@ const clickPipeline = async (event) => {
       if (response.finalTarget.isNav) {
         updateHead(response.newHead);
       }
-      updateHistory(response.finalTarget, response.url);
+      updateHistory(response.finalTarget, response.url, ctx.select, ctx.also);
     } catch (error) {
       if (error.name !== 'AbortError') throw error;
     }
@@ -77,7 +78,7 @@ const submitPipeline = async (event) => {
       if (response.finalTarget.isNav) {
         updateHead(response.newHead);
       }
-      updateHistory(response.finalTarget, response.url);
+      updateHistory(response.finalTarget, response.url, ctx.select, ctx.also);
     } catch (error) {
       if (error.name !== 'AbortError') throw error;
     } finally {
@@ -85,6 +86,37 @@ const submitPipeline = async (event) => {
     }
   } catch (error) {
     onError(error);
+  }
+};
+
+const popstatePipeline = async (event) => {
+  let ctx;
+  try {
+    ctx = getPopStateContext(event);
+    if (!ctx) return;
+    inFlightRequests.set(ctx.target.el, ctx.abortController);
+    try {
+      const response = await fetchAndSwap(
+        ctx.request,
+        ctx.target,
+        ctx.select,
+        ctx.also,
+        ctx.loggingContext,
+        ctx.initiator,
+      );
+      if (!response) return;
+      if (response.finalTarget.isNav) {
+        updateHead(response.newHead);
+      }
+    } catch (error) {
+      if (error.name !== 'AbortError') throw error;
+    }
+  } catch (error) {
+    onError(error);
+  } finally {
+    if (ctx?.target?.el) {
+      inFlightRequests.delete(ctx.target.el);
+    }
   }
 };
 
@@ -619,13 +651,24 @@ const getRequestCoordination = (targetEl) => {
   return { toAbort };
 };
 
-const updateHistory = (target, responseUrl) => {
+const updateHistory = (target, responseUrl, select, also) => {
   if (!target.isNav || !responseUrl) return;
+  const state = {
+    paneName: target.name,
+    url: responseUrl,
+    select,
+    also,
+  };
   if (!historyStateReplaced) {
-    history.replaceState(null, '', window.location.href);
+    history.replaceState(
+      { ...state, url: window.location.href },
+      '',
+      window.location.href,
+    );
     historyStateReplaced = true;
   }
-  history.pushState(null, '', responseUrl);
+  history.pushState(state, '', responseUrl);
+  currentHistoryUrl = window.location.href;
 };
 
 const updateHead = (newHead) => {
@@ -636,6 +679,37 @@ const updateHead = (newHead) => {
       document.head.appendChild(el.cloneNode(true));
     });
   });
+};
+
+const getPopStateContext = (event) => {
+  const toUrl = window.location.href;
+  if (!event.state) {
+    currentHistoryUrl = toUrl;
+    return;
+  }
+  inFlightRequests.forEach((controller) => controller.abort());
+  inFlightRequests.clear();
+  const { paneName, url, select, also } = event.state;
+  const loggingContext = {
+    navigationFromUrl: currentHistoryUrl,
+    navigationToUrl: toUrl,
+    navigationTargetName: paneName,
+    resolvedTargetName: paneName,
+  };
+  currentHistoryUrl = toUrl;
+  const target = getTarget(paneName, loggingContext);
+  loggingContext.targetPaneElement = target.el;
+  const abortController = new AbortController();
+  const request = new Request(url, { signal: abortController.signal });
+  return {
+    request,
+    target,
+    abortController,
+    select,
+    also,
+    initiator: document,
+    loggingContext,
+  };
 };
 
 const getTarget = (targetName, loggingContext) => {
@@ -675,6 +749,7 @@ export function init(config) {
   headContentSelectors = config?.headContentSelectors ?? headContentSelectors;
   document.addEventListener('click', clickPipeline);
   document.addEventListener('submit', submitPipeline);
+  window.addEventListener('popstate', popstatePipeline);
 }
 
 export function destroy() {
@@ -682,4 +757,5 @@ export function destroy() {
   inFlightRequests.clear();
   document.removeEventListener('click', clickPipeline);
   document.removeEventListener('submit', submitPipeline);
+  window.removeEventListener('popstate', popstatePipeline);
 }
