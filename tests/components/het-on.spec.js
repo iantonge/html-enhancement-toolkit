@@ -54,6 +54,9 @@ test.describe('components het-on', () => {
     await expect(page.locator('#assignment-copy')).toHaveText('ready');
     await expect(page.locator('#assignment-status')).toHaveText('done');
     await expect(page.locator('#assignment-enabled')).toHaveText('true');
+
+    await page.click('#assignment-negate');
+    await expect(page.locator('#assignment-enabled')).toHaveText('false');
   });
 
   test('toggles signals with het-on expressions', async ({ page }) => {
