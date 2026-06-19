@@ -1,3 +1,5 @@
+const NAV_DEBOUNCE_TIME = 500;
+const recentClicks = new Set();
 const parser = new DOMParser();
 const inFlightRequests = new Map();
 let historyStateReplaced = false;
@@ -347,6 +349,9 @@ const getClickContext = (event) => {
   const link = event.target.closest('a[het-target]');
   if (!link) return;
   event.preventDefault();
+  if (recentClicks.has(link)) return;
+  recentClicks.add(link);
+  setTimeout(() => recentClicks.delete(link), NAV_DEBOUNCE_TIME);
   const targetName = link.getAttribute('het-target');
   const loggingContext = {
     linkElement: link,
