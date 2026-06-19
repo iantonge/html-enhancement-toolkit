@@ -14,6 +14,12 @@ test.describe('components het-on', () => {
     await expect(page.locator('#count-b')).toHaveText('1');
   });
 
+  test('supports custom event names containing colons on the left-hand side', async ({ page }) => {
+    await page.goto('/components/het-on/custom-event-colon');
+    await page.click('#dispatch-custom-event');
+    await expect(page.locator('#custom-event-count')).toHaveText('1');
+  });
+
   test('assigns signals from contextual values, signals, literals, and intrinsics', async ({ page }) => {
     await page.goto('/components/het-on/assigns-signal');
 

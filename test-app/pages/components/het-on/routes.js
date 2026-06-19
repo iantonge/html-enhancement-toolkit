@@ -20,6 +20,12 @@ router.get('/multiple-handlers', (request, response) => {
   });
 });
 
+router.get('/custom-event-colon', (request, response) => {
+  response.render('components/het-on/custom-event-colon', {
+    title: 'Custom event (colon)',
+  });
+});
+
 router.get('/assigns-signal', (request, response) => {
   response.render('components/het-on/assigns-signal', {
     title: 'Assigns signal',
