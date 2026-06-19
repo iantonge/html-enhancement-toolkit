@@ -3,7 +3,7 @@
     <h1 class="h4 mb-3">{{title}}</h1>
     <div id="sync-root" het-component="acquisition-sync">
       <input id="sync-input" class="form-control" het-sync="query=$props.value" value="alpha">
-      <p id="sync-value" het-text="query" class="mt-2 mb-0 text-muted"></p>
+      <p id="sync-value" het-props="textContent=query" class="mt-2 mb-0 text-muted"></p>
     </div>
   </div>
 </section>
