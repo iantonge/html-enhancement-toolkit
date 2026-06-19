@@ -108,6 +108,8 @@ Use `het-also` to replace elements outside the target pane from the same respons
 
 ## Server contract
 
+Enhanced requests include an `X-HET-Target` header containing the resolved target pane name.
+
 Responses must be HTML containing exactly one matching target pane, regardless of HTTP status code.
 
 ## Request coordination

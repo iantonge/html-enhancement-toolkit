@@ -75,6 +75,7 @@ const fetchAndSwap = async (
   loggingContext,
   initiator,
 ) => {
+  request.headers.set('X-HET-Target', target.name);
   const requestLoggingContext = {
     ...loggingContext,
     requestUrl: request.url,
