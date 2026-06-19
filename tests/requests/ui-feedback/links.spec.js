@@ -1,0 +1,96 @@
+import { test, expect } from '@playwright/test';
+
+test.describe('link UI feedback', () => {
+  test('adds and removes busy state on target', async ({ page }) => {
+    await page.goto('/requests/ui-feedback/links');
+
+    let releaseSlow;
+    const slowGate = new Promise((resolve) => {
+      releaseSlow = resolve;
+    });
+    await page.route('**/requests/ui-feedback/links/responses/slow**', async (route) => {
+      await slowGate;
+      await route.continue();
+    });
+
+    await page.click('#slow-link');
+
+    const target = page.locator('#main-pane');
+    await expect(target).toHaveAttribute('data-het-busy', /\d+/);
+    await expect(target).toHaveClass(/het-busy/);
+    await expect(target).toHaveAttribute('aria-busy', 'true');
+
+    releaseSlow();
+    await page.waitForSelector('#main-content:has-text("Slow response.")');
+    await expect(target).not.toHaveAttribute('data-het-busy', /\d+/);
+    await expect(target).not.toHaveClass(/het-busy/);
+    await expect(target).not.toHaveAttribute('aria-busy', 'true');
+  });
+
+  test('does not clear busy state for a newer request', async ({ page }) => {
+    await page.goto('/requests/ui-feedback/links');
+
+    let releaseSlow;
+    const slowGate = new Promise((resolve) => {
+      releaseSlow = resolve;
+    });
+    let releaseSlow2;
+    const slow2Gate = new Promise((resolve) => {
+      releaseSlow2 = resolve;
+    });
+    await page.route('**/requests/ui-feedback/links/responses/slow**', async (route) => {
+      await slowGate;
+      try {
+        await route.continue();
+      } catch {}
+    });
+    await page.route('**/requests/ui-feedback/links/responses/slow-2**', async (route) => {
+      await slow2Gate;
+      await route.continue();
+    });
+
+    await page.click('#slow-link');
+    const target = page.locator('#main-pane');
+    await expect(target).toHaveAttribute('data-het-busy', /\d+/);
+    const firstBusy = await target.getAttribute('data-het-busy');
+
+    await page.click('#slow-link-2');
+    await expect(target).toHaveAttribute('data-het-busy', /\d+/);
+    const secondBusy = await target.getAttribute('data-het-busy');
+    expect(secondBusy).not.toBe(firstBusy);
+
+    releaseSlow2();
+    await page.waitForSelector('#main-content:has-text("Second response.")');
+
+    const finalBusy = await target.getAttribute('data-het-busy');
+    expect(finalBusy).toBe(null);
+
+    releaseSlow();
+  });
+
+  test('does not swap content after destroy during in-flight request', async ({
+    page,
+  }) => {
+    await page.goto('/requests/ui-feedback/links');
+
+    let releaseSlow;
+    const slowGate = new Promise((resolve) => {
+      releaseSlow = resolve;
+    });
+    await page.route('**/requests/ui-feedback/links/responses/slow**', async (route) => {
+      await slowGate;
+      await route.continue();
+    });
+
+    await page.click('#slow-link', { noWaitAfter: true });
+    await expect(page.locator('#main-pane')).toHaveAttribute('data-het-busy', /\d+/);
+
+    await page.evaluate(() => {
+      window.HET.destroy();
+    });
+
+    releaseSlow();
+    await page.waitForTimeout(700);
+    await expect(page.locator('#main-content')).toHaveText('UI feedback content.');
+  });
+});

@@ -10,6 +10,7 @@
 - [Additional replacements with `het-also`](#additional-replacements-with-het-also)
 - [Navigation panes (`het-nav`)](#navigation-panes-het-nav)
 - [Server contract](#server-contract)
+- [UI feedback while requests are in flight](#ui-feedback-while-requests-are-in-flight)
 - [Request coordination](#request-coordination)
 - [Lifecycle events](#lifecycle-events)
 
@@ -142,6 +143,14 @@ Responses must be HTML containing exactly one matching target pane, regardless o
 | `X-HET-Also-Override` | Override `het-also` ids. Use a whitespace-separated list of ids; an empty value clears additional replacements. |
 
 When using `X-HET-Target-Override`, it is usually safer to also clear selection (`X-HET-Select-Override: ""`) unless the selected ids are guaranteed to exist in the overridden target pane.
+
+## UI feedback while requests are in flight
+
+When an enhanced request starts, HET marks the target pane as busy:
+
+- Sets `aria-busy="true"` on the target pane.
+- Adds the `het-busy` CSS class.
+When the request finishes or is aborted, HET removes the busy markers.
 
 ## Request coordination
 

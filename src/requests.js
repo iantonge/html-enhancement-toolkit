@@ -10,6 +10,7 @@ let replaceContent = (elToReplace, replacementEl) => {
   elToReplace.replaceWith(importedNode);
   return importedNode;
 };
+const busyClass = 'het-busy';
 let nonceHeader = 'X-HET-Nonce';
 let nonce;
 let trustedTypesPolicy;
@@ -21,15 +22,18 @@ let headContentSelectors = [
   'link[rel="alternate"]',
   'script[type="application/ld+json"]',
 ];
+let requestCount = 0;
 
 const clickPipeline = async (event) => {
   let ctx;
+  const requestId = getRequestId();
   try {
     ctx = getClickContext(event);
     if (!ctx) return;
     const requestCoordination = getRequestCoordination(ctx.target.el);
     if (requestCoordination.abortThis) return;
     requestCoordination.toAbort.forEach((controller) => controller.abort());
+    startUiFeedback(ctx.target.el, requestId);
     inFlightRequests.set(ctx.target.el, ctx.abortController);
     try {
       const response = await fetchAndSwap(
@@ -53,6 +57,7 @@ const clickPipeline = async (event) => {
   } finally {
     if (ctx?.target?.el) {
       inFlightRequests.delete(ctx.target.el);
+      endUiFeedback(ctx.target.el, requestId);
     }
   }
 };
@@ -64,6 +69,8 @@ const submitPipeline = async (event) => {
     const requestCoordination = getRequestCoordination(ctx.target.el);
     if (requestCoordination.abortThis) return;
     requestCoordination.toAbort.forEach((controller) => controller.abort());
+    const requestId = getRequestId();
+    startUiFeedback(ctx.target.el, requestId);
     inFlightRequests.set(ctx.target.el, ctx.abortController);
     try {
       const response = await fetchAndSwap(
@@ -83,6 +90,7 @@ const submitPipeline = async (event) => {
       if (error.name !== 'AbortError') throw error;
     } finally {
       inFlightRequests.delete(ctx.target.el);
+      endUiFeedback(ctx.target.el, requestId);
     }
   } catch (error) {
     onError(error);
@@ -91,9 +99,11 @@ const submitPipeline = async (event) => {
 
 const popstatePipeline = async (event) => {
   let ctx;
+  const requestId = getRequestId();
   try {
     ctx = getPopStateContext(event);
     if (!ctx) return;
+    startUiFeedback(ctx.target.el, requestId);
     inFlightRequests.set(ctx.target.el, ctx.abortController);
     try {
       const response = await fetchAndSwap(
@@ -116,6 +126,7 @@ const popstatePipeline = async (event) => {
   } finally {
     if (ctx?.target?.el) {
       inFlightRequests.delete(ctx.target.el);
+      endUiFeedback(ctx.target.el, requestId);
     }
   }
 };
@@ -347,6 +358,11 @@ const getClickContext = (event) => {
     initiator: link,
     loggingContext,
   };
+};
+
+const getRequestId = () => {
+  requestCount += 1;
+  return requestCount;
 };
 
 const getEffectiveDirectiveValue = (form, submitter, attributeName) => {
@@ -649,6 +665,19 @@ const getRequestCoordination = (targetEl) => {
     }
   }
   return { toAbort };
+};
+
+const startUiFeedback = (targetEl, requestId) => {
+  targetEl.setAttribute('data-het-busy', requestId);
+  targetEl.setAttribute('aria-busy', 'true');
+  targetEl.classList.add(busyClass);
+};
+
+const endUiFeedback = (targetEl, requestId) => {
+  if (targetEl.dataset.hetBusy !== String(requestId)) return;
+  targetEl.removeAttribute('data-het-busy');
+  targetEl.removeAttribute('aria-busy');
+  targetEl.classList.remove(busyClass);
 };
 
 const updateHistory = (target, responseUrl, select, also) => {
