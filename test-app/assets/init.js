@@ -1,9 +1,8 @@
+window.hetInitConfig = window.hetInitConfig || {};
 window.hetErrors = window.hetErrors || [];
 
-const originalConsoleError = console.error;
-console.error = (...args) => {
-  const [err] = args;
+window.hetInitConfig.onError = (err) => {
   window.hetErrors.push(err);
-  originalConsoleError(...args);
+  console.error(err, err.cause);
 };
-window.HET.init();
+window.HET.init(window.hetInitConfig);
