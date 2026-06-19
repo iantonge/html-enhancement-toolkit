@@ -8,6 +8,7 @@ import {
 import { configureStructuralTeardown } from './structural.js';
 import { initializeSyncEvents, destroySyncEvents } from './sync.js';
 
+const pendingRemovals = new Set();
 const pendingAdditions = new Set();
 let observer;
 
@@ -38,6 +39,7 @@ function destroy() {
     observer.disconnect();
     observer = undefined;
     pendingAdditions.clear();
+    pendingRemovals.clear();
   }
 }
 
@@ -48,6 +50,14 @@ function initializeObserver() {
     for (const record of records) {
       try {
         if (record.type === 'childList') {
+          for (const node of record.removedNodes) {
+            if (node.nodeType !== Node.ELEMENT_NODE) continue;
+            if (node.hasAttribute('het-component')) pendingRemovals.add(node);
+            node
+              .querySelectorAll('[het-component]')
+              .forEach((child) => pendingRemovals.add(child));
+          }
+
           for (const node of record.addedNodes) {
             if (node.nodeType !== Node.ELEMENT_NODE) continue;
             if (node.hasAttribute('het-component')) pendingAdditions.add(node);
@@ -63,6 +73,7 @@ function initializeObserver() {
 
     queueMicrotask(() => {
       const additions = Array.from(pendingAdditions);
+      const removals = Array.from(pendingRemovals);
       for (const el of additions) {
         try {
           if (!el.isConnected) continue;
@@ -74,6 +85,17 @@ function initializeObserver() {
         }
       }
       pendingAdditions.clear();
+
+      for (const el of removals) {
+        try {
+          const stillComponent = el.isConnected && el.hasAttribute('het-component');
+          if (stillComponent) continue;
+          if (el.__het_instance) destroyComponent(el);
+        } catch (error) {
+          handleError(error);
+        }
+      }
+      pendingRemovals.clear();
     });
   });
 

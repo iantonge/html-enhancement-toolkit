@@ -7,4 +7,10 @@ test.describe('components mutation observer', () => {
     await expect(page.locator('#mount-state')).toHaveText('mounted');
   });
 
+  test('runs cleanup when component is removed', async ({ page }) => {
+    await page.goto('/components/mutation-observer/unmount-removed');
+    await page.click('#remove-component');
+    await expect(page.locator('#cleanup-state')).toHaveText('cleaned');
+  });
+
 });

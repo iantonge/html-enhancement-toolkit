@@ -14,4 +14,10 @@ router.get('/mount-added', (request, response) => {
   });
 });
 
+router.get('/unmount-removed', (request, response) => {
+  response.render('components/mutation-observer/unmount-removed', {
+    title: 'Unmount removed components',
+  });
+});
+
 export default router;
