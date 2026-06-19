@@ -8,6 +8,7 @@
 - [Output bindings](#output-bindings)
 - [Input and event bindings](#input-and-event-bindings)
 - [Signal sharing](#signal-sharing)
+- [Structural templates](#structural-templates)
 - [Cleanup](#cleanup)
 - [Component lifecycle notes](#component-lifecycle-notes)
 - [Component attribute support](#component-attribute-support)
@@ -355,6 +356,23 @@ The value is a whitespace-separated declaration list.
 
 If multiple ancestors export the same signal name, HET resolves to the nearest exporting ancestor. On `het:sync`, imports are resolved again so moved components continue to use the nearest current exporter.
 
+## Structural templates
+
+HET supports `het-for` on `<template>` elements.
+
+Each structural template must:
+
+- use exactly one structural directive
+- contain exactly one root element
+- use a root element that is itself a component
+
+### `het-for`
+
+`het-for="signalName"` expects the signal value to be an array.
+Each array item must be an object whose properties are Preact signals. HET forwards those signals into the cloned component root.
+
+Prefer ordinary visibility bindings such as `het-bool-attrs="hidden=isHidden"` when the DOM should stay mounted. Structural directives create and destroy component instances.
+
 ## Cleanup
 
 `setup(context)` receives `onCleanup(fn)`.
@@ -397,3 +415,4 @@ Bindings declared in HTML are cleaned up automatically.
 | `het-sync` | Re-read DOM snapshots on mount and `het:sync` | Yes | Semicolon-separated declarations. |
 | `het-exports` | Export signals to descendants | Yes | Whitespace-separated signal names. |
 | `het-imports` | Import nearest exported signals | Yes | Whitespace-separated declarations. |
+| `het-for` | Structural repeated template | No | `<template>` only. |

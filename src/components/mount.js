@@ -1,18 +1,19 @@
 import { signal } from '@preact/signals-core';
 import { PREACT_SIGNAL_BRAND } from './constants.js';
-import { DIRECTIVES_SELECTOR } from './directives.js';
+import { DIRECTIVES_SELECTOR, STRUCTURAL_TEMPLATES_SELECTOR } from './directives.js';
 import { scopedQuerySelectorAll, isComponentRoot, getNodeDepth } from './dom-scope.js';
 import { handleError } from './error-handler.js';
 import { getBindingInputValue } from './expressions.js';
 import { getComponentCause, getBindingCause } from './logging.js';
 import { getMountableComponent } from './registry.js';
-import { getBindings } from './bindings/parse.js';
+import { getBindings, getStructuralBindings } from './bindings/parse.js';
 import {
   getImportDeclarations,
   initializeForwardedSignals,
   resolveImports,
 } from './imports.js';
 import { initializeBindings } from './runtime.js';
+import { initializeStructuralBindings } from './structural.js';
 
 function mountComponents(root) {
   const componentsToMount = [];
@@ -68,7 +69,9 @@ function mountComponent(rootEl, setup, options = {}) {
   };
   const ctx = { el: rootEl, refs, signals, onCleanup };
   const boundEls = scopedQuerySelectorAll(rootEl, DIRECTIVES_SELECTOR);
+  const structuralTemplateEls = scopedQuerySelectorAll(rootEl, STRUCTURAL_TEMPLATES_SELECTOR);
   const bindings = getBindings(boundEls, componentLoggingContext);
+  const structuralBindings = getStructuralBindings(structuralTemplateEls, componentLoggingContext);
   const syncBindings = bindings.filter((binding) => binding.acquisitionStrategy === 'sync');
   const bindingsToInit = bindings.filter((binding) => binding.acquisitionStrategy);
 
@@ -125,10 +128,19 @@ function mountComponent(rootEl, setup, options = {}) {
     importDeclarations,
     bindings,
     syncBindings,
+    structuralBindings,
     cleanup: () => {
       cleanups.forEach((fn) => fn());
     },
   };
+
+  initializeStructuralBindings(ctx, structuralBindings, {
+    destroyComponent,
+    getMountableComponent,
+    mountComponent,
+    mountComponents,
+    removeMountPendingAttributes,
+  });
 
   return true;
 }

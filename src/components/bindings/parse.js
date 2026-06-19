@@ -8,6 +8,7 @@ import {
   MODEL_TYPES,
   READ_SOURCE_TYPE,
   SIGNAL_SOURCE_TYPE,
+  STRUCTURAL_ATTRS,
 } from '../constants.js';
 import { DIRECTIVE_BY_NAME } from '../directives.js';
 import { getExpressionMetadata, inferModelKey } from '../expressions.js';
@@ -30,6 +31,10 @@ function getBindings(boundEls, componentLoggingContext) {
     }
   }
   return bindings;
+}
+
+function getStructuralBindings(templateEls, componentLoggingContext) {
+  return templateEls.map((el) => getStructuralBinding(el, componentLoggingContext));
 }
 
 function getParsedDirectiveAttributeName(attrName) {
@@ -106,6 +111,74 @@ function getParsedBindingDeclarations(
     componentLoggingContext,
     modelType,
   ));
+}
+
+function getStructuralBinding(el, componentLoggingContext) {
+  const componentRoot = getTemplateComponentRoot(el, componentLoggingContext);
+  const presentAttrs = STRUCTURAL_ATTRS.filter((attrName) => el.hasAttribute(attrName));
+
+  if (presentAttrs.length !== 1) {
+    throw new Error(
+      'HET Error: Structural template requires exactly one directive',
+      {
+        cause: {
+          ...componentLoggingContext,
+          bindingElement: el,
+        },
+      },
+    );
+  }
+
+  const attrName = presentAttrs[0];
+  const declaration = el.getAttribute(attrName) || '';
+  const bindingLoggingContext = {
+    ...componentLoggingContext,
+    bindingAttribute: attrName,
+    bindingDeclaration: declaration,
+    bindingElement: el,
+  };
+  const source = getValidatedSignalIdentifier(declaration, bindingLoggingContext);
+
+  return {
+    dirName: attrName,
+    attrName,
+    el,
+    componentElement: componentLoggingContext.componentElement,
+    componentName: componentLoggingContext.componentName,
+    componentRoot,
+    source,
+    exp: declaration,
+  };
+}
+
+function getTemplateComponentRoot(templateEl, componentLoggingContext) {
+  const fragment = templateEl.content;
+  const elementChildren = Array.from(fragment.childNodes).filter(
+    (node) => node.nodeType === Node.ELEMENT_NODE,
+  );
+  const invalidContent = Array.from(fragment.childNodes).some((node) => {
+    if (node.nodeType === Node.TEXT_NODE) {
+      return node.textContent.trim().length > 0;
+    }
+    return (
+      node.nodeType !== Node.ELEMENT_NODE &&
+      node.nodeType !== Node.COMMENT_NODE
+    );
+  });
+
+  if (invalidContent || elementChildren.length !== 1) {
+    throw new Error(
+      'HET Error: Structural template must contain exactly one root element',
+      {
+        cause: {
+          ...componentLoggingContext,
+          bindingElement: templateEl,
+        },
+      },
+    );
+  }
+
+  return elementChildren[0];
 }
 
 function getSplitBindingDeclarations(rawAttr, bindingLoggingContext) {
@@ -630,4 +703,5 @@ function getValidatedSignalIdentifier(value, bindingLoggingContext) {
 
 export {
   getBindings,
+  getStructuralBindings,
 };

@@ -6,6 +6,7 @@ const PREACT_SIGNAL_BRAND = Symbol.for('preact-signals');
 const MODEL_TYPES = ['int', 'bool', 'float'];
 const EXPORTS_ATTR = 'het-exports';
 const IMPORTS_ATTR = 'het-imports';
+const FOR_ATTR = 'het-for';
 const KEYBOARD_EVENT_NAMES = ['keydown', 'keyup', 'keypress'];
 const ACQUISITION_STRATEGIES = ['seed', 'sync'];
 const FORBIDDEN_MEMBER_NAMES = new Set(['__proto__', 'prototype', 'constructor']);
@@ -21,6 +22,7 @@ const CONTEXTUAL_IDENTIFIERS = new Set([
 ]);
 const INTRINSIC_IDENTIFIERS = new Set(['$int', '$float', '$bool']);
 const EMPTY_EXPORTS_SET = new Set();
+const STRUCTURAL_ATTRS = [FOR_ATTR];
 
 export {
   ACQUISITION_STRATEGIES,
@@ -28,6 +30,7 @@ export {
   CONTEXTUAL_IDENTIFIERS,
   EMPTY_EXPORTS_SET,
   EXPORTS_ATTR,
+  FOR_ATTR,
   FORBIDDEN_MEMBER_NAMES,
   FUNC_SOURCE_TYPE,
   IMPORTS_ATTR,
@@ -37,4 +40,5 @@ export {
   PREACT_SIGNAL_BRAND,
   READ_SOURCE_TYPE,
   SIGNAL_SOURCE_TYPE,
+  STRUCTURAL_ATTRS,
 };

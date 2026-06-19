@@ -17,7 +17,7 @@ HET is probably not the right fit when you need:
 ## Documentation
 
 - [Reference index](docs/README.md): component, API, and error reference docs.
-- [Component reference](docs/reference/components.md): component roots, signals, bindings, imports/exports, and lifecycle notes.
+- [Component reference](docs/reference/components.md): component roots, signals, bindings, imports/exports, structural templates, and lifecycle notes.
 - [API reference](docs/reference/api.md)
 - [Error reference](docs/reference/errors.md)
 

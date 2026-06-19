@@ -3,6 +3,7 @@ import {
   READ_SOURCE_TYPE,
   SIGNAL_SOURCE_TYPE,
   FUNC_SOURCE_TYPE,
+  STRUCTURAL_ATTRS,
 } from './constants.js';
 
 function escapeAttributeSelectorName(name) {
@@ -107,10 +108,14 @@ const DIRECTIVE_ATTR_NAMES = DIRECTIVES.flatMap((directive) => {
 const DIRECTIVES_SELECTOR = DIRECTIVE_ATTR_NAMES
   .map((name) => `[${escapeAttributeSelectorName(name)}]`)
   .join(', ');
+const STRUCTURAL_TEMPLATES_SELECTOR = STRUCTURAL_ATTRS
+  .map((name) => `template[${escapeAttributeSelectorName(name)}]`)
+  .join(', ');
 
 export {
   DIRECTIVES,
   DIRECTIVE_ATTR_NAMES,
   DIRECTIVE_BY_NAME,
   DIRECTIVES_SELECTOR,
+  STRUCTURAL_TEMPLATES_SELECTOR,
 };

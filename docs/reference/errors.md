@@ -391,7 +391,39 @@ Fix the exporting component by creating or acquiring the exported signal.
 
 ### `HET Error: Imported signal conflicts with local initialization`
 
-A component tried to import a signal name and also initialize that same local name with `het-seed` or `het-sync`.
+A component tried to import a signal name and also initialize that same local name with `het-seed`, `het-sync`, or forwarded structural signals.
 
 Fix the component by choosing either imported ownership or local acquisition, not both.
+
+## Structural Templates
+
+### `HET Error: Structural template requires exactly one directive`
+
+A `<template>` did not declare `het-for`.
+
+### `HET Error: Structural template must contain exactly one root element`
+
+A structural template contained extra roots or unsupported free text content.
+
+### `HET Error: Structural template root component is not registered`
+
+The structural template root named a component that was not registered.
+
+### `HET Error: het-for source must be an array`
+
+`het-for` resolved to a non-array value.
+
+### `HET Error: het-for item must be an object`
+
+One `het-for` item was not an object.
+
+### `HET Error: Structural item property must be a signal`
+
+A forwarded structural item property was not a Preact signal.
+
+### `HET Error: Structural clone is missing forwarded signal wrapper`
+
+HET expected a forwarded-signal wrapper on a structural clone but did not find one.
+
+Fix structural-template errors by keeping template roots valid, component-backed, and driven by objects whose properties are signals.
 
