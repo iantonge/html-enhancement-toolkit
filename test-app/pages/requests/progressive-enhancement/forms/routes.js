@@ -1,6 +1,7 @@
 import { Router } from 'express';
 
 import getRoutes from './get/routes.js';
+import noTargetRoutes from './no-target-form/routes.js';
 import relativeActionRoutes from './relative-action-form/routes.js';
 import responsesRoutes from './responses/routes.js';
 
@@ -13,6 +14,7 @@ router.get('/', (request, response) => {
 });
 
 router.use(getRoutes);
+router.use(noTargetRoutes);
 router.use(relativeActionRoutes);
 router.use(responsesRoutes);
 

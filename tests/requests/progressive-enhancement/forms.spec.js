@@ -23,4 +23,14 @@ test.describe('form progressive enhancement (core)', () => {
     expect(content).toContain('GET form submitted');
   });
 
+  test('does not intercept forms without het-target', async ({ page }) => {
+    await page.goto('/requests/progressive-enhancement/forms/no-target-form');
+    await Promise.all([
+      page.waitForURL('**/requests/progressive-enhancement/forms/get-form**'),
+      page.click('#submit'),
+    ]);
+    const content = await page.textContent('#response-message');
+    expect(content).toContain('GET form submitted');
+  });
+
 });

@@ -9,4 +9,10 @@ router.get('/get-form', (request, response) => {
   });
 });
 
+router.get('/no-target', (request, response) => {
+  response.render('requests/progressive-enhancement/forms/responses/no-target', {
+    title: 'Form Progressive Enhancement (Core)',
+  });
+});
+
 export default router;
