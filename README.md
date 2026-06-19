@@ -1,3 +1,7 @@
 # html-enhancement-toolkit
 
-Minimal project scaffold.
+Minimal Express and Playwright test scaffold.
+
+| Command | Description |
+| --- | --- |
+| `npm run test-app` | Start the Express test app. |
