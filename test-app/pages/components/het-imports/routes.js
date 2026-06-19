@@ -32,4 +32,10 @@ router.get('/parent-not-mounted', (request, response) => {
   });
 });
 
+router.get('/export-missing-signal', (request, response) => {
+  response.render('components/het-imports/export-missing-signal', {
+    title: 'Exported signal missing on parent',
+  });
+});
+
 export default router;

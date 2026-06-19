@@ -323,4 +323,10 @@ An import resolved to an ancestor component element, but that exporting componen
 
 Fix the mount order or export configuration so the ancestor component is mounted normally.
 
+### `HET Error: Exporting ancestor does not provide imported signal`
+
+An ancestor exported the requested name, but the signal itself was not available on the exporting component.
+
+Fix the exporting component by creating or acquiring the exported signal.
+
 

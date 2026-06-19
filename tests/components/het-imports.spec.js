@@ -63,4 +63,27 @@ test.describe('components het-exports / het-imports', () => {
     });
   });
 
+  test('reports error when exported signal is not found on nearest parent component', async ({ page }) => {
+    await page.goto('/components/het-imports/export-missing-signal');
+    await page.waitForFunction(() =>
+      window.hetErrors.some((error) => error.message === 'HET Error: Exporting ancestor does not provide imported signal'),
+    );
+    const cause = await page.evaluate(() => ({
+      componentName: window.hetErrors.at(-1).cause.componentName,
+      bindingAttribute: window.hetErrors.at(-1).cause.bindingAttribute,
+      importLocalSignalName: window.hetErrors.at(-1).cause.importLocalSignalName,
+      importSourceSignalName: window.hetErrors.at(-1).cause.importSourceSignalName,
+      exportingComponentName: window.hetErrors.at(-1).cause.exportingComponentName,
+      parentExports: window.hetErrors.at(-1).cause.exportingComponentElement.getAttribute('het-exports'),
+    }));
+    expect(cause).toEqual({
+      componentName: 'imports-export-missing-child',
+      bindingAttribute: 'het-imports',
+      importLocalSignalName: 'count',
+      importSourceSignalName: 'count',
+      exportingComponentName: 'imports-export-missing-parent',
+      parentExports: 'count',
+    });
+  });
+
 });
