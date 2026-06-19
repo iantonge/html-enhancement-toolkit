@@ -70,4 +70,11 @@ test.describe('components structural templates', () => {
     );
   });
 
+  test('reports error when forwarded and local initialization conflict', async ({ page }) => {
+    await page.goto('/components/structural/signal-name-conflict');
+    await page.waitForFunction(() =>
+      window.hetErrors.some((error) => error.message === 'HET Error: Imported signal conflicts with local initialization'),
+    );
+  });
+
 });

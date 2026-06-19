@@ -1,0 +1,22 @@
+<section class="card shadow-sm border-0" het-component="structural-forwarded-conflict">
+  <div class="card-body">
+    <h1 class="h4 mb-3">{{title}}</h1>
+    <template het-for="items">
+      <div het-component="structural-forwarded-conflict-item">
+        <p het-seed="label=$text" het-props="textContent=label">Conflict</p>
+      </div>
+    </template>
+  </div>
+</section>
+
+<script nonce="{{{cspNonce}}}">
+  window.HET.registerComponent('structural-forwarded-conflict', ({ signals }) => {
+    signals.items = window.HET.signals.signal([
+      {
+        label: window.HET.signals.signal('forwarded'),
+      },
+    ]);
+  });
+
+  window.HET.registerComponent('structural-forwarded-conflict-item');
+</script>

@@ -38,4 +38,10 @@ router.get('/invalid-root', (request, response) => {
   });
 });
 
+router.get('/signal-name-conflict', (request, response) => {
+  response.render('components/structural/signal-name-conflict', {
+    title: 'Forwarded signal conflict',
+  });
+});
+
 export default router;
