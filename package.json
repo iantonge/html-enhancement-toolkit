@@ -9,6 +9,7 @@
   "devDependencies": {
     "@playwright/test": "^1.61.0",
     "express": "^5.2.1",
-    "hbs": "^4.2.1"
+    "hbs": "^4.2.1",
+    "multer": "^2.2.0"
   }
 }
