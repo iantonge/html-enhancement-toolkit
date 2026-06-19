@@ -32,6 +32,12 @@ router.get('/if-toggle-override', (request, response) => {
   });
 });
 
+router.get('/mount-added', (request, response) => {
+  response.render('components/structural/mount-added', {
+    title: 'Mutation observer mounts structural components',
+  });
+});
+
 router.get('/for-list-delayed', (request, response) => {
   response.render('components/structural/for-list-delayed', {
     title: 'het-for delayed unmount',

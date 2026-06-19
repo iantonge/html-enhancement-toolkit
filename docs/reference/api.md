@@ -4,7 +4,7 @@ This section collects the JavaScript entry points and initialization options for
 
 ## `init(config)`
 
-Initialize HET. This mounts registered components.
+Initialize HET. This mounts registered components and starts component mutation observation.
 
 `config` is optional, and every config property is optional. Omitted properties use the defaults described below. `init` does not return a value.
 

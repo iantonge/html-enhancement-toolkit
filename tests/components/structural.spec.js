@@ -139,6 +139,13 @@ test.describe('components structural templates', () => {
     ).toEqual([3]);
   });
 
+  test('mounts structural templates when a component tree is added after init', async ({ page }) => {
+    await page.goto('/components/structural/mount-added');
+    await page.click('#add-structural-component');
+    await expect(page.locator('#mount-added-state')).toHaveText('Mounted after init');
+    await expect(page.locator('.mounted-label')).toHaveText('Mounted after init');
+  });
+
   test('reports error when het-for source is not an array', async ({ page }) => {
     await page.goto('/components/structural/invalid-non-array');
     await page.waitForFunction(() =>
