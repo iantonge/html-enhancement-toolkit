@@ -8,6 +8,7 @@ import hetModelRoutes from './het-model/routes.js';
 import hetOnRoutes from './het-on/routes.js';
 import hetPropsRoutes from './het-props/routes.js';
 import lifecycleRoutes from './lifecycle/routes.js';
+import negationRoutes from './negation/routes.js';
 import registrationRoutes from './registration/routes.js';
 
 const router = Router();
@@ -26,6 +27,7 @@ router.use('/het-model', hetModelRoutes);
 router.use('/het-on', hetOnRoutes);
 router.use('/het-props', hetPropsRoutes);
 router.use('/lifecycle', lifecycleRoutes);
+router.use('/negation', negationRoutes);
 router.use('/registration', registrationRoutes);
 
 export default router;
