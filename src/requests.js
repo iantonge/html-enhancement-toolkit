@@ -10,7 +10,7 @@ let replaceContent = (elToReplace, replacementEl) => {
   elToReplace.replaceWith(importedNode);
   return importedNode;
 };
-const busyClass = 'het-busy';
+let busyClass = 'het-busy';
 let nonceHeader = 'X-HET-Nonce';
 let nonce;
 let trustedTypesPolicy;
@@ -811,6 +811,7 @@ const getTarget = (targetName, loggingContext) => {
 export function init(config) {
   onError = config?.onError ?? onError;
   replaceContent = config?.replaceContent ?? replaceContent;
+  busyClass = config?.busyClass ?? busyClass;
   nonceHeader = config?.nonceHeader ?? nonceHeader;
   nonce = config?.nonce ?? nonce;
   trustedTypesPolicy = config?.trustedTypesPolicy ?? trustedTypesPolicy;

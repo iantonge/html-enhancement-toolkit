@@ -9,6 +9,12 @@ router.get('/', (request, response) => {
   });
 });
 
+router.get('/custom-class', (request, response) => {
+  response.render('requests/ui-feedback/links/custom-class', {
+    title: 'UI feedback custom class',
+  });
+});
+
 router.get('/responses/slow', async (request, response) => {
   await delay(500);
   response.render('requests/ui-feedback/links/responses/slow', {

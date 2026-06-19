@@ -25,6 +25,16 @@ HET.init({
 });
 ```
 
+#### `busyClass`
+
+Override the CSS class HET applies to a busy target pane while a request is in flight. Default: `"het-busy"`.
+
+```js
+HET.init({
+  busyClass: 'is-loading',
+});
+```
+
 #### `headContentSelectors`
 
 Controls which `<head>` elements HET synchronizes from responses during `het-nav` navigations. Default:

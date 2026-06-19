@@ -70,6 +70,28 @@ test.describe('link UI feedback', () => {
     releaseSlow();
   });
 
+  test('uses custom busy class when configured', async ({ page }) => {
+    await page.goto('/requests/ui-feedback/links/custom-class');
+
+    let releaseSlow;
+    const slowGate = new Promise((resolve) => {
+      releaseSlow = resolve;
+    });
+    await page.route('**/requests/ui-feedback/links/responses/slow**', async (route) => {
+      await slowGate;
+      await route.continue();
+    });
+
+    await page.click('#slow-link', { noWaitAfter: true });
+    const target = page.locator('#main-pane');
+    await expect(target).toHaveClass(/custom-busy/);
+    await expect(target).not.toHaveClass(/het-busy/);
+
+    releaseSlow();
+    await page.waitForSelector('#main-content:has-text("Slow response.")');
+    await expect(target).not.toHaveClass(/custom-busy/);
+  });
+
   test('does not swap content after destroy during in-flight request', async ({
     page,
   }) => {
