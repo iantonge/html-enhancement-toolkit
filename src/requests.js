@@ -2,7 +2,7 @@ const parser = new DOMParser();
 let onError = (error) => {
   console.error(error, error.cause);
 };
-const replaceContent = (elToReplace, replacementEl) => {
+let replaceContent = (elToReplace, replacementEl) => {
   const importedNode = document.importNode(replacementEl, true);
   elToReplace.replaceWith(importedNode);
   return importedNode;
@@ -507,6 +507,7 @@ const getTarget = (targetName, loggingContext) => {
 
 export function init(config) {
   onError = config?.onError ?? onError;
+  replaceContent = config?.replaceContent ?? replaceContent;
   trustedTypesPolicy = config?.trustedTypesPolicy ?? trustedTypesPolicy;
   document.addEventListener('click', clickPipeline);
   document.addEventListener('submit', submitPipeline);

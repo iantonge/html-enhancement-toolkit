@@ -22,5 +22,12 @@
   <p id="sync-sidebar-value" het-props="textContent=query" class="mt-2 text-muted mb-0"></p>
 </aside>
 <script nonce="{{{cspNonce}}}">
+  window.hetInitConfig = {
+    replaceContent: (currentEl, replacementEl) => {
+      Idiomorph.morph(currentEl, replacementEl);
+      return currentEl;
+    }
+  };
+
   window.HET.registerComponent('integration-sync');
 </script>

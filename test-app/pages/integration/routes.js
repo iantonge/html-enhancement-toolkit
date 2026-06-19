@@ -20,4 +20,16 @@ router.get('/requests-components-sync/response', (request, response) => {
   });
 });
 
+router.get('/requests-components-model-seed', (request, response) => {
+  response.render('integration/requests-components-model-seed/index', {
+    title: 'Requests + Components model seed',
+  });
+});
+
+router.get('/requests-components-model-seed/response', (request, response) => {
+  response.render('integration/requests-components-model-seed/response', {
+    title: 'Requests + Components model seed response',
+  });
+});
+
 export default router;

@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 
 test.describe('integration requests + components sync', () => {
-  test('synchronizes component signals after request-driven content replacement', async ({ page }) => {
+  test('synchronizes existing component signals after request-driven DOM mutation', async ({ page }) => {
     await page.goto('/integration/requests-components-sync');
 
     await expect(page.locator('#sync-value')).toHaveText('alpha');
