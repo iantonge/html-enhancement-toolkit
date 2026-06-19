@@ -8,6 +8,7 @@
 - [Output bindings](#output-bindings)
 - [Input and event bindings](#input-and-event-bindings)
 - [Signal sharing](#signal-sharing)
+- [Cleanup](#cleanup)
 - [Component lifecycle notes](#component-lifecycle-notes)
 - [Component attribute support](#component-attribute-support)
 
@@ -32,7 +33,7 @@ Set a value to mount a registered component by name, or leave the attribute empt
 </div>
 ```
 
-Register named components before calling `init()`. Anonymous roots are useful when HTML bindings, imports, exports, and sync use the normal component lifecycle without a registered setup function.
+Register named components before calling `init()`. Anonymous roots are useful when HTML bindings, imports, exports, sync, and cleanup use the normal component lifecycle without a registered setup function.
 
 ## Signals
 
@@ -264,6 +265,23 @@ The value is a whitespace-separated declaration list.
 ```
 
 If multiple ancestors export the same signal name, HET resolves to the nearest exporting ancestor. On `het:sync`, imports are resolved again so moved components continue to use the nearest current exporter.
+
+## Cleanup
+
+`setup(context)` receives `onCleanup(fn)`.
+Register teardown work for manual event listeners, timers, observers, or other resources created in setup.
+
+```js
+HET.registerComponent('clock', ({ onCleanup }) => {
+  const timer = setInterval(() => {
+    // ...
+  }, 1000);
+
+  onCleanup(() => clearInterval(timer));
+});
+```
+
+Bindings declared in HTML are cleaned up automatically.
 
 ## Component lifecycle notes
 

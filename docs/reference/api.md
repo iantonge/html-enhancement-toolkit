@@ -27,7 +27,7 @@ HET.init({
 
 ## `destroy()`
 
-Destroy mounted components and remove HET's document and window event listeners.
+Destroy mounted components, run their cleanup callbacks, and remove HET's document and window event listeners.
 
 `destroy` accepts no parameters and does not return a value.
 
@@ -44,6 +44,7 @@ Parameters:
 
 - `el`: the component root element.
 - `signals`: the component signal registry.
+- `onCleanup(fn)`: register cleanup work to run when the component is destroyed.
 
 `setup` may return an object of methods for `het-on` bindings. `registerComponent` does not return a value.
 

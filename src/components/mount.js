@@ -16,6 +16,7 @@ import { initializeBindings } from './runtime.js';
 
 function mountComponents(root) {
   const componentsToMount = [];
+  const mountedComponents = [];
 
   if (isComponentRoot(root)) componentsToMount.push(root);
   if (typeof root.querySelectorAll === 'function') {
@@ -29,11 +30,14 @@ function mountComponents(root) {
       const component = getMountableComponent(el);
       if (!component) continue;
 
-      mountComponent(el, component.setup);
+      if (mountComponent(el, component.setup)) {
+        mountedComponents.push(el);
+      }
     } catch (error) {
       handleError(error);
     }
   }
+
 }
 
 function mountComponent(rootEl, setup, options = {}) {
@@ -46,9 +50,16 @@ function mountComponent(rootEl, setup, options = {}) {
   const signals = createSignalsProxy(rawSignals, componentLoggingContext);
   const importDeclarations = getImportDeclarations(rootEl, componentLoggingContext);
   const cleanups = [];
-  const addCleanup = (fn) => cleanups.push(fn);
-  const setupCtx = { el: rootEl, signals };
-  const runtimeCtx = { el: rootEl, signals, addCleanup };
+  const onCleanup = (fn) => {
+    if (typeof fn !== 'function') {
+      throw new Error(
+        'HET Error: Cleanup callback must be a function',
+        { cause: componentLoggingContext },
+      );
+    }
+    cleanups.push(fn);
+  };
+  const ctx = { el: rootEl, signals, onCleanup };
   const boundEls = scopedQuerySelectorAll(rootEl, DIRECTIVES_SELECTOR);
   const bindings = getBindings(boundEls, componentLoggingContext);
   const syncBindings = bindings.filter((binding) => binding.acquisitionStrategy === 'sync');
@@ -94,9 +105,9 @@ function mountComponent(rootEl, setup, options = {}) {
     signalMeta[binding.source] = 'local';
     signalInitBindings[binding.source] = binding;
   }
-  const methods = (setup && setup(setupCtx)) || {};
+  const methods = (setup && setup(ctx)) || {};
 
-  initializeBindings(runtimeCtx, bindings, methods);
+  initializeBindings(ctx, bindings, methods);
 
   rootEl.__het_instance = {
     rootEl,

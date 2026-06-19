@@ -17,14 +17,14 @@ function initializeBindings(ctx, bindings, methods) {
     if (binding.sourceType === SIGNAL_SOURCE_TYPE) {
       configureSignalBinding(ctx, binding);
     } else if (binding.sourceType === FUNC_SOURCE_TYPE) {
-      configureEventBinding(methods, binding, ctx.addCleanup);
+      configureEventBinding(methods, binding, ctx.onCleanup);
     } else if (binding.sourceType === ASSIGNMENT_SOURCE_TYPE) {
       configureAssignmentBinding(ctx, binding);
     }
   }
 }
 
-function configureEventBinding(methods, binding, addCleanup) {
+function configureEventBinding(methods, binding, onCleanup) {
   const handler = methods?.[binding.source];
   if (typeof handler !== 'function') {
     throw new Error(
@@ -35,7 +35,7 @@ function configureEventBinding(methods, binding, addCleanup) {
   configureEventListener(
     binding,
     handler.bind(methods),
-    addCleanup,
+    onCleanup,
   );
 }
 
@@ -57,10 +57,10 @@ function configureAssignmentBinding(ctx, binding) {
     }
   };
 
-  configureEventListener(binding, listener, ctx.addCleanup);
+  configureEventListener(binding, listener, ctx.onCleanup);
 }
 
-function configureEventListener(binding, action, addCleanup) {
+function configureEventListener(binding, action, onCleanup) {
   const modifiers = binding.eventModifiers || {};
   const listenerState = {
     debounceTimer: undefined,
@@ -98,7 +98,7 @@ function configureEventListener(binding, action, addCleanup) {
   };
 
   binding.el.addEventListener(binding.key, listener, listenerOptions);
-  addCleanup(() => {
+  onCleanup(() => {
     clearTimeout(listenerState.debounceTimer);
     binding.el.removeEventListener(binding.key, listener, listenerOptions);
   });
@@ -147,7 +147,7 @@ function configureSignalBinding(ctx, binding) {
       handleError(error);
     }
   });
-  ctx.addCleanup(dispose);
+  ctx.onCleanup(dispose);
 
   if (binding.dirName === 'het-model') {
     const updateFromEl = () => {
@@ -163,7 +163,7 @@ function configureSignalBinding(ctx, binding) {
 
     const eventName = inferInputEvent(binding.key);
     binding.el.addEventListener(eventName, updateFromEl);
-    ctx.addCleanup(() => binding.el.removeEventListener(eventName, updateFromEl));
+    ctx.onCleanup(() => binding.el.removeEventListener(eventName, updateFromEl));
   }
 }
 
