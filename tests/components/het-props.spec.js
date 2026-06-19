@@ -28,4 +28,30 @@ test.describe('components het-props', () => {
     );
   });
 
+  test('attaches binding context to empty binding declaration errors', async ({ page }) => {
+    await page.goto('/components/het-props/empty-binding');
+    await page.waitForFunction(() =>
+      window.hetErrors.some((error) => error.message === 'HET Error: Empty binding declaration'),
+    );
+
+    const cause = await page.evaluate(() => {
+      const { componentElement, bindingElement, ...serializableCause } =
+        window.hetErrors.at(-1).cause;
+      return {
+        ...serializableCause,
+        hasComponentName: Object.hasOwn(window.hetErrors.at(-1).cause, 'componentName'),
+        componentElementId: componentElement.id,
+        bindingElementId: bindingElement.id,
+      };
+    });
+
+    expect(cause).toEqual({
+      hasComponentName: false,
+      componentElementId: 'empty-binding-root',
+      bindingAttribute: 'het-props',
+      bindingDeclaration: 'textContent=count; ; title=count',
+      bindingErrorReason: 'Empty binding declaration',
+      bindingElementId: 'empty-binding-target',
+    });
+  });
 });

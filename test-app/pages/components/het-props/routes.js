@@ -32,4 +32,10 @@ router.get('/invalid-assignment', (request, response) => {
   });
 });
 
+router.get('/empty-binding', (request, response) => {
+  response.render('components/het-props/empty-binding', {
+    title: 'Empty binding',
+  });
+});
+
 export default router;
