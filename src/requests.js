@@ -164,7 +164,13 @@ const fetchAndSwap = async (
     resolvedTargetName: target.name,
     targetPaneElement: target.el,
   };
-  const finalResponse = await fetch(finalRequest);
+  const response = await fetch(finalRequest);
+  const afterFetchEvent = new CustomEvent('het:afterFetch', {
+    detail: { response, initiator, target: target.el },
+    bubbles: true,
+  });
+  initiator.dispatchEvent(afterFetchEvent);
+  const finalResponse = afterFetchEvent.detail.response;
   const targetOverride = finalResponse.headers.get('X-HET-Target-Override');
   const finalTarget = getFinalTarget(target, targetOverride, requestLoggingContext);
   const finalTargetChanged = finalTarget.el !== target.el;

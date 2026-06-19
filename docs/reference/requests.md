@@ -174,6 +174,7 @@ Fetch events bubble from the initiator: the `a[het-target]` or `form[het-target]
 | Event | Cancelable | Detail | Notes |
 | --- | --- | --- | --- |
 | `het:beforeFetch` | Yes | `request`, `initiator`, `target` | Listeners may replace `detail.request` before HET calls `fetch`. |
+| `het:afterFetch` | No | `response`, `initiator`, `target` | Listeners may replace `detail.response` before HET reads the response body. |
 | `het:afterLoadContent` | No | `alsoElements` | Dispatched after target/select/also replacements. |
 
 For request diagnostics and full `error.cause` fields, see the [error reference](errors.md#request-errors).
