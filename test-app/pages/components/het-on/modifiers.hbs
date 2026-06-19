@@ -26,13 +26,13 @@
         id="key-input"
         class="form-control mt-3"
         het-on="keydown.esc->keyName='esc'; keydown.enter->keyName='enter'; keydown.space->keyName='space'">
-      <p id="modifier-submitted" het-text="submitted" class="mt-3 mb-0 text-muted"></p>
-      <p id="modifier-parent-clicks" het-text="parentClicks" class="mb-0 text-muted"></p>
-      <p id="modifier-child-clicks" het-text="childClicks" class="mb-0 text-muted"></p>
-      <p id="modifier-capture-order" het-text="captureOrder" class="mb-0 text-muted"></p>
-      <p id="modifier-debounced" het-text="debounced" class="mb-0 text-muted"></p>
-      <p id="modifier-throttled" het-text="throttled" class="mb-0 text-muted"></p>
-      <p id="modifier-key" het-text="keyName" class="mb-0 text-muted"></p>
+      <p id="modifier-submitted" het-props="textContent=submitted" class="mt-3 mb-0 text-muted"></p>
+      <p id="modifier-parent-clicks" het-props="textContent=parentClicks" class="mb-0 text-muted"></p>
+      <p id="modifier-child-clicks" het-props="textContent=childClicks" class="mb-0 text-muted"></p>
+      <p id="modifier-capture-order" het-props="textContent=captureOrder" class="mb-0 text-muted"></p>
+      <p id="modifier-debounced" het-props="textContent=debounced" class="mb-0 text-muted"></p>
+      <p id="modifier-throttled" het-props="textContent=throttled" class="mb-0 text-muted"></p>
+      <p id="modifier-key" het-props="textContent=keyName" class="mb-0 text-muted"></p>
     </div>
   </div>
 </section>

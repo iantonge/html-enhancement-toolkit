@@ -7,11 +7,11 @@
         value="5"
         class="form-control"
         het-on="input->count=$int($target.value); input->label='ready'; input->copy=label; input->status='done'; input->enabled=$bool('true')">
-      <p id="assignment-count" het-text="count" class="mt-2 mb-0 text-muted"></p>
-      <p id="assignment-label" het-text="label" class="mb-0 text-muted"></p>
-      <p id="assignment-copy" het-text="copy" class="mb-0 text-muted"></p>
-      <p id="assignment-status" het-text="status" class="mb-0 text-muted"></p>
-      <p id="assignment-enabled" het-text="enabled" class="mb-0 text-muted"></p>
+      <p id="assignment-count" het-props="textContent=count" class="mt-2 mb-0 text-muted"></p>
+      <p id="assignment-label" het-props="textContent=label" class="mb-0 text-muted"></p>
+      <p id="assignment-copy" het-props="textContent=copy" class="mb-0 text-muted"></p>
+      <p id="assignment-status" het-props="textContent=status" class="mb-0 text-muted"></p>
+      <p id="assignment-enabled" het-props="textContent=enabled" class="mb-0 text-muted"></p>
     </div>
   </div>
 </section>
