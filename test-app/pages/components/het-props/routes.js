@@ -14,6 +14,12 @@ router.get('/binds-signal', (request, response) => {
   });
 });
 
+router.get('/trailing-semicolon', (request, response) => {
+  response.render('components/het-props/trailing-semicolon', {
+    title: 'Trailing semicolon',
+  });
+});
+
 router.get('/missing-signal', (request, response) => {
   response.render('components/het-props/missing-signal', {
     title: 'Missing signal',
