@@ -25,6 +25,29 @@ HET.init({
 });
 ```
 
+#### `nonce`
+
+Adds a nonce value to enhanced fetch requests using the configured nonce header name. Default: unset.
+
+This is mainly useful for nonce-protected inline `<style>` blocks in swapped HTML. HET parses response HTML with browser APIs and does not execute scripts from swapped content.
+
+```js
+HET.init({
+  nonce: 'server-generated-nonce',
+});
+```
+
+#### `nonceHeader`
+
+Overrides the request header name used for `nonce`. Default: `"X-HET-Nonce"`.
+
+```js
+HET.init({
+  nonce: 'server-generated-nonce',
+  nonceHeader: 'X-CSP-Nonce',
+});
+```
+
 #### `trustedTypesPolicy`
 
 [Trusted Types](https://developer.mozilla.org/en-US/docs/Web/API/Trusted_Types_API) policy object used to transform response HTML before parsing. Default: unset. If provided, HET calls `trustedTypesPolicy.createHTML(responseHtml)`.

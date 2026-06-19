@@ -8,6 +8,8 @@ let replaceContent = (elToReplace, replacementEl) => {
   elToReplace.replaceWith(importedNode);
   return importedNode;
 };
+let nonceHeader = 'X-HET-Nonce';
+let nonce;
 let trustedTypesPolicy;
 
 const clickPipeline = async (event) => {
@@ -75,6 +77,9 @@ const fetchAndSwap = async (
   loggingContext,
   initiator,
 ) => {
+  if (nonce) {
+    request.headers.set(nonceHeader, nonce);
+  }
   request.headers.set('X-HET-Target', target.name);
   const requestLoggingContext = {
     ...loggingContext,
@@ -554,6 +559,8 @@ const getTarget = (targetName, loggingContext) => {
 export function init(config) {
   onError = config?.onError ?? onError;
   replaceContent = config?.replaceContent ?? replaceContent;
+  nonceHeader = config?.nonceHeader ?? nonceHeader;
+  nonce = config?.nonce ?? nonce;
   trustedTypesPolicy = config?.trustedTypesPolicy ?? trustedTypesPolicy;
   document.addEventListener('click', clickPipeline);
   document.addEventListener('submit', submitPipeline);
