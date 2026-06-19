@@ -80,6 +80,30 @@ test.describe('form disables-in-flight', () => {
     await expect(page.locator('#pre-disabled-field')).toBeDisabled();
   });
 
+  test('does not disable form controls for background submitters', async ({ page }) => {
+    await page.goto('/requests/disables-in-flight/form-controls');
+
+    let releaseResponse;
+    const responseGate = new Promise((resolve) => {
+      releaseResponse = resolve;
+    });
+
+    await page.route('**/requests/disables-in-flight/child-target**', async (route) => {
+      await responseGate;
+      await route.continue();
+    });
+
+    await page.click('#background-submit');
+
+    await expect(page.locator('#field')).not.toBeDisabled();
+    await expect(page.locator('#submit')).not.toBeDisabled();
+    await expect(page.locator('#background-submit')).not.toBeDisabled();
+
+    releaseResponse();
+
+    await page.waitForSelector('#child-message');
+  });
+
   test('does not disable form controls for background forms', async ({ page }) => {
     await page.goto('/requests/disables-in-flight/background-form');
 

@@ -449,7 +449,9 @@ const getSubmitContext = (event) => {
     getEffectiveDirectiveValue(form, submitter, 'het-also'),
     alsoLoggingContext,
   );
-  const isBackgroundSubmission = form.hasAttribute('het-background');
+  const isBackgroundSubmission =
+    submitter?.hasAttribute('het-background') ||
+    form.hasAttribute('het-background');
   const resolvedActionUrl = new URL(resolvedAction, window.location.href);
   if (resolvedActionUrl.origin !== window.location.origin)
     throw new Error(
