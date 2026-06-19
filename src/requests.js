@@ -129,16 +129,14 @@ const getSubmitContext = (event) => {
   if (!formAction) return;
   const resolvedMethod = formMethod.toUpperCase();
   if (resolvedMethod !== 'GET') return;
-  const resolvedAction = formAction;
-  const resolvedActionUrl = new URL(resolvedAction, window.location.href);
-  if (resolvedActionUrl.origin !== window.location.origin) return;
   event.preventDefault();
+  const resolvedAction = formAction;
   const loggingContext = {
     formElement: form,
     resolvedTargetName: targetName,
     formAction,
     formMethod,
-    resolvedActionUrl: resolvedActionUrl.href,
+    resolvedActionUrl: new URL(resolvedAction, window.location.href).href,
     resolvedMethod,
   };
   if (submitter) {
@@ -147,6 +145,12 @@ const getSubmitContext = (event) => {
   if (formTargetName) {
     loggingContext.formTargetName = formTargetName;
   }
+  const resolvedActionUrl = new URL(resolvedAction, window.location.href);
+  if (resolvedActionUrl.origin !== window.location.origin)
+    throw new Error(
+      'HET Error: Cross-origin form submissions cannot be progressively enhanced',
+      { cause: { ...loggingContext } },
+    );
   const formData = new FormData(form);
   const request = buildGetRequest(resolvedActionUrl, formData);
   const target = getTarget(targetName, loggingContext);

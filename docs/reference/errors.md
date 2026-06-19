@@ -447,6 +447,7 @@ The request-related errors below are unchanged by the component expression rewri
 
 - `HET Error: Cross-origin links cannot be progressively enhanced`
 - `HET Error: Links with a target attribute cannot be progressively enhanced`
+- `HET Error: Cross-origin form submissions cannot be progressively enhanced`
 
 ### Target panes
 

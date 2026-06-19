@@ -33,6 +33,34 @@ test.describe('form progressive enhancement (core)', () => {
     expect(content).toContain('GET form submitted');
   });
 
+  test('throws on cross-origin form submissions', async ({ page }) => {
+    await page.goto('/requests/progressive-enhancement/forms/external-form');
+    await page.click('#external-submit');
+    await page.waitForFunction(() =>
+      window.hetErrors.some((error) => error.message === 'HET Error: Cross-origin form submissions cannot be progressively enhanced',),
+    );
+    const errors = await page.evaluate(() => window.hetErrors.map((error) => error.message));
+    expect(errors).toContain(
+      'HET Error: Cross-origin form submissions cannot be progressively enhanced',
+    );
+    const cause = await page.evaluate(() => ({
+      formElementId: window.hetErrors.at(-1).cause.formElement.id,
+      submitterElementId: window.hetErrors.at(-1).cause.submitterElement.id,
+      formAction: window.hetErrors.at(-1).cause.formAction,
+      formTargetName: window.hetErrors.at(-1).cause.formTargetName,
+      resolvedTargetName: window.hetErrors.at(-1).cause.resolvedTargetName,
+      resolvedActionUrl: window.hetErrors.at(-1).cause.resolvedActionUrl,
+    }));
+    expect(cause).toEqual({
+      formElementId: 'form',
+      submitterElementId: 'external-submit',
+      formAction: 'https://example.com/submit',
+      formTargetName: 'main',
+      resolvedTargetName: 'main',
+      resolvedActionUrl: 'https://example.com/submit',
+    });
+  });
+
   test('throws when response does not include the target pane', async ({
     page,
   }) => {
