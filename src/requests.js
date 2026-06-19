@@ -71,6 +71,7 @@ const submitPipeline = async (event) => {
     requestCoordination.toAbort.forEach((controller) => controller.abort());
     const requestId = getRequestId();
     startUiFeedback(ctx.target.el, requestId);
+    updateForm(ctx.form, requestId, disableElement);
     inFlightRequests.set(ctx.target.el, ctx.abortController);
     try {
       const response = await fetchAndSwap(
@@ -90,6 +91,7 @@ const submitPipeline = async (event) => {
       if (error.name !== 'AbortError') throw error;
     } finally {
       inFlightRequests.delete(ctx.target.el);
+      updateForm(ctx.form, requestId, enableElement);
       endUiFeedback(ctx.target.el, requestId);
     }
   } catch (error) {
@@ -665,6 +667,27 @@ const getRequestCoordination = (targetEl) => {
     }
   }
   return { toAbort };
+};
+
+const updateForm = (form, requestId, func) => {
+  updateInteractiveElements(form, requestId, func);
+};
+
+const updateInteractiveElements = (container, requestId, func) => {
+  container
+    .querySelectorAll('input, button, select, textarea')
+    .forEach((el) => func(el, requestId));
+};
+
+const disableElement = (el, requestId) => {
+  el.disabled = true;
+  el.setAttribute('data-het-disabled', requestId);
+};
+
+const enableElement = (el, requestId) => {
+  if (el.dataset.hetDisabled !== String(requestId)) return;
+  el.disabled = false;
+  el.removeAttribute('data-het-disabled');
 };
 
 const startUiFeedback = (targetEl, requestId) => {

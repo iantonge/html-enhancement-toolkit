@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import disableRoutes from './disables-in-flight/routes.js';
 import headersRoutes from './headers/routes.js';
 import hetAlsoRoutes from './het-also/routes.js';
 import hetSelectRoutes from './het-select/routes.js';
@@ -15,6 +16,7 @@ router.get('/', (request, response) => {
   response.render('requests/index', { title: 'Requests' });
 });
 
+router.use('/disables-in-flight', disableRoutes);
 router.use('/headers', headersRoutes);
 router.use('/het-also', hetAlsoRoutes);
 router.use('/het-select', hetSelectRoutes);

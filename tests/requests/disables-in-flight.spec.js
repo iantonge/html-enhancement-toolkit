@@ -1,0 +1,29 @@
+import { test, expect } from '@playwright/test';
+
+test.describe('form disables-in-flight', () => {
+  test('disables form controls while request is in flight', async ({ page }) => {
+    await page.goto('/requests/disables-in-flight/form-controls');
+
+    let releaseResponse;
+    const responseGate = new Promise((resolve) => {
+      releaseResponse = resolve;
+    });
+
+    await page.route('**/requests/disables-in-flight/child-target**', async (route) => {
+      await responseGate;
+      await route.continue();
+    });
+
+    await page.click('#submit');
+
+    await expect(page.locator('#field')).toBeDisabled();
+    await expect(page.locator('#submit')).toBeDisabled();
+
+    releaseResponse();
+
+    await page.waitForSelector('#child-message');
+    await expect(page.locator('#field')).not.toBeDisabled();
+    await expect(page.locator('#submit')).not.toBeDisabled();
+  });
+
+});
