@@ -44,6 +44,36 @@ router.get('/duplicate-seed-signal', (request, response) => {
   });
 });
 
+router.get('/invalid-multiple-colons', (request, response) => {
+  response.render('components/acquisition/invalid-multiple-colons', {
+    title: 'Invalid declaration: multiple colons',
+  });
+});
+
+router.get('/incomplete-acquisition', (request, response) => {
+  response.render('components/acquisition/incomplete-acquisition', {
+    title: 'Incomplete acquisition',
+  });
+});
+
+router.get('/type-hint-unsupported', (request, response) => {
+  response.render('components/acquisition/type-hint-unsupported', {
+    title: 'Type hint unsupported',
+  });
+});
+
+router.get('/unknown-type-hint', (request, response) => {
+  response.render('components/acquisition/unknown-type-hint', {
+    title: 'Unknown type hint',
+  });
+});
+
+router.get('/unknown-strategy', (request, response) => {
+  response.render('components/acquisition/unknown-strategy', {
+    title: 'Unknown acquisition strategy',
+  });
+});
+
 router.get('/acquisition-not-supported', (request, response) => {
   response.render('components/acquisition/acquisition-not-supported', {
     title: 'Acquisition not supported',
