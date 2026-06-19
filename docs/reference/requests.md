@@ -18,7 +18,7 @@
 | Attribute | Valid elements | Value shape | Multiple values | Notes |
 | --- | --- | --- | --- | --- |
 | `het-pane` | Replaceable pane element | Pane name | No | Current document and response must each contain exactly one matching pane. |
-| `het-nav` | `het-pane` element | Boolean attribute | No | Enables browser history updates for that pane. |
+| `het-nav` | `het-pane` element | Boolean attribute | No | Enables browser history and configured `<head>` synchronization for that pane. |
 | `het-target` | Same-origin links, forms, submit buttons | Pane name | No | On forms, a submitter with `het-target` overrides the form value. |
 | `het-select` | Links, forms, submit buttons | Element id list | Yes | Replaces matching descendants inside the target pane. On forms, a submitter with `het-select` overrides the form value; an empty submitter value clears the form value. |
 | `het-also` | Links, forms, submit buttons | Element id list | Yes | Replaces matching elements outside the target pane. On forms, a submitter with `het-also` overrides the form value; an empty submitter value clears the form value. |
@@ -126,6 +126,8 @@ Add `het-nav` to a pane when replacements should also update browser history.
 ```
 
 When HET performs the first navigation in a session, it calls `replaceState` for the initial page and then `pushState` for the loaded response URL.
+
+For `het-nav` navigations, HET also synchronizes configured `<head>` elements from the response, including `<title>` by default.
 
 ## Server contract
 

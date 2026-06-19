@@ -12,6 +12,14 @@ let replaceContent = (elToReplace, replacementEl) => {
 let nonceHeader = 'X-HET-Nonce';
 let nonce;
 let trustedTypesPolicy;
+let headContentSelectors = [
+  'title',
+  'meta[name]',
+  'meta[property]',
+  'link[rel="canonical"]',
+  'link[rel="alternate"]',
+  'script[type="application/ld+json"]',
+];
 
 const clickPipeline = async (event) => {
   let ctx;
@@ -32,6 +40,9 @@ const clickPipeline = async (event) => {
         ctx.initiator,
       );
       if (!response) return;
+      if (response.finalTarget.isNav) {
+        updateHead(response.newHead);
+      }
       updateHistory(response.finalTarget, response.url);
     } catch (error) {
       if (error.name !== 'AbortError') throw error;
@@ -63,6 +74,9 @@ const submitPipeline = async (event) => {
         ctx.initiator,
       );
       if (!response) return;
+      if (response.finalTarget.isNav) {
+        updateHead(response.newHead);
+      }
       updateHistory(response.finalTarget, response.url);
     } catch (error) {
       if (error.name !== 'AbortError') throw error;
@@ -171,7 +185,7 @@ const fetchAndSwap = async (
       bubbles: true,
     });
     loadedContent.dispatchEvent(afterLoadContentEvent);
-    return { url: finalResponse.url, finalTarget };
+    return { url: finalResponse.url, newHead: parsedDocument.head, finalTarget };
   }
   const selectLoggingContext = {
     ...swapLoggingContext,
@@ -207,7 +221,7 @@ const fetchAndSwap = async (
     bubbles: true,
   });
   loadedContent.dispatchEvent(afterLoadContentEvent);
-  return { url: finalResponse.url, finalTarget };
+  return { url: finalResponse.url, newHead: parsedDocument.head, finalTarget };
 };
 
 const getFinalSelect = (
@@ -614,6 +628,16 @@ const updateHistory = (target, responseUrl) => {
   history.pushState(null, '', responseUrl);
 };
 
+const updateHead = (newHead) => {
+  if (!newHead) return;
+  headContentSelectors.forEach((selector) => {
+    document.head.querySelectorAll(selector).forEach((el) => el.remove());
+    newHead.querySelectorAll(selector).forEach((el) => {
+      document.head.appendChild(el.cloneNode(true));
+    });
+  });
+};
+
 const getTarget = (targetName, loggingContext) => {
   const candidates = document.querySelectorAll(`[het-pane="${targetName}"]`);
   if (candidates.length === 0) {
@@ -648,6 +672,7 @@ export function init(config) {
   nonceHeader = config?.nonceHeader ?? nonceHeader;
   nonce = config?.nonce ?? nonce;
   trustedTypesPolicy = config?.trustedTypesPolicy ?? trustedTypesPolicy;
+  headContentSelectors = config?.headContentSelectors ?? headContentSelectors;
   document.addEventListener('click', clickPipeline);
   document.addEventListener('submit', submitPipeline);
 }

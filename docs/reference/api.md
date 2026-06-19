@@ -25,6 +25,29 @@ HET.init({
 });
 ```
 
+#### `headContentSelectors`
+
+Controls which `<head>` elements HET synchronizes from responses during `het-nav` navigations. Default:
+
+```js
+[
+  'title',
+  'meta[name]',
+  'meta[property]',
+  'link[rel="canonical"]',
+  'link[rel="alternate"]',
+  'script[type="application/ld+json"]',
+]
+```
+
+Example limiting updates to `<title>` only:
+
+```js
+HET.init({
+  headContentSelectors: ['title'],
+});
+```
+
 #### `nonce`
 
 Adds a nonce value to enhanced fetch requests using the configured nonce header name. Default: unset.
@@ -52,7 +75,7 @@ HET.init({
 
 [Trusted Types](https://developer.mozilla.org/en-US/docs/Web/API/Trusted_Types_API) policy object used to transform response HTML before parsing. Default: unset. If provided, HET calls `trustedTypesPolicy.createHTML(responseHtml)`.
 
-[DOMPurify](https://github.com/cure53/DOMPurify) is a suitable sanitizer for this. Configure it to keep the document structure and allow HET elements and attributes.
+[DOMPurify](https://github.com/cure53/DOMPurify) is a suitable sanitizer for this. If you use head updates, configure it to keep the document structure and allow head elements and attributes.
 
 ```js
 import DOMPurify from 'dompurify';
@@ -62,7 +85,7 @@ const trustedTypesPolicy = trustedTypes.createPolicy('het', {
     DOMPurify.sanitize(html, {
       RETURN_TRUSTED_TYPE: false,
       WHOLE_DOCUMENT: true,
-      ADD_TAGS: ['html', 'head', 'body', 'style'],
+      ADD_TAGS: ['html', 'head', 'body', 'meta', 'title', 'link', 'style'],
       ADD_ATTR: [
         'het-component',
         'het-ref',

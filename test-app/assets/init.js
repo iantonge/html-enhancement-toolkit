@@ -4,7 +4,7 @@ const trustedTypesPolicy = trustedTypes.createPolicy('het', {
   createHTML: (html) => DOMPurify.sanitize(html, {
     RETURN_TRUSTED_TYPE: false,
     WHOLE_DOCUMENT: true,
-    ADD_TAGS: ['html', 'head', 'body', 'style', 'script'],
+    ADD_TAGS: ['html', 'head', 'body', 'meta', 'title', 'link', 'style', 'script'],
     ADD_ATTR: [
       'het-component',
       'het-ref',
