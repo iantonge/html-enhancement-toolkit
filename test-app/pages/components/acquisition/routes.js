@@ -14,4 +14,10 @@ router.get('/seed', (request, response) => {
   });
 });
 
+router.get('/explicit-sources', (request, response) => {
+  response.render('components/acquisition/explicit-sources', {
+    title: 'Explicit read sources',
+  });
+});
+
 export default router;
