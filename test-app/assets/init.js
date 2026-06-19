@@ -26,6 +26,7 @@ const trustedTypesPolicy = trustedTypes.createPolicy('het', {
       'het-if',
       'het-unmount-delay',
       'het-pane',
+      'het-nav',
       'het-target',
       'het-select',
       'het-also',

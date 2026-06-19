@@ -1,5 +1,6 @@
 const parser = new DOMParser();
 const inFlightRequests = new Map();
+let historyStateReplaced = false;
 let onError = (error) => {
   console.error(error, error.cause);
 };
@@ -22,7 +23,7 @@ const clickPipeline = async (event) => {
     requestCoordination.toAbort.forEach((controller) => controller.abort());
     inFlightRequests.set(ctx.target.el, ctx.abortController);
     try {
-      await fetchAndSwap(
+      const response = await fetchAndSwap(
         ctx.request,
         ctx.target,
         ctx.select,
@@ -30,6 +31,8 @@ const clickPipeline = async (event) => {
         ctx.loggingContext,
         ctx.initiator,
       );
+      if (!response) return;
+      updateHistory(response.finalTarget, response.url);
     } catch (error) {
       if (error.name !== 'AbortError') throw error;
     }
@@ -51,7 +54,7 @@ const submitPipeline = async (event) => {
     requestCoordination.toAbort.forEach((controller) => controller.abort());
     inFlightRequests.set(ctx.target.el, ctx.abortController);
     try {
-      await fetchAndSwap(
+      const response = await fetchAndSwap(
         ctx.request,
         ctx.target,
         ctx.select,
@@ -59,6 +62,8 @@ const submitPipeline = async (event) => {
         ctx.loggingContext,
         ctx.initiator,
       );
+      if (!response) return;
+      updateHistory(response.finalTarget, response.url);
     } catch (error) {
       if (error.name !== 'AbortError') throw error;
     } finally {
@@ -166,7 +171,7 @@ const fetchAndSwap = async (
       bubbles: true,
     });
     loadedContent.dispatchEvent(afterLoadContentEvent);
-    return;
+    return { url: finalResponse.url, finalTarget };
   }
   const selectLoggingContext = {
     ...swapLoggingContext,
@@ -202,7 +207,7 @@ const fetchAndSwap = async (
     bubbles: true,
   });
   loadedContent.dispatchEvent(afterLoadContentEvent);
-  return;
+  return { url: finalResponse.url, finalTarget };
 };
 
 const getFinalSelect = (
@@ -600,6 +605,15 @@ const getRequestCoordination = (targetEl) => {
   return { toAbort };
 };
 
+const updateHistory = (target, responseUrl) => {
+  if (!target.isNav || !responseUrl) return;
+  if (!historyStateReplaced) {
+    history.replaceState(null, '', window.location.href);
+    historyStateReplaced = true;
+  }
+  history.pushState(null, '', responseUrl);
+};
+
 const getTarget = (targetName, loggingContext) => {
   const candidates = document.querySelectorAll(`[het-pane="${targetName}"]`);
   if (candidates.length === 0) {
@@ -624,7 +638,8 @@ const getTarget = (targetName, loggingContext) => {
     );
   }
   const el = candidates[0];
-  return { el, name: targetName };
+  const isNav = el.hasAttribute('het-nav');
+  return { el, name: targetName, isNav };
 };
 
 export function init(config) {

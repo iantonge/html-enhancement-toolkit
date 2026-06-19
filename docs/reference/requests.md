@@ -8,6 +8,7 @@
 - [Panes](#panes)
 - [Partial updates with `het-select`](#partial-updates-with-het-select)
 - [Additional replacements with `het-also`](#additional-replacements-with-het-also)
+- [Navigation panes (`het-nav`)](#navigation-panes-het-nav)
 - [Server contract](#server-contract)
 - [Request coordination](#request-coordination)
 - [Lifecycle events](#lifecycle-events)
@@ -17,6 +18,7 @@
 | Attribute | Valid elements | Value shape | Multiple values | Notes |
 | --- | --- | --- | --- | --- |
 | `het-pane` | Replaceable pane element | Pane name | No | Current document and response must each contain exactly one matching pane. |
+| `het-nav` | `het-pane` element | Boolean attribute | No | Enables browser history updates for that pane. |
 | `het-target` | Same-origin links, forms, submit buttons | Pane name | No | On forms, a submitter with `het-target` overrides the form value. |
 | `het-select` | Links, forms, submit buttons | Element id list | Yes | Replaces matching descendants inside the target pane. On forms, a submitter with `het-select` overrides the form value; an empty submitter value clears the form value. |
 | `het-also` | Links, forms, submit buttons | Element id list | Yes | Replaces matching elements outside the target pane. On forms, a submitter with `het-also` overrides the form value; an empty submitter value clears the form value. |
@@ -105,6 +107,25 @@ Use `het-also` to replace elements outside the target pane from the same respons
 - `het-also` throws if any listed id is missing in the current document or server response, or if an id refers to an element inside the target pane.
 - If `het-also` is present, it must list at least one id.
 - On submit buttons, `het-also=""` clears a form-level `het-also` override and skips additional replacements for that submission.
+
+## Navigation panes (`het-nav`)
+
+Add `het-nav` to a pane when replacements should also update browser history.
+
+```html
+<main het-pane="main" het-nav>
+  <a href="/next" het-target="main">Next page</a>
+</main>
+
+<main het-pane="main" het-nav>
+  <form method="get" action="/search" het-target="main">
+    <input name="q">
+    <button type="submit">Search</button>
+  </form>
+</main>
+```
+
+When HET performs the first navigation in a session, it calls `replaceState` for the initial page and then `pushState` for the loaded response URL.
 
 ## Server contract
 
