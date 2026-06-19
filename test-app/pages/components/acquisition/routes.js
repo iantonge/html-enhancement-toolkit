@@ -14,6 +14,12 @@ router.get('/seed', (request, response) => {
   });
 });
 
+router.get('/sync', (request, response) => {
+  response.render('components/acquisition/sync', {
+    title: 'Sync strategy',
+  });
+});
+
 router.get('/type-hints', (request, response) => {
   response.render('components/acquisition/type-hints', {
     title: 'Type hints',

@@ -9,6 +9,21 @@ test.describe('components acquisition and sync expressions', () => {
     await expect(page.locator('#seed-count')).toHaveText('8');
   });
 
+  test('synchronizes seeded signals from DOM using het-sync on het:sync events', async ({ page }) => {
+    await page.goto('/components/acquisition/sync');
+
+    await expect(page.locator('#sync-value')).toHaveText('alpha');
+
+    await page.evaluate(() => {
+      const input = document.getElementById('sync-input');
+      input.value = 'beta';
+      const root = document.getElementById('sync-root');
+      root.dispatchEvent(new CustomEvent('het:sync', { bubbles: true }));
+    });
+
+    await expect(page.locator('#sync-value')).toHaveText('beta');
+  });
+
   test('coerces values using $int, $float, and $bool intrinsics', async ({ page }) => {
     await page.goto('/components/acquisition/type-hints');
 
