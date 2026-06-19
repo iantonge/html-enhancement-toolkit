@@ -7,6 +7,7 @@ import historyRoutes from './history/routes.js';
 import lifecycleEventsRoutes from './lifecycle-events/routes.js';
 import navPanesRoutes from './nav-panes/routes.js';
 import progressiveEnhancementRoutes from './progressive-enhancement/routes.js';
+import replaceContentRoutes from './replace-content/routes.js';
 import requestCoordinationRoutes from './request-coordination/routes.js';
 import uiFeedbackRoutes from './ui-feedback/routes.js';
 
@@ -24,6 +25,7 @@ router.use('/history', historyRoutes);
 router.use('/lifecycle-events', lifecycleEventsRoutes);
 router.use('/nav-panes', navPanesRoutes);
 router.use('/progressive-enhancement', progressiveEnhancementRoutes);
+router.use('/replace-content', replaceContentRoutes);
 router.use('/request-coordination', requestCoordinationRoutes);
 router.use('/ui-feedback', uiFeedbackRoutes);
 
