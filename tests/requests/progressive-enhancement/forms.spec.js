@@ -33,6 +33,20 @@ test.describe('form progressive enhancement (core)', () => {
     expect(content).toContain('GET form submitted');
   });
 
+  test('throws when response does not include the target pane', async ({
+    page,
+  }) => {
+    await page.goto('/requests/progressive-enhancement/forms/missing-target-response-form');
+    await page.click('#submit');
+    await page.waitForFunction(() =>
+      window.hetErrors.some((error) => error.message === 'HET Error: Target pane not found in server response',),
+    );
+    const errors = await page.evaluate(() => window.hetErrors.map((error) => error.message));
+    expect(errors).toContain(
+      'HET Error: Target pane not found in server response',
+    );
+  });
+
   test('throws when response includes duplicate target panes', async ({
     page,
   }) => {
