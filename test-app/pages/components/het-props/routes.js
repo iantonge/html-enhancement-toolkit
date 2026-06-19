@@ -14,4 +14,16 @@ router.get('/binds-signal', (request, response) => {
   });
 });
 
+router.get('/missing-signal', (request, response) => {
+  response.render('components/het-props/missing-signal', {
+    title: 'Missing signal',
+  });
+});
+
+router.get('/invalid-assignment', (request, response) => {
+  response.render('components/het-props/invalid-assignment', {
+    title: 'Invalid assignment',
+  });
+});
+
 export default router;
