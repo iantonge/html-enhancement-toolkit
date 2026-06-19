@@ -1,6 +1,20 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('link progressive enhancement (core)', () => {
+  test('throws when response includes duplicate target panes', async ({
+    page,
+  }) => {
+    await page.goto('/requests/progressive-enhancement/links/duplicate-target-response');
+    await page.click('#link');
+    await page.waitForFunction(() =>
+      window.hetErrors.some((error) => error.message === 'HET Error: Multiple target panes found in server response',),
+    );
+    const errors = await page.evaluate(() => window.hetErrors.map((error) => error.message));
+    expect(errors).toContain(
+      'HET Error: Multiple target panes found in server response',
+    );
+  });
+
   const modifiers = [
     { name: 'Ctrl key', options: { modifiers: ['Control'] }, skipWebkit: false },
     { name: 'Shift key', options: { modifiers: ['Shift'] }, skipWebkit: false },
