@@ -13,7 +13,7 @@
 | Attribute | Valid elements | Value shape | Multiple values | Notes |
 | --- | --- | --- | --- | --- |
 | `het-pane` | Replaceable pane element | Pane name | No | Current document and response must each contain exactly one matching pane. |
-| `het-target` | Same-origin links and forms | Pane name | No | The matching pane is replaced with the response pane. |
+| `het-target` | Same-origin links, forms, submit buttons | Pane name | No | On forms, a submitter with `het-target` overrides the form value. |
 
 ## Links
 
@@ -42,6 +42,7 @@ Add `het-target="<pane-name>"` to a same-origin form to submit it with `fetch` a
 
 - HET respects native form defaults and submitter overrides: `formaction`, `formmethod`, default `method`/`action`, and submitter name/value pairs.
 - HET submits `GET` forms as query strings and submits non-GET forms as `application/x-www-form-urlencoded`.
+- `het-target` on the clicked submit button overrides `het-target` on the form.
 - Do not put `het-target` on cross-origin form submissions; HET treats that as an error.
 
 ## Panes

@@ -119,7 +119,10 @@ const getClickContext = (event) => {
 
 const getSubmitContext = (event) => {
   const formTargetName = event.target.getAttribute('het-target');
-  const targetName = formTargetName;
+  const submitterTargetName = event.submitter?.hasAttribute('het-target')
+    ? event.submitter.getAttribute('het-target')
+    : undefined;
+  const targetName = submitterTargetName || formTargetName;
   if (!targetName) return;
   event.preventDefault();
   const form = event.target;
@@ -147,6 +150,9 @@ const getSubmitContext = (event) => {
   }
   if (formTargetName) {
     loggingContext.formTargetName = formTargetName;
+  }
+  if (submitterTargetName) {
+    loggingContext.submitterTargetName = submitterTargetName;
   }
   if (submitterAction) {
     loggingContext.submitterAction = submitterAction;

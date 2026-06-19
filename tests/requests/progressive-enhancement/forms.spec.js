@@ -105,6 +105,20 @@ test.describe('form progressive enhancement (core)', () => {
     expect(content).toContain('Default action submitted');
   });
 
+  test('uses submitter het-target override for form-associated control', async ({
+    page,
+  }) => {
+    await page.goto('/requests/progressive-enhancement/forms/submitter-target-form');
+    await Promise.all([
+      page.waitForSelector('#child-message'),
+      page.click('#submitter-target-submit'),
+    ]);
+    const childContent = await page.textContent('#child-message');
+    expect(childContent).toContain('Child pane updated.');
+    const mainContent = await page.textContent('#main-content');
+    expect(mainContent).toContain('Original page content.');
+  });
+
   test('throws on cross-origin form submissions', async ({ page }) => {
     await page.goto('/requests/progressive-enhancement/forms/external-form');
     await page.click('#external-submit');
@@ -121,6 +135,7 @@ test.describe('form progressive enhancement (core)', () => {
       formAction: window.hetErrors.at(-1).cause.formAction,
       submitterAction: window.hetErrors.at(-1).cause.submitterAction,
       formTargetName: window.hetErrors.at(-1).cause.formTargetName,
+      submitterTargetName: window.hetErrors.at(-1).cause.submitterTargetName,
       resolvedTargetName: window.hetErrors.at(-1).cause.resolvedTargetName,
       resolvedActionUrl: window.hetErrors.at(-1).cause.resolvedActionUrl,
     }));
@@ -130,6 +145,7 @@ test.describe('form progressive enhancement (core)', () => {
       formAction: '/requests/progressive-enhancement/forms/get-form',
       submitterAction: 'https://example.com/submit',
       formTargetName: 'main',
+      submitterTargetName: 'main',
       resolvedTargetName: 'main',
       resolvedActionUrl: 'https://example.com/submit',
     });

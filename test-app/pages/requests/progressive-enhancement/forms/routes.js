@@ -14,6 +14,7 @@ import noTargetRoutes from './no-target-form/routes.js';
 import postRoutes from './post/routes.js';
 import relativeActionRoutes from './relative-action-form/routes.js';
 import responsesRoutes from './responses/routes.js';
+import submitterTargetRoutes from './submitter-target-form/routes.js';
 
 const router = Router();
 
@@ -37,5 +38,6 @@ router.use(noTargetRoutes);
 router.use(postRoutes);
 router.use(relativeActionRoutes);
 router.use(responsesRoutes);
+router.use(submitterTargetRoutes);
 
 export default router;

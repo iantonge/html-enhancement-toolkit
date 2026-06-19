@@ -57,4 +57,11 @@ router.post('/post-form', (request, response) => {
   });
 });
 
+router.get('/child-target', (request, response) => {
+  response.render('requests/progressive-enhancement/forms/responses/child-target', {
+    title: 'Form Progressive Enhancement (Core)',
+    message: 'Child pane updated.',
+  });
+});
+
 export default router;
