@@ -21,6 +21,9 @@ HET is probably not the right fit when you need:
 
 ## Documentation
 
+- [Tutorial index](docs/tutorial.md): start with separate requests and components walkthroughs.
+- [Requests tutorial](docs/tutorial-requests.md): build up panes, links, forms, navigation, partial updates, and request lifecycle behavior.
+- [Components tutorial](docs/tutorial-components.md): build up component roots, signals, bindings, structural templates, and DOM synchronization.
 - [Reference index](docs/README.md): component, request, API, and error reference docs.
 - [Component reference](docs/reference/components.md): component roots, signals, bindings, imports/exports, structural templates, and lifecycle notes.
 - [Request reference](docs/reference/requests.md)
@@ -117,6 +120,7 @@ HET is built around a few small primitives:
 
 ## Where next
 
+- Follow the [requests tutorial](docs/tutorial-requests.md), then the [components tutorial](docs/tutorial-components.md).
 - Use the [reference index](docs/README.md) when you already know what concept you need.
 - Use the [error reference](docs/reference/errors.md) for `HET Error:` diagnostics and `error.cause` fields.
 
