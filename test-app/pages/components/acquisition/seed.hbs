@@ -3,9 +3,18 @@
     <h1 class="h4 mb-3">{{title}}</h1>
     <div het-component="acquisition-seed">
       <p id="seed-count" het-seed="count=$int($text)" het-text="count" class="mb-2">7</p>
+      <button id="seed-inc" type="button" het-on="click->increment" class="btn btn-sm btn-primary">
+        Increment
+      </button>
     </div>
   </div>
 </section>
 <script nonce="{{{cspNonce}}}">
-  window.HET.registerComponent('acquisition-seed');
+  window.HET.registerComponent('acquisition-seed', ({ signals }) => {
+    return {
+      increment() {
+        signals.count.value += 1;
+      },
+    };
+  });
 </script>

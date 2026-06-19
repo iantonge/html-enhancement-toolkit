@@ -5,6 +5,8 @@ test.describe('components acquisition and sync expressions', () => {
     await page.goto('/components/acquisition/seed');
 
     await expect(page.locator('#seed-count')).toHaveText('7');
+    await page.click('#seed-inc');
+    await expect(page.locator('#seed-count')).toHaveText('8');
   });
 
   test('supports contextual reads and het-text bindings', async ({ page }) => {
