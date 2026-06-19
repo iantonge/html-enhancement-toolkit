@@ -4,6 +4,7 @@ import {
   destroyComponent,
   mountComponent,
   mountComponents,
+  removeMountPendingAttributes,
 } from './mount.js';
 import { configureStructuralTeardown } from './structural.js';
 import { initializeSyncEvents, destroySyncEvents } from './sync.js';
@@ -74,16 +75,21 @@ function initializeObserver() {
     queueMicrotask(() => {
       const additions = Array.from(pendingAdditions);
       const removals = Array.from(pendingRemovals);
+      const mountedComponents = [];
+
       for (const el of additions) {
         try {
           if (!el.isConnected) continue;
           if (!el.hasAttribute('het-component')) continue;
           const component = getMountableComponent(el);
-          if (component) mountComponent(el, component.setup);
+          if (component && mountComponent(el, component.setup)) {
+            mountedComponents.push(el);
+          }
         } catch (error) {
           handleError(error);
         }
       }
+      removeMountPendingAttributes(mountedComponents);
       pendingAdditions.clear();
 
       for (const el of removals) {

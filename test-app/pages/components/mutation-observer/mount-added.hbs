@@ -4,12 +4,20 @@
     <button id="add-component" type="button" class="btn btn-sm btn-primary mb-3">
       Add component
     </button>
+    <button id="add-mount-pending-component" type="button" class="btn btn-sm btn-primary mb-3">
+      Add mount-pending component
+    </button>
     <div id="host"></div>
     <p id="mount-state" class="mb-0 text-muted">not-mounted</p>
+    <p id="mount-pending-state" class="mb-0 text-muted">mount-pending</p>
   </div>
 </section>
 <script nonce="{{{cspNonce}}}">
   window.HET.registerComponent('observer-added', ({ refs }) => {
+    refs.state.textContent = 'mounted';
+  });
+
+  window.HET.registerComponent('observer-mount-pending', ({ refs }) => {
     refs.state.textContent = 'mounted';
   });
 
@@ -31,4 +39,22 @@
     }, 0);
   });
 
+  document.getElementById('add-mount-pending-component').addEventListener('click', () => {
+    const host = document.getElementById('host');
+    const root = document.createElement('div');
+    root.id = 'added-mount-pending';
+    root.setAttribute('het-component', 'observer-mount-pending');
+    root.setAttribute('het-mount-pending', '');
+
+    const stateEl = document.createElement('span');
+    stateEl.setAttribute('het-ref', 'state');
+    root.appendChild(stateEl);
+
+    host.replaceChildren(root);
+
+    setTimeout(() => {
+      const isMountPending = document.getElementById('added-mount-pending')?.hasAttribute('het-mount-pending');
+      document.getElementById('mount-pending-state').textContent = isMountPending ? 'mount-pending' : 'mounted';
+    }, 0);
+  });
 </script>
