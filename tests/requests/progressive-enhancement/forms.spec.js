@@ -75,6 +75,17 @@ test.describe('form progressive enhancement (core)', () => {
     expect(content).toContain('POST form submitted: relative post value');
   });
 
+  test('honors multipart form enctype', async ({ page }) => {
+    await page.goto('/requests/progressive-enhancement/forms/multipart');
+    await Promise.all([
+      page.waitForSelector('#response-message'),
+      page.click('#submit'),
+    ]);
+    const content = await page.textContent('#response-message');
+    expect(content).toContain('Multipart form submitted: multipart value');
+    expect(content).toContain('multipart/form-data');
+  });
+
   test('does not intercept forms without het-target', async ({ page }) => {
     await page.goto('/requests/progressive-enhancement/forms/no-target-form');
     await Promise.all([

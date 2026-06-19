@@ -57,6 +57,15 @@ router.post('/post-form', (request, response) => {
   });
 });
 
+router.post('/enctype-multipart', (request, response) => {
+  const someField = request.body['some-field'] ?? '';
+  const contentType = request.get('content-type') ?? '';
+  response.render('requests/progressive-enhancement/forms/responses/post-form', {
+    title: 'Form Progressive Enhancement (Core)',
+    message: `Multipart form submitted: ${someField} (${contentType})`,
+  });
+});
+
 router.get('/child-target', (request, response) => {
   response.render('requests/progressive-enhancement/forms/responses/child-target', {
     title: 'Form Progressive Enhancement (Core)',

@@ -137,13 +137,18 @@ const getSubmitContext = (event) => {
     ? submitter.getAttribute('formaction')
     : undefined;
   const resolvedAction = submitterAction || formAction;
+  const formEnctype =
+    form.getAttribute('enctype') || 'application/x-www-form-urlencoded';
+  const resolvedEnctype = formEnctype.toLowerCase();
   const loggingContext = {
     formElement: form,
     resolvedTargetName: targetName,
     formAction,
     formMethod,
+    formEnctype,
     resolvedActionUrl: new URL(resolvedAction, window.location.href).href,
     resolvedMethod,
+    resolvedEnctype,
   };
   if (submitter) {
     loggingContext.submitterElement = submitter;
@@ -174,6 +179,7 @@ const getSubmitContext = (event) => {
           resolvedActionUrl,
           resolvedMethod,
           formData,
+          resolvedEnctype,
         );
   const target = getTarget(targetName, loggingContext);
   loggingContext.targetPaneElement = target.el;
@@ -194,7 +200,30 @@ const buildGetRequest = (actionUrl, formData) => {
   return new Request(url.href, { method: 'GET' });
 };
 
-const buildPostRequest = (actionUrl, method, formData) => {
+const buildPostRequest = (
+  actionUrl,
+  method,
+  formData,
+  enctype,
+) => {
+  if (enctype === 'multipart/form-data') {
+    return new Request(actionUrl.href, {
+      method,
+      body: formData,
+    });
+  }
+  if (enctype === 'text/plain') {
+    const textBody = Array.from(formData.entries())
+      .map(([key, value]) => `${key}=${value}`)
+      .join('\r\n');
+    return new Request(actionUrl.href, {
+      method,
+      headers: {
+        'Content-Type': 'text/plain;charset=UTF-8',
+      },
+      body: textBody,
+    });
+  }
   const params = new URLSearchParams(formData);
   return new Request(actionUrl.href, {
     method,
