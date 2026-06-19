@@ -33,4 +33,15 @@ test.describe('form progressive enhancement (core)', () => {
     expect(content).toContain('GET form submitted');
   });
 
+  test('throws when current document has duplicate panes', async ({ page }) => {
+    await page.goto('/requests/progressive-enhancement/forms/duplicate-pane-form');
+    await page.click('#submit');
+    await page.waitForFunction(() =>
+      window.hetErrors.some((error) => error.message === 'HET Error: Multiple target panes found on the page',),
+    );
+    const errors = await page.evaluate(() => window.hetErrors.map((error) => error.message));
+    expect(errors).toContain(
+      'HET Error: Multiple target panes found on the page',
+    );
+  });
 });
