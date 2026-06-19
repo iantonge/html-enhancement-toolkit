@@ -63,4 +63,11 @@ test.describe('components structural templates', () => {
     );
   });
 
+  test('reports error when the structural template root is not a component', async ({ page }) => {
+    await page.goto('/components/structural/invalid-root');
+    await page.waitForFunction(() =>
+      window.hetErrors.some((error) => error.message === 'HET Error: Structural template root must be a component'),
+    );
+  });
+
 });

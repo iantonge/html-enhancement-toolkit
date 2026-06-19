@@ -405,6 +405,10 @@ A `<template>` used neither `het-if` nor `het-for`, or used both at once.
 
 A structural template contained extra roots or unsupported free text content.
 
+### `HET Error: Structural template root must be a component`
+
+The single root element inside a structural template did not have `het-component`.
+
 ### `HET Error: Structural template root component is not registered`
 
 The structural template root named a component that was not registered.

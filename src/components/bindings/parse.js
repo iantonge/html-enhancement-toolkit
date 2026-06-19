@@ -180,7 +180,21 @@ function getTemplateComponentRoot(templateEl, componentLoggingContext) {
     );
   }
 
-  return elementChildren[0];
+  const [componentRoot] = elementChildren;
+  if (!componentRoot.hasAttribute('het-component')) {
+    throw new Error(
+      'HET Error: Structural template root must be a component',
+      {
+        cause: {
+          ...componentLoggingContext,
+          bindingElement: templateEl,
+          structuralRootElement: componentRoot,
+        },
+      },
+    );
+  }
+
+  return componentRoot;
 }
 
 function getSplitBindingDeclarations(rawAttr, bindingLoggingContext) {

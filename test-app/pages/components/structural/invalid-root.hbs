@@ -1,0 +1,16 @@
+<section class="card shadow-sm border-0" het-component="structural-invalid-root">
+  <div class="card-body">
+    <h1 class="h4 mb-3">{{title}}</h1>
+    <template het-for="items">
+      <div>
+        <span>Not a component root</span>
+      </div>
+    </template>
+  </div>
+</section>
+
+<script nonce="{{{cspNonce}}}">
+  window.HET.registerComponent('structural-invalid-root', ({ signals }) => {
+    signals.items = window.HET.signals.signal([]);
+  });
+</script>

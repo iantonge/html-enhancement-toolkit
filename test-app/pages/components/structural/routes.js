@@ -32,4 +32,10 @@ router.get('/invalid-property', (request, response) => {
   });
 });
 
+router.get('/invalid-root', (request, response) => {
+  response.render('components/structural/invalid-root', {
+    title: 'Invalid structural root',
+  });
+});
+
 export default router;
