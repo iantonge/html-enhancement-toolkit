@@ -91,7 +91,7 @@ function getParsedBindingDeclarations(
     );
   }
 
-  if (directive.name === 'het-seed') {
+  if (directive.name === 'het-seed' || directive.name === 'het-sync') {
     return declarations.map((declaration) =>
       getParsedReadDeclaration(directive, attrName, el, declaration, componentLoggingContext),
     );

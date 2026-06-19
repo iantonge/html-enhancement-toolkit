@@ -32,7 +32,7 @@ Component bindings expect Preact signal objects.
 Signals can come from three places:
 
 - Local signals initialized in `setup`, such as `signals.count = HET.signals.signal(0)`.
-- Acquired signals created from DOM values with `het-seed` before `setup` runs.
+- Acquired signals created from DOM values with `het-seed` or `het-sync` before `setup` runs.
 - Imported signals declared with `het-imports`.
 
 Initialize only the local signals your component owns. Do not initialize signals that are acquired from the DOM or imported from an ancestor.
@@ -65,6 +65,7 @@ Expressions are used by:
 - output bindings such as `het-text`
 - assignment-style `het-on`
 - `het-seed`
+- `het-sync`
 
 Supported syntax:
 
@@ -156,7 +157,7 @@ Typed variants apply coercion when reading from the control into the signal:
 - `het-model:float`
 - `het-model:bool`
 
-For explicit non-model patterns, combine `het-text`, `het-on`, and `het-seed`.
+For explicit non-model patterns, combine `het-text`, `het-on`, and `het-seed` / `het-sync`.
 
 ### `het-on`
 
@@ -211,6 +212,24 @@ Multiple acquisitions use semicolons:
 
 A signal may have only one acquisition source.
 
+### `het-sync`
+
+Use `het-sync` when another system may update the DOM after mount and you need HET to re-read that snapshot into signals.
+
+```html
+<input value="Draft" het-sync="status=$props.value">
+<p het-text="status"></p>
+```
+
+HET evaluates `het-sync` during initial mount and again whenever a `het:sync` event bubbles through the component subtree.
+
+```js
+const container = document.querySelector('#profile-editor');
+container.dispatchEvent(new CustomEvent('het:sync', { bubbles: true }));
+```
+
+DOM-updating integrations must dispatch `het:sync` themselves.
+
 ## Signal sharing
 
 ### `het-exports`
@@ -236,14 +255,14 @@ The value is a whitespace-separated declaration list.
 <aside het-component="searchSidebar" het-imports="sidebarQuery=query"></aside>
 ```
 
-If multiple ancestors export the same signal name, HET resolves to the nearest exporting ancestor.
+If multiple ancestors export the same signal name, HET resolves to the nearest exporting ancestor. On `het:sync`, imports are resolved again so moved components continue to use the nearest current exporter.
 
 ## Component lifecycle notes
 
 - HET mounts component roots in depth order so parents mount before descendants.
 - HET unmounts removed components automatically.
 - `destroy()` unmounts all mounted components and removes HET-managed listeners.
-- Component bindings are discovered once, when the component mounts.
+- Component bindings are discovered once, when the component mounts. Dispatching `het:sync` re-runs existing sync bindings; it does not register new or changed `het-*` attributes.
 
 ## Component attribute support
 
@@ -256,5 +275,6 @@ If multiple ancestors export the same signal name, HET resolves to the nearest e
 | `het-model:bool` | Two-way control binding with boolean coercion | No | Reads with `$bool` semantics. |
 | `het-on` | Event handlers and event-time assignments | Yes | Semicolon-separated declarations. |
 | `het-seed` | Create signals from DOM snapshots before setup | Yes | Semicolon-separated declarations. |
+| `het-sync` | Re-read DOM snapshots on mount and `het:sync` | Yes | Semicolon-separated declarations. |
 | `het-exports` | Export signals to descendants | Yes | Whitespace-separated signal names. |
 | `het-imports` | Import nearest exported signals | Yes | Whitespace-separated declarations. |

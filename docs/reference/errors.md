@@ -127,7 +127,7 @@ Fix the binding by filling in both sides.
 
 ### `HET Error: Read binding must contain exactly one "="`
 
-A `het-seed` declaration did not contain exactly one top-level `=` between the signal name and expression.
+A `het-seed` or `het-sync` declaration did not contain exactly one top-level `=` between the signal name and expression.
 
 ```html
 <div het-component="counter">
@@ -143,7 +143,7 @@ Fix the declaration so it has one signal target and one expression.
 
 ### `HET Error: Read binding requires a signal name and source`
 
-A `het-seed` declaration used `=` but left the signal name or expression empty.
+A `het-seed` or `het-sync` declaration used `=` but left the signal name or expression empty.
 
 ```html
 <div het-component="counter">
@@ -202,7 +202,7 @@ An output binding such as `het-text` used contextual snapshot values like `$targ
 </div>
 ```
 
-Fix the binding by reading from the DOM in `het-seed` or an event-time `het-on` assignment first.
+Fix the binding by reading from the DOM in `het-seed`, `het-sync`, or an event-time `het-on` assignment first.
 
 ```html
 <input het-seed="message=$props.value">
@@ -341,7 +341,7 @@ Fix the exporting component by creating or acquiring the exported signal.
 
 ### `HET Error: Imported signal conflicts with local initialization`
 
-A component tried to import a signal name and also initialize that same local name with `het-seed`.
+A component tried to import a signal name and also initialize that same local name with `het-seed` or `het-sync`.
 
 Fix the component by choosing either imported ownership or local acquisition, not both.
 

@@ -22,6 +22,12 @@ const DIRECTIVES = [
     acquisitionStrategy: 'seed',
   },
   {
+    name: 'het-sync',
+    sourceType: READ_SOURCE_TYPE,
+    allowMultiple: true,
+    acquisitionStrategy: 'sync',
+  },
+  {
     name: 'het-text',
     sourceType: SIGNAL_SOURCE_TYPE,
     allowMultiple: false,

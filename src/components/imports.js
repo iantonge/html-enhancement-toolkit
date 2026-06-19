@@ -72,6 +72,18 @@ function initializeForwardedSignals(
   }
 }
 
+function syncImportedSignals(rootEl, instance) {
+  if (!instance.importDeclarations?.length) return;
+
+  resolveImports(
+    rootEl,
+    instance.importDeclarations,
+    instance.rawSignals,
+    instance.signalMeta,
+    getComponentCause(rootEl),
+  );
+}
+
 function resolveImports(
   rootEl,
   importDeclarations,
@@ -188,4 +200,5 @@ export {
   getImportDeclarations,
   initializeForwardedSignals,
   resolveImports,
+  syncImportedSignals,
 };

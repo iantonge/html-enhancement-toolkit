@@ -3,10 +3,12 @@ import {
   destroyComponent,
   mountComponents,
 } from './mount.js';
+import { initializeSyncEvents, destroySyncEvents } from './sync.js';
 
 function init() {
   try {
     mountComponents(document);
+    initializeSyncEvents();
   } catch (error) {
     handleError(error);
   }
@@ -20,6 +22,8 @@ function destroy() {
       handleError(error);
     }
   }
+
+  destroySyncEvents();
 }
 
 export {

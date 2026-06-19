@@ -7,7 +7,7 @@ const MODEL_TYPES = ['int', 'bool', 'float'];
 const EXPORTS_ATTR = 'het-exports';
 const IMPORTS_ATTR = 'het-imports';
 const KEYBOARD_EVENT_NAMES = ['keydown', 'keyup', 'keypress'];
-const ACQUISITION_STRATEGIES = ['seed'];
+const ACQUISITION_STRATEGIES = ['seed', 'sync'];
 const FORBIDDEN_MEMBER_NAMES = new Set(['__proto__', 'prototype', 'constructor']);
 const CONTEXTUAL_IDENTIFIERS = new Set([
   '$event',

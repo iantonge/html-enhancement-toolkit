@@ -51,6 +51,7 @@ function mountComponent(rootEl, setup, options = {}) {
   const runtimeCtx = { el: rootEl, signals, addCleanup };
   const boundEls = scopedQuerySelectorAll(rootEl, DIRECTIVES_SELECTOR);
   const bindings = getBindings(boundEls, componentLoggingContext);
+  const syncBindings = bindings.filter((binding) => binding.acquisitionStrategy === 'sync');
   const bindingsToInit = bindings.filter((binding) => binding.acquisitionStrategy);
 
   initializeForwardedSignals(
@@ -105,6 +106,7 @@ function mountComponent(rootEl, setup, options = {}) {
     signalMeta,
     importDeclarations,
     bindings,
+    syncBindings,
     cleanup: () => {
       cleanups.forEach((fn) => fn());
     },
