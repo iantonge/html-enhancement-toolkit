@@ -20,6 +20,12 @@ router.get('/missing-method', (request, response) => {
   });
 });
 
+router.get('/invalid-expression', (request, response) => {
+  response.render('components/het-on/invalid-expression', {
+    title: 'Invalid expression',
+  });
+});
+
 router.get('/multiple-handlers', (request, response) => {
   response.render('components/het-on/multiple-handlers', {
     title: 'Multiple handlers',

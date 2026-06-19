@@ -46,6 +46,38 @@ Fix the binding by supplying an expression.
 ```
 
 
+### `HET Error: Event binding must contain exactly one "->"`
+
+A `het-on` declaration was missing `->` or used it more than once.
+
+```html
+<div het-component="counter">
+  <button het-on="click=>save"></button>
+</div>
+```
+
+Fix the binding by using exactly one event/action separator.
+
+```html
+<button het-on="click->save"></button>
+```
+
+### `HET Error: Event binding requires an event and action`
+
+A `het-on` declaration used `->` but left the event name or action empty.
+
+```html
+<div het-component="counter">
+  <button het-on="click->"></button>
+</div>
+```
+
+Fix the binding by naming both sides.
+
+```html
+<button het-on="click->save"></button>
+```
+
 ### `HET Error: Event assignment requires a signal name and source`
 
 An assignment-style `het-on` declaration used `=` but left the signal name or expression empty.

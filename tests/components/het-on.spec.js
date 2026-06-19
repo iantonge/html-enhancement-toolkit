@@ -142,4 +142,11 @@ test.describe('components het-on', () => {
     );
   });
 
+  test('reports error for invalid het-on expression', async ({ page }) => {
+    await page.goto('/components/het-on/invalid-expression');
+    await page.waitForFunction(() =>
+      window.hetErrors.some((error) => error.message === 'HET Error: Event binding must contain exactly one "->"'),
+    );
+  });
+
 });
