@@ -85,7 +85,7 @@ HET bindings support a limited subset of JavaScript for pure, side-effect-free e
 
 Expressions are used by:
 
-- output bindings such as `het-text`, `het-props`, `het-attrs`, and `het-bool-attrs`
+- output bindings such as `het-text`, `het-props`, `het-attrs`, `het-bool-attrs`, and `het-class`
 - assignment-style `het-on`
 - `het-seed`
 - `het-sync`
@@ -161,7 +161,7 @@ Examples:
 Bindings that support multiple declarations use top-level semicolons:
 
 ```html
-<button het-bool-attrs="disabled=!valid || loading"></button>
+<div het-class="active=count > 0; disabled=!valid || loading"></div>
 ```
 
 Whitespace alone does not separate declarations.
@@ -203,6 +203,14 @@ Truthy values add the attribute. Falsy values remove it.
 
 ```html
 <input het-bool-attrs="disabled=isSaving || !isValid">
+```
+
+### `het-class`
+
+Use `het-class` to add or remove classes based on expression truthiness.
+
+```html
+<div het-class="active=count > 0; disabled=!isEnabled"></div>
 ```
 
 ## Input and event bindings
@@ -362,6 +370,7 @@ Bindings declared in HTML are cleaned up automatically.
 | `het-props` | Write expressions to DOM properties | Yes | Semicolon-separated declarations. |
 | `het-attrs` | Write expressions to attributes | Yes | Use for value-bearing attributes. |
 | `het-bool-attrs` | Toggle boolean attributes | Yes | Truthy adds, falsy removes. |
+| `het-class` | Toggle classes | Yes | Use `$classes["name"]` only in `het-seed` / `het-sync`, not output bindings. |
 | `het-model` | Two-way control binding | No | Always seeded from the control. |
 | `het-model:int` | Two-way control binding with integer coercion | No | Reads with `$int` semantics. |
 | `het-model:float` | Two-way control binding with float coercion | No | Reads with `$float` semantics. |

@@ -69,6 +69,19 @@ const DIRECTIVES = [
     },
   },
   {
+    name: 'het-class',
+    keyRequired: true,
+    sourceType: SIGNAL_SOURCE_TYPE,
+    allowMultiple: true,
+    write: (el, key, value) => {
+      if (value) {
+        el.classList.add(key);
+      } else {
+        el.classList.remove(key);
+      }
+    },
+  },
+  {
     name: 'het-model',
     keyRequired: false,
     sourceType: SIGNAL_SOURCE_TYPE,
