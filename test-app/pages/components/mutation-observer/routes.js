@@ -26,4 +26,10 @@ router.get('/depth-order', (request, response) => {
   });
 });
 
+router.get('/attribute-toggle', (request, response) => {
+  response.render('components/mutation-observer/attribute-toggle', {
+    title: 'Attribute toggling',
+  });
+});
+
 export default router;

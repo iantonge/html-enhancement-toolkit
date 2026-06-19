@@ -31,4 +31,14 @@ test.describe('components mutation observer', () => {
     await expect(page.locator('#cleanup-order')).toHaveText('child,parent');
   });
 
+  test('mounts and unmounts when het-component attribute is toggled', async ({ page }) => {
+    await page.goto('/components/mutation-observer/attribute-toggle');
+
+    await page.click('#enable-component');
+    await expect(page.locator('#toggle-mount-state')).toHaveText('mounted');
+
+    await page.click('#disable-component');
+    await expect(page.locator('#toggle-cleanup-state')).toHaveText('cleaned');
+    await expect(page.locator('.pending-unmount')).toHaveCount(0);
+  });
 });

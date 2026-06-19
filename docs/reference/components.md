@@ -402,7 +402,7 @@ This feature is structural-only and exit-only:
 
 - it applies to clones created by `het-if` and `het-for`
 - it does not add enter hooks or enter classes
-- it does not affect `destroy()`, mutation-observer removals, or other non-structural teardown paths
+- it does not affect `destroy()`, mutation-observer removals, `het-component` attribute toggles, or other non-structural teardown paths
 
 ## Cleanup
 

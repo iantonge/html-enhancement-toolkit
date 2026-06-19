@@ -67,6 +67,17 @@ function initializeObserver() {
               .querySelectorAll('[het-component]')
               .forEach((child) => pendingAdditions.add(child));
           }
+        } else if (
+          record.type === 'attributes' &&
+          record.attributeName === 'het-component'
+        ) {
+          const el = record.target;
+          if (el.isConnected && !el.hasAttribute('het-component')) {
+            pendingRemovals.add(el);
+          }
+          if (el.isConnected && el.hasAttribute('het-component')) {
+            pendingAdditions.add(el);
+          }
         }
       } catch (error) {
         handleError(error);
@@ -113,6 +124,8 @@ function initializeObserver() {
   observer.observe(document, {
     childList: true,
     subtree: true,
+    attributes: true,
+    attributeFilter: ['het-component'],
   });
 }
 

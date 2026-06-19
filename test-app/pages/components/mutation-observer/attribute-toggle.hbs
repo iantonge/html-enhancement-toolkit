@@ -1,0 +1,43 @@
+<section class="card shadow-sm border-0">
+  <div class="card-body">
+    <h1 class="h4 mb-3">{{title}}</h1>
+    <div class="d-flex gap-2 mb-3">
+      <button id="enable-component" type="button" class="btn btn-sm btn-primary">Enable component</button>
+      <button id="disable-component" type="button" class="btn btn-sm btn-outline-secondary">Disable component</button>
+    </div>
+    <div id="toggle-root">
+      <span id="toggle-ref" het-ref="state"></span>
+    </div>
+    <p id="toggle-mount-state" class="mb-0 text-muted">not-mounted</p>
+    <p id="toggle-cleanup-state" class="mb-0 text-muted">not-cleaned</p>
+  </div>
+</section>
+<script nonce="{{{cspNonce}}}">
+  window.hetInitConfig = {
+    structuralUnmountDelay: 120,
+    structuralUnmountClass: 'pending-unmount',
+  };
+
+  window.HET.registerComponent('observer-toggle', ({ refs, onCleanup }) => {
+    refs.state.textContent = 'mounted';
+    onCleanup(() => {
+      document.getElementById('toggle-cleanup-state').textContent = 'cleaned';
+    });
+  });
+
+  const root = document.getElementById('toggle-root');
+  const ref = document.getElementById('toggle-ref');
+
+  document.getElementById('enable-component').addEventListener('click', () => {
+    document.getElementById('toggle-cleanup-state').textContent = 'not-cleaned';
+    ref.textContent = '';
+    root.setAttribute('het-component', 'observer-toggle');
+    setTimeout(() => {
+      document.getElementById('toggle-mount-state').textContent = ref.textContent || 'not-mounted';
+    }, 0);
+  });
+
+  document.getElementById('disable-component').addEventListener('click', () => {
+    root.removeAttribute('het-component');
+  });
+</script>
