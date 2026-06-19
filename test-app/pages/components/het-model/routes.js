@@ -14,4 +14,10 @@ router.get('/text-input', (request, response) => {
   });
 });
 
+router.get('/checkbox', (request, response) => {
+  response.render('components/het-model/checkbox', {
+    title: 'Checkbox',
+  });
+});
+
 export default router;

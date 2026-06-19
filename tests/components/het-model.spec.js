@@ -15,4 +15,21 @@ test.describe('components het-model', () => {
     await expect(page.locator('#name-value')).toHaveText('Bravo');
   });
 
+  test('binds checkbox with two-way updates using change events', async ({ page }) => {
+    await page.goto('/components/het-model/checkbox');
+
+    await expect(page.locator('#done-checkbox')).not.toBeChecked();
+    await expect(page.locator('#done-value')).toHaveText('false');
+
+    await page.click('#done-checkbox');
+    await expect(page.locator('#done-value')).toHaveText('true');
+
+    await page.click('#done-checkbox');
+    await expect(page.locator('#done-value')).toHaveText('false');
+
+    await page.click('#set-done');
+    await expect(page.locator('#done-checkbox')).toBeChecked();
+    await expect(page.locator('#done-value')).toHaveText('true');
+  });
+
 });
