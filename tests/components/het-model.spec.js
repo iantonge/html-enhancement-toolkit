@@ -46,4 +46,18 @@ test.describe('components het-model', () => {
     await expect(page.locator('#chosen-value')).toHaveText('true');
   });
 
+  test('binds typed int models using declaration suffixes', async ({ page }) => {
+    await page.goto('/components/het-model/typed-int');
+
+    await expect(page.locator('#count-input')).toHaveValue('7');
+    await expect(page.locator('#count-value')).toHaveText('7');
+
+    await page.fill('#count-input', '9');
+    await expect(page.locator('#count-value')).toHaveText('9');
+
+    await page.click('#set-count');
+    await expect(page.locator('#count-input')).toHaveValue('12');
+    await expect(page.locator('#count-value')).toHaveText('12');
+  });
+
 });

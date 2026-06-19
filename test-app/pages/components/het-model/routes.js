@@ -14,6 +14,12 @@ router.get('/text-input', (request, response) => {
   });
 });
 
+router.get('/typed-int', (request, response) => {
+  response.render('components/het-model/typed-int', {
+    title: 'Typed int',
+  });
+});
+
 router.get('/checkbox', (request, response) => {
   response.render('components/het-model/checkbox', {
     title: 'Checkbox',
