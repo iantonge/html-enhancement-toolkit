@@ -56,7 +56,7 @@ test.describe('components het-on', () => {
     await expect(page.locator('#assignment-enabled')).toHaveText('true');
   });
 
-  test('supports prevent, stop, capture, debounce, throttle, and key filters', async ({ page }) => {
+  test('supports prevent, stop, capture, debounce, throttle, key filters, and once modifiers', async ({ page }) => {
     await page.goto('/components/het-on/modifiers');
 
     await page.click('#modifier-submit');
@@ -90,6 +90,11 @@ test.describe('components het-on', () => {
     await expect(page.locator('#modifier-key')).toHaveText('enter');
     await page.keyboard.press('Space');
     await expect(page.locator('#modifier-key')).toHaveText('space');
+
+    await page.click('#toggle-once');
+    await expect(page.locator('#modifier-toggled')).toHaveText('true');
+    await page.click('#toggle-once');
+    await expect(page.locator('#modifier-toggled')).toHaveText('true');
   });
 
   test('reports error when assignment source signal is missing', async ({ page }) => {
