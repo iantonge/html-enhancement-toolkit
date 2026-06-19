@@ -38,6 +38,12 @@ router.get('/export-missing-signal', (request, response) => {
   });
 });
 
+router.get('/invalid-declaration', (request, response) => {
+  response.render('components/het-imports/invalid-declaration', {
+    title: 'Invalid het-imports declaration',
+  });
+});
+
 router.get('/signal-name-conflict', (request, response) => {
   response.render('components/het-imports/signal-name-conflict', {
     title: 'Import and local signal conflict',

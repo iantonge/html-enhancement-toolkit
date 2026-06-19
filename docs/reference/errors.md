@@ -311,6 +311,16 @@ signals.count = HET.signals.signal(1);
 
 ## Imports and Exports
 
+### `HET Error: Invalid import declaration`
+
+`het-imports` used a malformed declaration.
+
+```html
+<div het-component="child" het-imports="child=query=extra"></div>
+```
+
+Fix the declaration by using either `localName` or `localName=sourceName`.
+
 ### `HET Error: Imported signal has no exporting ancestor`
 
 `het-imports` requested a signal that no ancestor component currently exports.

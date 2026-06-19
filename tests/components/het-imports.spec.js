@@ -86,6 +86,13 @@ test.describe('components het-exports / het-imports', () => {
     });
   });
 
+  test('reports error for invalid het-imports declarations', async ({ page }) => {
+    await page.goto('/components/het-imports/invalid-declaration');
+    await page.waitForFunction(() =>
+      window.hetErrors.some((error) => error.message === 'HET Error: Invalid import declaration'),
+    );
+  });
+
   test('reports error when imported and local signals conflict', async ({ page }) => {
     await page.goto('/components/het-imports/signal-name-conflict');
     await page.waitForFunction(() =>
