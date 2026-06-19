@@ -77,4 +77,11 @@ test.describe('components structural templates', () => {
     );
   });
 
+  test('reports error when a structural clone receives a different forwarded signal shape', async ({ page }) => {
+    await page.goto('/components/structural/shape-change');
+    await page.click('#shape-change');
+    await page.waitForFunction(() =>
+      window.hetErrors.some((error) => error.message === 'HET Error: Structural clone signal shape changed'),
+    );
+  });
 });

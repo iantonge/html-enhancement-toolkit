@@ -87,7 +87,7 @@ function reconcileForBlock(ctx, binding, block, value, mountApi) {
     const existingClone = block.clones[index];
 
     if (existingClone) {
-      retargetForwardedSignals(existingClone, itemSignals);
+      retargetForwardedSignals(existingClone, itemSignals, binding);
       continue;
     }
 
@@ -114,7 +114,7 @@ function reconcileIfBlock(ctx, binding, block, value, mountApi) {
 
   const itemSignals = getForwardedSignalsForValue(value, binding);
   if (block.clones[0]) {
-    retargetForwardedSignals(block.clones[0], itemSignals);
+    retargetForwardedSignals(block.clones[0], itemSignals, binding);
     block.activeCount = 1;
     return;
   }
@@ -181,10 +181,23 @@ function getClonedTemplateRoot(fragment) {
   return Array.from(fragment.childNodes).find((node) => node.nodeType === Node.ELEMENT_NODE);
 }
 
-function retargetForwardedSignals(clone, nextSignals) {
+function retargetForwardedSignals(clone, nextSignals, binding) {
   const instance = clone.rootEl.__het_instance;
 
-  for (const name of clone.forwardedNames) {
+  const nextNames = Object.keys(nextSignals);
+  const previousNames = clone.forwardedNames;
+
+  if (
+    previousNames.length !== nextNames.length ||
+    previousNames.some((name) => !Object.prototype.hasOwnProperty.call(nextSignals, name))
+  ) {
+    throw new Error(
+      'HET Error: Structural clone signal shape changed',
+      { cause: getBindingCause(binding, { signalName: binding.source }) },
+    );
+  }
+
+  for (const name of nextNames) {
     instance.rawSignals[name].setTarget(nextSignals[name]);
   }
 }

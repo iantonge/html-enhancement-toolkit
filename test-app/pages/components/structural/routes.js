@@ -44,4 +44,10 @@ router.get('/signal-name-conflict', (request, response) => {
   });
 });
 
+router.get('/shape-change', (request, response) => {
+  response.render('components/structural/shape-change', {
+    title: 'Structural shape change',
+  });
+});
+
 export default router;

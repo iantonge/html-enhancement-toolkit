@@ -429,6 +429,10 @@ One `het-for` item was not an object.
 
 A forwarded structural item property was not a Preact signal.
 
+### `HET Error: Structural clone signal shape changed`
+
+An existing structural clone received a forwarded signal object with a different property shape from the original clone.
+
 ### `HET Error: Structural clone is missing forwarded signal wrapper`
 
 HET expected a forwarded-signal wrapper on a structural clone but did not find one.
