@@ -15,7 +15,7 @@ test.describe('components lifecycle and registration', () => {
   test('omits component name from anonymous component error causes', async ({ page }) => {
     await page.goto('/components/registration/anonymous-error');
     await page.waitForFunction(() =>
-      window.hetErrors.some((error) => error.message === 'HET Error: het-text binding requires an expression'),
+      window.hetErrors.some((error) => error.message === 'HET Error: Binding declaration requires a target and source'),
     );
 
     const cause = await page.evaluate(() => {
@@ -32,9 +32,9 @@ test.describe('components lifecycle and registration', () => {
     expect(cause).toEqual({
       hasComponentName: false,
       componentElementId: 'anonymous-error-root',
-      bindingAttribute: 'het-text',
-      bindingDeclaration: '',
-      bindingErrorReason: 'het-text binding requires an expression',
+      bindingAttribute: 'het-props',
+      bindingDeclaration: 'textContent=',
+      bindingErrorReason: 'Binding declaration requires a target and source',
       bindingElementId: 'anonymous-error-binding',
     });
   });
