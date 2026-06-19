@@ -3,7 +3,7 @@
     <h1 class="h4 mb-3">{{title}}</h1>
     <div het-component="imports-unregistered-parent" het-exports="count">
       <div het-component="imports-parent-not-mounted-child" het-imports="count">
-        <p id="not-mounted-value" het-text="count" class="mb-0 text-muted"></p>
+        <p id="not-mounted-value" het-props="textContent=count" class="mb-0 text-muted"></p>
       </div>
     </div>
   </div>
