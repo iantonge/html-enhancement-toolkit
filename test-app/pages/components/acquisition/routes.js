@@ -32,6 +32,18 @@ router.get('/explicit-sources', (request, response) => {
   });
 });
 
+router.get('/invalid-attrs-computed', (request, response) => {
+  response.render('components/acquisition/invalid-attrs-computed', {
+    title: 'Invalid attrs computed access',
+  });
+});
+
+router.get('/invalid-bool-attrs-computed', (request, response) => {
+  response.render('components/acquisition/invalid-bool-attrs-computed', {
+    title: 'Invalid bool attrs computed access',
+  });
+});
+
 router.get('/invalid-sync-model', (request, response) => {
   response.render('components/acquisition/invalid-sync-model', {
     title: 'Invalid sync on het-model',

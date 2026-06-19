@@ -6,9 +6,26 @@
       <p id="text-output" het-text="message" class="mb-2"></p>
 
       <input id="prop-source" class="form-control" value="7" het-seed="count=$int($props.value)">
-      <div id="mixed-source" het-seed="answer=$int(42)"></div>
+      <div
+        id="mixed-source"
+        data-status="open"
+        data-label="bracket camel"
+        foo:bar="bracket colon"
+        class="active md:hover:block"
+        hidden
+        het-seed="status=$attrs.dataStatus; bracketStatus=$attrs['data-status']; bracketLabel=$attrs['dataLabel']; colonAttr=$attrs['foo:bar']; isHidden=$boolAttrs.hidden; bracketHidden=$boolAttrs['hidden']; hasColonAttr=$boolAttrs['foo:bar']; isActive=$classes.active; responsive=$classes['md:hover:block']; answer=$int(42)"
+      ></div>
 
       <p id="count-output" het-text="count" class="mb-0"></p>
+      <p id="status-output" het-text="status" class="mb-0"></p>
+      <p id="bracket-status-output" het-text="bracketStatus" class="mb-0"></p>
+      <p id="bracket-label-output" het-text="bracketLabel" class="mb-0"></p>
+      <p id="colon-attr-output" het-text="colonAttr" class="mb-0"></p>
+      <p id="hidden-output" het-text="isHidden" class="mb-0"></p>
+      <p id="bracket-hidden-output" het-text="bracketHidden" class="mb-0"></p>
+      <p id="colon-bool-attr-output" het-text="hasColonAttr" class="mb-0"></p>
+      <p id="active-output" het-text="isActive" class="mb-0"></p>
+      <p id="responsive-output" het-text="responsive" class="mb-0"></p>
       <p id="answer-output" het-text="answer" class="mb-0"></p>
     </div>
   </div>

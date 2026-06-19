@@ -45,7 +45,28 @@ test.describe('components acquisition and sync expressions', () => {
 
     await expect(page.locator('#text-output')).toHaveText('Ready');
     await expect(page.locator('#count-output')).toHaveText('7');
+    await expect(page.locator('#status-output')).toHaveText('open');
+    await expect(page.locator('#bracket-status-output')).toHaveText('open');
+    await expect(page.locator('#bracket-label-output')).toHaveText('bracket camel');
+    await expect(page.locator('#colon-attr-output')).toHaveText('bracket colon');
+    await expect(page.locator('#hidden-output')).toHaveText('true');
+    await expect(page.locator('#bracket-hidden-output')).toHaveText('true');
+    await expect(page.locator('#colon-bool-attr-output')).toHaveText('true');
+    await expect(page.locator('#active-output')).toHaveText('true');
+    await expect(page.locator('#responsive-output')).toHaveText('true');
     await expect(page.locator('#answer-output')).toHaveText('42');
+  });
+
+  test('rejects dynamic computed attribute contextual reads', async ({ page }) => {
+    await page.goto('/components/acquisition/invalid-attrs-computed');
+    await page.waitForFunction(() =>
+      window.hetErrors.some((error) => error.message === 'HET Error: Invalid expression'),
+    );
+
+    await page.goto('/components/acquisition/invalid-bool-attrs-computed');
+    await page.waitForFunction(() =>
+      window.hetErrors.some((error) => error.message === 'HET Error: Invalid expression'),
+    );
   });
 
   test('reports error when the same seeded signal is declared twice', async ({ page }) => {
