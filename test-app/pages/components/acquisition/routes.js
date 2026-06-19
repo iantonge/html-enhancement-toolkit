@@ -20,4 +20,10 @@ router.get('/explicit-sources', (request, response) => {
   });
 });
 
+router.get('/duplicate-seed-signal', (request, response) => {
+  response.render('components/acquisition/duplicate-seed-signal', {
+    title: 'Duplicate seed signal',
+  });
+});
+
 export default router;

@@ -155,6 +155,19 @@ A binding referenced a signal that was never created, imported, or acquired.
 
 Fix the component by creating, importing, or acquiring the signal before the binding needs it.
 
+### `HET Error: Duplicate signal initialization`
+
+Two acquisition bindings tried to create the same local signal.
+
+```html
+<div het-component="counter">
+  <span het-seed="count=$int($text)">1</span>
+  <span het-seed="count=$int($text)">2</span>
+</div>
+```
+
+Fix the component by choosing one acquisition source for the signal.
+
 ### `HET Error: Signal initialized with a non-signal value`
 
 `setup` assigned a plain value to `signals.<name>` instead of a Preact signal object.

@@ -15,4 +15,31 @@ test.describe('components acquisition and sync expressions', () => {
     await expect(page.locator('#answer-output')).toHaveText('42');
   });
 
+  test('reports error when the same seeded signal is declared twice', async ({ page }) => {
+    await page.goto('/components/acquisition/duplicate-seed-signal');
+    await page.waitForFunction(() =>
+      window.hetErrors.some((error) => error.message === 'HET Error: Duplicate signal initialization'),
+    );
+    const cause = await page.evaluate(() => ({
+      componentName: window.hetErrors.at(-1).cause.componentName,
+      signalName: window.hetErrors.at(-1).cause.signalName,
+      bindingAttribute: window.hetErrors.at(-1).cause.bindingAttribute,
+      bindingDeclaration: window.hetErrors.at(-1).cause.bindingDeclaration,
+      bindingElementText: window.hetErrors.at(-1).cause.bindingElement.textContent.trim(),
+      existingBindingAttribute: window.hetErrors.at(-1).cause.existingBindingAttribute,
+      existingBindingDeclaration: window.hetErrors.at(-1).cause.existingBindingDeclaration,
+      existingBindingElementText: window.hetErrors.at(-1).cause.existingBindingElement.textContent.trim(),
+    }));
+    expect(cause).toEqual({
+      componentName: 'acquisition-duplicate-seed',
+      signalName: 'count',
+      bindingAttribute: 'het-seed',
+      bindingDeclaration: 'count=$int($text)',
+      bindingElementText: '2',
+      existingBindingAttribute: 'het-seed',
+      existingBindingDeclaration: 'count=$int($text)',
+      existingBindingElementText: '1',
+    });
+  });
+
 });
