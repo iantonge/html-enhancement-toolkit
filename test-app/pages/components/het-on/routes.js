@@ -44,6 +44,12 @@ router.get('/modifiers', (request, response) => {
   });
 });
 
+router.get('/invalid-modifier-duplicate-key', (request, response) => {
+  response.render('components/het-on/invalid-modifier-duplicate-key', {
+    title: 'Invalid modifier duplicate key',
+  });
+});
+
 router.get('/invalid-modifier-key-event', (request, response) => {
   response.render('components/het-on/invalid-modifier-key-event', {
     title: 'Invalid modifier key event',
