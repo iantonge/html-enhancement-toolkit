@@ -1,24 +1,38 @@
 # Component Reference
 
+## Contents
+
+- [Component roots and mounting](#component-roots-and-mounting)
+- [Signals](#signals)
+- [Limited JavaScript expressions](#limited-javascript-expressions)
+- [Output bindings](#output-bindings)
+- [Input and event bindings](#input-and-event-bindings)
+- [Component lifecycle notes](#component-lifecycle-notes)
+- [Component attribute support](#component-attribute-support)
+
 ## Component roots and mounting
+
+### `het-component`
 
 Use `het-component` to mark a component root and mount a registered component by name.
 
 ```html
-<div het-component="counter"></div>
+<div het-component="counter">
+  <output het-seed="count=$int($text)" het-text="count">0</output>
+</div>
 ```
 
 Register named components before calling `init()`.
 
 ## Signals
 
-Component setup functions receive a signal registry. Assign Preact signal objects to create component-local state.
+Component bindings expect Preact signal objects.
+Signals can come from three places:
 
-```js
-HET.registerComponent('counter', ({ signals }) => {
-  signals.count = HET.signals.signal(0);
-});
-```
+- Local signals initialized in `setup`, such as `signals.count = HET.signals.signal(0)`.
+- Acquired signals created from DOM values with `het-seed` before `setup` runs.
+
+Initialize only the local signals your component owns. Do not initialize signals that are acquired from the DOM.
 
 In the IIFE build, HET exposes these Preact Signals helpers on `HET.signals`:
 
@@ -28,10 +42,121 @@ In the IIFE build, HET exposes these Preact Signals helpers on `HET.signals`:
 - `HET.signals.batch(fn)`
 - `HET.signals.untracked(fn)`
 
+Example:
+
+```js
+HET.registerComponent('counter', ({ signals }) => {
+  signals.count = HET.signals.signal(0);
+  signals.doubleCount = HET.signals.computed(() => signals.count.value * 2);
+});
+```
+
 The ESM build does not re-export signal helpers. Import them from `@preact/signals-core` instead.
+
+## Limited JavaScript expressions
+
+HET bindings support a limited subset of JavaScript for pure, side-effect-free expressions. This subset is intentionally narrow: HET interprets these bindings without creating an alternate arbitrary-code-execution surface under a strict CSP.
+
+Expressions are used by:
+
+- output bindings such as `het-text`
+- `het-seed`
+
+Supported syntax:
+
+- signal identifiers such as `count`
+- dot member access such as `$target.value`
+- primitive literals: strings, numbers, booleans, `null`
+- unary `-`
+- binary `+`, `-`, `*`, `/`, `%`
+- comparisons: `===`, `!==`, `<`, `<=`, `>`, `>=`
+- logical `&&`, `||`
+- ternary `condition ? a : b`
+- parentheses
+- allowlisted calls: `$int(value)`, `$float(value)`, `$bool(value)`
+
+### Contextual values
+
+HET provides these contextual snapshot values:
+
+- `$event`
+- `$target`
+- `$currentTarget`
+- `$text`
+- `$props`
+
+These values are snapshots by design. They are not reactive state.
+
+Context semantics:
+
+- `$text` reads `element.textContent`
+- `$props.foo` reads `element.foo`
+
+### Contextual functions
+
+HET exposes three built-in conversion functions:
+
+- `$int(value)` reads a value as an integer
+- `$float(value)` reads a value as a floating-point number
+- `$bool(value)` treats only `true` and `"true"` as `true`
+
+Examples:
+
+```html
+<output het-seed="count=$int($text)" het-text="count">0</output>
+<input het-seed="price=$float($props.value)" value="3.50">
+```
+
+### Multi-binding syntax
+
+Bindings that support multiple declarations use top-level semicolons:
+
+```html
+<span het-seed="count=$int($text); status='ready'"></span>
+```
+
+Whitespace alone does not separate declarations.
+An optional trailing semicolon is allowed.
+
+## Output bindings
+
+Output bindings evaluate signal-only expressions and write the result to the DOM. Output expressions must not use contextual values such as `$target` or `$props`.
+
+### `het-text`
+
+Use `het-text` to bind an expression to an element's `textContent`.
+
+```html
+<p het-text="count === 1 ? 'item' : 'items'"></p>
+```
+
+### `het-seed`
+
+Use `het-seed` to create local signals from DOM snapshots before `setup` runs.
+
+```html
+<output het-seed="count=$int($text)" het-text="count">7</output>
+<p het-text="count"></p>
+```
+
+Multiple acquisitions use semicolons:
+
+```html
+<input value="ready" het-seed="status=$props.value">
+```
+
+A signal may have only one acquisition source.
 
 ## Component lifecycle notes
 
 - HET mounts component roots in depth order so parents mount before descendants.
 - HET unmounts removed components automatically.
-- `destroy()` unmounts all mounted components.
+- `destroy()` unmounts all mounted components and removes HET-managed listeners.
+- Component bindings are discovered once, when the component mounts.
+
+## Component attribute support
+
+| Attribute | Purpose | Multiple declarations | Notes |
+| --- | --- | --- | --- |
+| `het-text` | Write expression to `textContent` | No | Output expression only. |
+| `het-seed` | Create signals from DOM snapshots before setup | Yes | Semicolon-separated declarations. |

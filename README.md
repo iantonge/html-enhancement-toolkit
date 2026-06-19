@@ -4,9 +4,9 @@ HET (HTML Enhancement Toolkit) is a lightweight, HTML-first enhancement library 
 
 HET is a good fit when you want:
 
-- **Component islands for server-rendered apps:** HET mounts small JavaScript components on existing HTML instead of moving rendering and routing into a client-side SPA.
-- **Strict-CSP-conscious setup:** Component setup is normal JavaScript and does not require `unsafe-eval` or similar CSP compromises.
-- **Explicit, readable wiring:** Component roots are declared with `het-component` and initialized with ordinary JavaScript.
+- **Component islands for server-rendered apps:** HET mounts small signal-driven components on existing HTML instead of moving rendering and routing into a client-side SPA.
+- **Strict-CSP-conscious interactivity:** Component behavior is wired through normal JavaScript functions and signal bindings, without requiring `unsafe-eval` or similar CSP compromises.
+- **Explicit, readable wiring:** Refs, event handlers, bindings, imports, and exports are declared with predictable `het-*` attributes and ordinary JavaScript.
 
 HET is probably not the right fit when you need:
 
@@ -17,7 +17,7 @@ HET is probably not the right fit when you need:
 ## Documentation
 
 - [Reference index](docs/README.md): component, API, and error reference docs.
-- [Component reference](docs/reference/components.md): component roots, signals, and lifecycle notes.
+- [Component reference](docs/reference/components.md): component roots, signals, bindings, imports/exports, and lifecycle notes.
 - [API reference](docs/reference/api.md)
 - [Error reference](docs/reference/errors.md)
 
@@ -65,6 +65,7 @@ Register a component before calling `init()`, then attach it to existing HTML wi
 
 ```html
 <div het-component="counter">
+  <output het-text="count"></output>
 </div>
 ```
 
@@ -81,7 +82,9 @@ HET.init();
 HET is built around a few small primitives:
 
 - `het-component` mounts a small reactive component on existing HTML instead of taking over the whole page.
-- Signals hold component state and can be created in `setup`.
+- Signals hold component state. They can be created in `setup` or acquired from the DOM with `het-seed`.
+- Component bindings use a limited subset of JavaScript expressions. HET parses and interprets those expressions itself instead of executing arbitrary JavaScript.
+- `het-seed` reads an initial value from the DOM once.
 
 ## Where next
 
