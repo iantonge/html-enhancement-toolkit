@@ -20,6 +20,12 @@ router.get('/if-toggle', (request, response) => {
   });
 });
 
+router.get('/if-toggle-delayed', (request, response) => {
+  response.render('components/structural/if-toggle-delayed', {
+    title: 'het-if delayed unmount',
+  });
+});
+
 router.get('/invalid-non-array', (request, response) => {
   response.render('components/structural/invalid-non-array', {
     title: 'Invalid het-for source',

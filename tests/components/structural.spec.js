@@ -23,6 +23,7 @@ test.describe('components structural templates', () => {
     await page.click('#shrink-list');
     await expect(page.locator('#for-list > li')).toHaveCount(1);
     await expect(page.locator('#for-list .item-message')).toHaveText(['Gamma']);
+    await expect(page.locator('.het-unmounting')).toHaveCount(0);
     const cleanupIds = await page.evaluate(() => window.structuralForCleanupIds.slice());
     expect(cleanupIds).toEqual([3, 2]);
   });
@@ -45,8 +46,50 @@ test.describe('components structural templates', () => {
 
     await page.click('#hide-item');
     await expect(page.locator('#if-host > article')).toHaveCount(0);
+    await expect(page.locator('.het-unmounting')).toHaveCount(0);
     const cleanupIds = await page.evaluate(() => window.structuralIfCleanupIds.slice());
     expect(cleanupIds).toEqual(['1']);
+  });
+
+  test('het-if defers structural teardown, then cleans up after the delay', async ({ page }) => {
+    await page.goto('/components/structural/if-toggle-delayed');
+
+    await page.click('#show-item');
+    await expect(page.locator('#if-host .if-mount')).toHaveText('1');
+
+    await page.click('#hide-item');
+    await expect(page.locator('#if-host > article')).toHaveCount(1);
+    await expect(page.locator('#if-host > article')).toHaveClass(/het-unmounting/);
+    await expect.poll(
+      () => page.evaluate(() => window.structuralIfDelayedCleanupIds.slice()),
+    ).toEqual([]);
+
+    await page.waitForTimeout(150);
+    await expect(page.locator('#if-host > article')).toHaveCount(0);
+    await expect.poll(
+      () => page.evaluate(() => window.structuralIfDelayedCleanupIds.slice()),
+    ).toEqual(['1']);
+  });
+
+  test('het-if cancels a pending structural teardown and reuses the clone', async ({ page }) => {
+    await page.goto('/components/structural/if-toggle-delayed');
+
+    await page.click('#show-item');
+    await expect(page.locator('#if-host .if-mount')).toHaveText('1');
+
+    await page.click('#hide-item');
+    await expect(page.locator('#if-host > article')).toHaveClass(/het-unmounting/);
+
+    await page.click('#swap-item');
+    await expect(page.locator('#if-host > article')).not.toHaveClass(/het-unmounting/);
+    await expect(page.locator('#if-host .if-label')).toHaveText('Replacement');
+    await expect(page.locator('#if-host .if-mount')).toHaveText('1');
+
+    await page.waitForTimeout(150);
+    await expect(page.locator('#if-host > article')).toHaveCount(1);
+    await expect.poll(
+      () => page.evaluate(() => window.structuralIfDelayedCleanupIds.slice()),
+    ).toEqual([]);
   });
 
   test('reports error when het-for source is not an array', async ({ page }) => {

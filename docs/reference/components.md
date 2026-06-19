@@ -373,12 +373,20 @@ Each structural template must:
 
 `het-if="signalName"` mounts the template root when the signal value is truthy and removes it when the signal value is falsy.
 
+When `init({ structuralUnmountDelay })` is greater than `0`, falsy transitions can keep the clone mounted briefly for exit animations. HET adds `het-unmounting` to the clone root during that delay.
+
 ### `het-for`
 
 `het-for="signalName"` expects the signal value to be an array.
 Each array item must be an object whose properties are Preact signals. HET forwards those signals into the cloned component root.
 
 Prefer ordinary visibility bindings such as `het-bool-attrs="hidden=isHidden"` when the DOM should stay mounted. Structural directives create and destroy component instances.
+
+This feature is structural-only and exit-only:
+
+- it applies to clones created by `het-if`
+- it does not add enter hooks or enter classes
+- it does not affect `destroy()` or other non-structural teardown paths
 
 ## Cleanup
 

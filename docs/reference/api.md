@@ -25,6 +25,19 @@ HET.init({
 });
 ```
 
+#### `structuralUnmountDelay`
+
+Delay, in milliseconds, before HET destroys structural clones that were removed by `het-if`. Default: `0`.
+
+When this is greater than `0`, HET keeps the structural clone mounted for the delay duration so CSS exit animations can finish. This applies only to structural clones. It does not change ordinary component teardown or `destroy()`.
+
+```js
+HET.init({
+  structuralUnmountDelay: 180,
+});
+```
+
+
 ## `destroy()`
 
 Destroy mounted components, run their cleanup callbacks, and remove HET's document and window event listeners.

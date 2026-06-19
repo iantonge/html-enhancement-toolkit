@@ -6,6 +6,9 @@ import {
 import { handleError } from './error-handler.js';
 import { getBindingCause } from './logging.js';
 
+let structuralUnmountDelay = 0;
+const structuralUnmountClass = 'het-unmounting';
+
 function initializeStructuralBindings(ctx, structuralBindings, mountApi) {
   for (const binding of structuralBindings) {
     if (binding.dirName === FOR_ATTR) {
@@ -87,6 +90,7 @@ function reconcileForBlock(ctx, binding, block, value, mountApi) {
     const existingClone = block.clones[index];
 
     if (existingClone) {
+      cancelStructuralCloneUnmount(existingClone);
       retargetForwardedSignals(existingClone, itemSignals, binding);
       continue;
     }
@@ -106,7 +110,7 @@ function reconcileForBlock(ctx, binding, block, value, mountApi) {
 function reconcileIfBlock(ctx, binding, block, value, mountApi) {
   if (!value) {
     if (block.clones[0]) {
-      finalizeStructuralCloneUnmount(block, block.clones[0], mountApi);
+      scheduleStructuralCloneUnmount(block, block.clones[0], mountApi);
     }
     block.activeCount = 0;
     return;
@@ -114,6 +118,7 @@ function reconcileIfBlock(ctx, binding, block, value, mountApi) {
 
   const itemSignals = getForwardedSignalsForValue(value, binding);
   if (block.clones[0]) {
+    cancelStructuralCloneUnmount(block.clones[0]);
     retargetForwardedSignals(block.clones[0], itemSignals, binding);
     block.activeCount = 1;
     return;
@@ -174,6 +179,8 @@ function createStructuralClone(ctx, binding, importedSignals, previousRootEl, mo
   return {
     rootEl,
     forwardedNames: Object.keys(importedSignals),
+    pendingUnmountHandle: undefined,
+    isPendingUnmount: false,
   };
 }
 
@@ -203,6 +210,7 @@ function retargetForwardedSignals(clone, nextSignals, binding) {
 }
 
 function destroyStructuralClone(clone, mountApi) {
+  cancelStructuralCloneUnmount(clone);
   mountApi.destroyComponent(clone.rootEl);
   clone.rootEl.remove();
 }
@@ -215,9 +223,32 @@ function destroyStructuralBlock(block, mountApi) {
   block.activeCount = 0;
 }
 
+function configureStructuralTeardown(config) {
+  structuralUnmountDelay = config?.structuralUnmountDelay ?? structuralUnmountDelay;
+}
+
+function scheduleStructuralCloneUnmount(block, clone, mountApi) {
+  if (!clone || clone.isPendingUnmount) return;
+
+  const delay = getStructuralUnmountDelay();
+  if (delay <= 0) {
+    finalizeStructuralCloneUnmount(block, clone, mountApi);
+    return;
+  }
+
+  clone.isPendingUnmount = true;
+  if (structuralUnmountClass) {
+    clone.rootEl.classList.add(structuralUnmountClass);
+  }
+  clone.pendingUnmountHandle = setTimeout(() => {
+    finalizeStructuralCloneUnmount(block, clone, mountApi);
+  }, delay);
+}
+
 function finalizeStructuralCloneUnmount(block, clone, mountApi) {
   if (!clone) return;
 
+  cancelStructuralCloneUnmount(clone);
   mountApi.destroyComponent(clone.rootEl);
   clone.rootEl.remove();
 
@@ -227,6 +258,27 @@ function finalizeStructuralCloneUnmount(block, clone, mountApi) {
   }
 }
 
+function cancelStructuralCloneUnmount(clone) {
+  if (!clone) return;
+
+  if (clone.pendingUnmountHandle !== undefined) {
+    clearTimeout(clone.pendingUnmountHandle);
+    clone.pendingUnmountHandle = undefined;
+  }
+
+  if (clone.isPendingUnmount) {
+    if (structuralUnmountClass) {
+      clone.rootEl.classList.remove(structuralUnmountClass);
+    }
+    clone.isPendingUnmount = false;
+  }
+}
+
+function getStructuralUnmountDelay() {
+  return structuralUnmountDelay;
+}
+
 export {
+  configureStructuralTeardown,
   initializeStructuralBindings,
 };

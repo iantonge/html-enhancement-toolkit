@@ -153,4 +153,20 @@ test.describe('components lifecycle and registration', () => {
     expect(errorMessage).toBe('HET Error: onError must be a function');
   });
 
+  test('destroy() bypasses delayed structural teardown and removes pending clones immediately', async ({ page }) => {
+    await page.goto('/components/structural/if-toggle-delayed');
+
+    await page.click('#show-item');
+    await page.click('#hide-item');
+    await expect(page.locator('#if-host > article')).toHaveClass(/het-unmounting/);
+
+    await page.evaluate(() => {
+      window.HET.destroy();
+    });
+
+    await expect(page.locator('#if-host > article')).toHaveCount(0);
+    await expect.poll(
+      () => page.evaluate(() => window.structuralIfDelayedCleanupIds.slice()),
+    ).toEqual(['1']);
+  });
 });

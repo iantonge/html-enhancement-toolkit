@@ -3,10 +3,12 @@ import {
   destroyComponent,
   mountComponents,
 } from './mount.js';
+import { configureStructuralTeardown } from './structural.js';
 import { initializeSyncEvents, destroySyncEvents } from './sync.js';
 
 function init(config) {
   setOnError(config?.onError);
+  configureStructuralTeardown(config);
   try {
     mountComponents(document);
     initializeSyncEvents();
