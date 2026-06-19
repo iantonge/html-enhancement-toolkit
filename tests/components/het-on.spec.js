@@ -20,6 +20,27 @@ test.describe('components het-on', () => {
     await expect(page.locator('#custom-event-count')).toHaveText('1');
   });
 
+  test('reports error when method is missing', async ({ page }) => {
+    await page.goto('/components/het-on/missing-method');
+    await page.waitForFunction(() =>
+      window.hetErrors.some((error) => error.message === 'HET Error: Missing component method'),
+    );
+    const cause = await page.evaluate(() => ({
+      componentName: window.hetErrors.at(-1).cause.componentName,
+      bindingAttribute: window.hetErrors.at(-1).cause.bindingAttribute,
+      bindingDeclaration: window.hetErrors.at(-1).cause.bindingDeclaration,
+      bindingElementId: window.hetErrors.at(-1).cause.bindingElement.id,
+      methodName: window.hetErrors.at(-1).cause.methodName,
+    }));
+    expect(cause).toEqual({
+      componentName: 'het-on-missing',
+      bindingAttribute: 'het-on',
+      bindingDeclaration: 'click->doesNotExist',
+      bindingElementId: 'missing-method-button',
+      methodName: 'doesNotExist',
+    });
+  });
+
   test('assigns signals from contextual values, signals, literals, and intrinsics', async ({ page }) => {
     await page.goto('/components/het-on/assigns-signal');
 

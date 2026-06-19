@@ -159,6 +159,22 @@ Cause fields for component binding errors in this section:
 
 ## Methods and Signals
 
+### `HET Error: Missing component method`
+
+`het-on="event->method"` referenced a method that the component did not return from `setup`.
+
+```html
+<div het-component="counter">
+  <button het-on="click->increment"></button>
+</div>
+
+<script>
+  HET.registerComponent('counter');
+</script>
+```
+
+Fix the binding by returning the method, or by changing the binding to the method name that actually exists.
+
 ### `HET Error: Bound signal does not exist`
 
 A binding referenced a signal that was never created, imported, or acquired.

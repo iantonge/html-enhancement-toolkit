@@ -14,6 +14,12 @@ router.get('/invokes-method', (request, response) => {
   });
 });
 
+router.get('/missing-method', (request, response) => {
+  response.render('components/het-on/missing-method', {
+    title: 'Missing method',
+  });
+});
+
 router.get('/multiple-handlers', (request, response) => {
   response.render('components/het-on/multiple-handlers', {
     title: 'Multiple handlers',
