@@ -57,4 +57,21 @@ test.describe('components lifecycle and registration', () => {
     });
   });
 
+  test('reports error when init receives a non-function onError', async ({ page }) => {
+    await page.goto('/');
+
+    const errorMessage = await page.evaluate(async () => {
+      window.HET.destroy();
+      const HET = await import(`/js/het/het.js?invalid-on-error=${Date.now()}`);
+      try {
+        HET.init({ onError: 'invalid' });
+      } catch (error) {
+        return error.message;
+      }
+      HET.destroy();
+    });
+
+    expect(errorMessage).toBe('HET Error: onError must be a function');
+  });
+
 });
