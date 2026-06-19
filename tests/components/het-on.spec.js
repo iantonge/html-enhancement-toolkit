@@ -149,4 +149,11 @@ test.describe('components het-on', () => {
     );
   });
 
+  test('reports error for empty het-on method expression', async ({ page }) => {
+    await page.goto('/components/het-on/invalid-expression-empty-method');
+    await page.waitForFunction(() =>
+      window.hetErrors.some((error) => error.message === 'HET Error: Event binding requires an event and action'),
+    );
+  });
+
 });

@@ -26,6 +26,12 @@ router.get('/invalid-expression', (request, response) => {
   });
 });
 
+router.get('/invalid-expression-empty-method', (request, response) => {
+  response.render('components/het-on/invalid-expression-empty-method', {
+    title: 'Invalid expression: empty method',
+  });
+});
+
 router.get('/multiple-handlers', (request, response) => {
   response.render('components/het-on/multiple-handlers', {
     title: 'Multiple handlers',
