@@ -73,7 +73,6 @@ const getClickContext = (event) => {
   }
   const link = event.target.closest('a[het-target]');
   if (!link) return;
-  if (link.hasAttribute('target')) return;
   event.preventDefault();
   const targetName = link.getAttribute('het-target');
   const loggingContext = {
@@ -85,6 +84,11 @@ const getClickContext = (event) => {
   if (new URL(link.href).origin !== window.location.origin)
     throw new Error(
       'HET Error: Cross-origin links cannot be progressively enhanced',
+      { cause: { ...loggingContext } },
+    );
+  if (link.hasAttribute('target'))
+    throw new Error(
+      'HET Error: Links with a target attribute cannot be progressively enhanced',
       { cause: { ...loggingContext } },
     );
   const target = getTarget(targetName, loggingContext);

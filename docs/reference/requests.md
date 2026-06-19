@@ -25,6 +25,7 @@ Add `het-target="<pane-name>"` to a same-origin link to fetch the link URL and r
 ```
 
 - Do not put `het-target` on links to another origin; HET treats that as an error.
+- Do not put `het-target` on links with a native `target` attribute; HET treats that as an error.
 - Modifier clicks such as Ctrl, Cmd, Shift, and middle click are not enhanced.
 
 ## Panes

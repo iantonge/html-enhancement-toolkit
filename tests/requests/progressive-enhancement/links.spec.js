@@ -25,6 +25,18 @@ test.describe('link progressive enhancement (core)', () => {
     });
   });
 
+  test('throws on internal link with target attribute', async ({ page }) => {
+    await page.goto('/requests/progressive-enhancement/links/target-attr');
+    await page.click('#link');
+    await page.waitForFunction(() =>
+      window.hetErrors.some((error) => error.message === 'HET Error: Links with a target attribute cannot be progressively enhanced',),
+    );
+    const errors = await page.evaluate(() => window.hetErrors.map((error) => error.message));
+    expect(errors).toContain(
+      'HET Error: Links with a target attribute cannot be progressively enhanced',
+    );
+  });
+
   test('throws on links targeting a missing pane', async ({ page }) => {
     await page.goto('/requests/progressive-enhancement/links/missing-pane');
     await page.click('#link');

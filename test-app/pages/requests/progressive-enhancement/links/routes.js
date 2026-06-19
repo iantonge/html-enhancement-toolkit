@@ -9,6 +9,7 @@ import missingPaneRoutes from './missing-pane/routes.js';
 import missingTargetResponseRoutes from './missing-target-response/routes.js';
 import noTargetRoutes from './no-target/routes.js';
 import responsesRoutes from './responses/routes.js';
+import targetAttrRoutes from './target-attr/routes.js';
 
 const router = Router();
 
@@ -27,5 +28,6 @@ router.use(missingPaneRoutes);
 router.use(missingTargetResponseRoutes);
 router.use(noTargetRoutes);
 router.use(responsesRoutes);
+router.use(targetAttrRoutes);
 
 export default router;
