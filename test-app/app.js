@@ -11,6 +11,8 @@ const port = 3000;
 app.set('views', path.join(__dirname, 'pages'));
 app.set('view engine', 'hbs');
 
+app.use('/assets', express.static(path.join(__dirname, 'assets')));
+
 app.use('/', pageRoutes);
 
 app.use((request, response) => {
