@@ -28,6 +28,15 @@ test.describe('components het-props', () => {
     );
   });
 
+  test('routes effect write errors through onError', async ({ page }) => {
+    await page.goto('/components/het-props/write-error');
+    await page.waitForFunction(() =>
+      window.hetErrors.some((error) => error.message === 'HET test error: write failed'),
+    );
+    const hetErrors = await page.evaluate(() => window.hetErrors.map((error) => error.message));
+    expect(hetErrors).toContain('HET test error: write failed');
+  });
+
   test('attaches binding context to empty binding declaration errors', async ({ page }) => {
     await page.goto('/components/het-props/empty-binding');
     await page.waitForFunction(() =>

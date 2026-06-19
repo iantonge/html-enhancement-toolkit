@@ -26,6 +26,12 @@ router.get('/missing-signal', (request, response) => {
   });
 });
 
+router.get('/write-error', (request, response) => {
+  response.render('components/het-props/write-error', {
+    title: 'Write error',
+  });
+});
+
 router.get('/invalid-assignment', (request, response) => {
   response.render('components/het-props/invalid-assignment', {
     title: 'Invalid assignment',
