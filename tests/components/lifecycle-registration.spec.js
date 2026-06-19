@@ -7,6 +7,13 @@ test.describe('components lifecycle and registration', () => {
     await expect(page.locator('#setup-count')).toHaveText('Setup count: 1');
   });
 
+  test('throws when registering a component without a name', async ({ page }) => {
+    await page.goto('/components/registration/register-without-name');
+    await page.waitForFunction(() =>
+      window.hetErrors.some((error) => error.message === 'HET Error: Component name is required',),
+    );
+  });
+
   test('default onError logs errors with cause and continues', async ({ page }) => {
     await page.goto('/');
 
