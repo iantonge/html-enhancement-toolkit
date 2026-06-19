@@ -146,6 +146,22 @@ Fix the binding by reading from the DOM in `het-seed` or an event-time `het-on` 
 <p het-text="message"></p>
 ```
 
+### `HET Error: Invalid event modifier`
+
+An event modifier name or modifier combination was not supported.
+
+```html
+<div het-component="counter">
+  <button het-on="click.debounce->save"></button>
+</div>
+```
+
+Fix the binding by using supported modifiers only.
+
+```html
+<button het-on="click.debounce(300)->save"></button>
+```
+
 Cause fields for component binding errors in this section:
 
 | `cause` property | Meaning |
@@ -156,6 +172,7 @@ Cause fields for component binding errors in this section:
 | `bindingDeclaration` | Raw binding declaration that failed. |
 | `bindingElement` | Element containing the binding declaration. |
 | `bindingErrorReason` | Exact parser reason used to build this error message, when present. |
+| `eventModifier` | Invalid or conflicting event modifier, when relevant. |
 
 ## Methods and Signals
 
