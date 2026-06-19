@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import hetAlsoRoutes from './het-also/routes.js';
+import hetSelectRoutes from './het-select/routes.js';
 import lifecycleEventsRoutes from './lifecycle-events/routes.js';
 import progressiveEnhancementRoutes from './progressive-enhancement/routes.js';
 
@@ -10,6 +11,7 @@ router.get('/', (request, response) => {
 });
 
 router.use('/het-also', hetAlsoRoutes);
+router.use('/het-select', hetSelectRoutes);
 router.use('/lifecycle-events', lifecycleEventsRoutes);
 router.use('/progressive-enhancement', progressiveEnhancementRoutes);
 

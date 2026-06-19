@@ -6,6 +6,7 @@
 - [Links](#links)
 - [Forms](#forms)
 - [Panes](#panes)
+- [Partial updates with `het-select`](#partial-updates-with-het-select)
 - [Additional replacements with `het-also`](#additional-replacements-with-het-also)
 - [Server contract](#server-contract)
 - [Lifecycle events](#lifecycle-events)
@@ -16,6 +17,7 @@
 | --- | --- | --- | --- | --- |
 | `het-pane` | Replaceable pane element | Pane name | No | Current document and response must each contain exactly one matching pane. |
 | `het-target` | Same-origin links, forms, submit buttons | Pane name | No | On forms, a submitter with `het-target` overrides the form value. |
+| `het-select` | Links, forms, submit buttons | Element id list | Yes | Replaces matching descendants inside the target pane. On forms, a submitter with `het-select` overrides the form value; an empty submitter value clears the form value. |
 | `het-also` | Links, forms, submit buttons | Element id list | Yes | Replaces matching elements outside the target pane. On forms, a submitter with `het-also` overrides the form value; an empty submitter value clears the form value. |
 
 ## Links
@@ -46,7 +48,7 @@ Add `het-target="<pane-name>"` to a same-origin form to submit it with `fetch` a
 - HET respects native form defaults and submitter overrides: `formaction`, `formmethod`, `formenctype`, default `method`/`action`, and submitter name/value pairs.
 - HET submits `GET` forms as query strings and supports `application/x-www-form-urlencoded`, `multipart/form-data`, and `text/plain` request bodies for non-GET forms.
 - `het-target` on the clicked submit button overrides `het-target` on the form.
-- `het-also` on the clicked submit button overrides the form attribute. Use an empty submitter attribute (`het-also=""`) to clear form-level additional replacements for that submission.
+- `het-select` and `het-also` on the clicked submit button override the form attributes. Use empty submitter attributes (`het-select=""`, `het-also=""`) to clear form-level partial or additional replacements for that submission.
 - Do not put `het-target` on cross-origin form submissions; HET treats that as an error.
 
 ## Panes
@@ -60,6 +62,28 @@ Use `het-pane="<name>"` to mark replaceable content. The current document and th
 ```
 
 If the pane is missing or duplicated in either place, HET throws an error.
+
+## Partial updates with `het-select`
+
+Use `het-select` to replace only specific ids inside the target pane. The value is a whitespace-separated list of ids.
+
+```html
+<main het-pane="main">
+  <p id="summary">Old summary</p>
+  <p id="detail">Old detail</p>
+  <a href="/next" het-target="main" het-select="summary">Update summary</a>
+</main>
+
+<form method="get" action="/search" het-target="main" het-select="summary detail">
+  <input name="q">
+  <button type="submit">Search</button>
+</form>
+```
+
+- Without `het-select`, HET replaces the entire target pane element with the matching pane from the response.
+- If `het-select` is present, it must list at least one id.
+- On submit buttons, `het-select=""` clears a form-level `het-select` override and performs a full pane replacement.
+- `het-select` throws if any listed id is missing in the current target or in the response target.
 
 ## Additional replacements with `het-also`
 
@@ -93,6 +117,6 @@ Content-load events bubble from the target pane or inserted pane.
 
 | Event | Cancelable | Detail | Notes |
 | --- | --- | --- | --- |
-| `het:afterLoadContent` | No | `alsoElements` | Dispatched after target/also replacements. |
+| `het:afterLoadContent` | No | `alsoElements` | Dispatched after target/select/also replacements. |
 
 For request diagnostics and full `error.cause` fields, see the [error reference](errors.md#request-errors).

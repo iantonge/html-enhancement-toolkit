@@ -16,6 +16,7 @@ const clickPipeline = async (event) => {
     await fetchAndSwap(
       ctx.request,
       ctx.target,
+      ctx.select,
       ctx.also,
       ctx.loggingContext,
       ctx.initiator,
@@ -32,6 +33,7 @@ const submitPipeline = async (event) => {
     await fetchAndSwap(
       ctx.request,
       ctx.target,
+      ctx.select,
       ctx.also,
       ctx.loggingContext,
       ctx.initiator,
@@ -44,6 +46,7 @@ const submitPipeline = async (event) => {
 const fetchAndSwap = async (
   request,
   target,
+  select,
   also,
   loggingContext,
   initiator,
@@ -78,11 +81,48 @@ const fetchAndSwap = async (
   const responseTarget = candidates[0];
   const newContent = responseTarget;
   const responseDoc = parsedDocument;
+  const insertedElements = [];
   let alsoElements = [];
+  let loadedContent;
   const alsoLoggingContext = {
     ...swapLoggingContext,
     requestDirectiveAttribute: also ? 'het-also' : '',
   };
+  if (!select || select.length === 0) {
+    if (also && also.length) {
+      alsoElements = applyAlsoReplacements(
+        also,
+        target.el,
+        newContent,
+        responseDoc,
+        alsoLoggingContext,
+      );
+      insertedElements.push(...alsoElements);
+    }
+    loadedContent = replaceContent(target.el, newContent);
+    insertedElements.push(loadedContent);
+    const afterLoadContentEvent = new CustomEvent('het:afterLoadContent', {
+      detail: { alsoElements },
+      bubbles: true,
+    });
+    loadedContent.dispatchEvent(afterLoadContentEvent);
+    return;
+  }
+  const selectLoggingContext = {
+    ...swapLoggingContext,
+    requestDirectiveAttribute: select ? 'het-select' : '',
+  };
+  validateSelectedIds(
+    select,
+    target.el,
+    newContent,
+    selectLoggingContext,
+  );
+  for (const id of select) {
+    const currentEl = getDescendantById(target.el, id);
+    const replacement = getDescendantById(newContent, id);
+    insertedElements.push(replaceContent(currentEl, replacement));
+  }
   if (also && also.length) {
     alsoElements = applyAlsoReplacements(
       also,
@@ -91,8 +131,9 @@ const fetchAndSwap = async (
       responseDoc,
       alsoLoggingContext,
     );
+    insertedElements.push(...alsoElements);
   }
-  const loadedContent = replaceContent(target.el, newContent);
+  loadedContent = target.el;
   const afterLoadContentEvent = new CustomEvent('het:afterLoadContent', {
     detail: { alsoElements },
     bubbles: true,
@@ -130,6 +171,11 @@ const getClickContext = (event) => {
       'HET Error: Links with a target attribute cannot be progressively enhanced',
       { cause: { ...loggingContext } },
     );
+  const selectLoggingContext = {
+    ...loggingContext,
+    requestDirectiveAttribute: 'het-select',
+  };
+  const select = getSelectIds(link.getAttribute('het-select'), selectLoggingContext);
   const alsoLoggingContext = {
     ...loggingContext,
     requestDirectiveAttribute: 'het-also',
@@ -141,6 +187,7 @@ const getClickContext = (event) => {
   return {
     request,
     target,
+    select,
     also,
     initiator: link,
     loggingContext,
@@ -209,6 +256,14 @@ const getSubmitContext = (event) => {
   if (submitterEnctype) {
     loggingContext.submitterEnctype = submitterEnctype;
   }
+  const selectLoggingContext = {
+    ...loggingContext,
+    requestDirectiveAttribute: 'het-select',
+  };
+  const select = getSelectIds(
+    getEffectiveDirectiveValue(form, submitter, 'het-select'),
+    selectLoggingContext,
+  );
   const alsoLoggingContext = {
     ...loggingContext,
     requestDirectiveAttribute: 'het-also',
@@ -239,6 +294,7 @@ const getSubmitContext = (event) => {
     request,
     target,
     form,
+    select,
     also,
     initiator: form,
     submitter,
@@ -287,12 +343,58 @@ const buildPostRequest = (
   });
 };
 
+const getSelectIds = (raw, loggingContext) => {
+  if (!raw) return;
+  const ids = raw.split(/\s+/).filter(Boolean);
+  if (ids.length === 0) {
+    const emptyDirectiveLoggingContext = {
+      ...loggingContext,
+      requestDirectiveDeclaration: raw,
+    };
+    throw new Error(
+      'HET Error: Select directive must list at least one id',
+      { cause: emptyDirectiveLoggingContext },
+    );
+  }
+  return ids;
+};
+
 const getDescendantById = (root, id) => {
   const escapedId = CSS?.escape
     ? CSS.escape(id)
     : id.replace(/"/g, '\\"').replace(/'/g, "\\'");
   const selector = `[id="${escapedId}"]`;
   return root.querySelector(selector);
+};
+
+const validateSelectedIds = (ids, currentContent, newContent, loggingContext) => {
+  ids.forEach((id) => {
+    const currentEl = getDescendantById(currentContent, id);
+    if (!currentEl) {
+      const missingCurrentLoggingContext = {
+        ...loggingContext,
+        selectId: id,
+        targetPaneElement: currentContent,
+      };
+      throw new Error(
+        'HET Error: Selected element not found in the target pane on the page',
+        { cause: missingCurrentLoggingContext },
+      );
+    }
+    const newEl = getDescendantById(newContent, id);
+    if (!newEl) {
+      const missingResponseLoggingContext = {
+        ...loggingContext,
+        selectId: id,
+        targetPaneElement: currentContent,
+        currentElement: currentEl,
+      };
+      throw new Error(
+        'HET Error: Selected element not found in the target pane in the server response',
+        { cause: missingResponseLoggingContext },
+      );
+    }
+  });
 };
 
 const getAlsoIds = (raw, loggingContext) => {

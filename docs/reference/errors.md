@@ -456,6 +456,12 @@ The request-related errors below are unchanged by the component expression rewri
 - `HET Error: Target pane not found in server response`
 - `HET Error: Multiple target panes found in server response`
 
+### `het-select`
+
+- `HET Error: Select directive must list at least one id`
+- `HET Error: Selected element not found in the target pane on the page`
+- `HET Error: Selected element not found in the target pane in the server response`
+
 ### `het-also`
 
 - `HET Error: Also directive must list at least one id`
