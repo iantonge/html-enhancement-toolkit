@@ -169,10 +169,11 @@ HET coordinates in-flight requests by target pane so overlapping updates do not 
 
 HET dispatches lifecycle events around fetch and content loading.
 
-Content-load events bubble from the target pane or inserted pane.
+Fetch events bubble from the initiator: the `a[het-target]` or `form[het-target]` for enhanced interactions, and `document` for browser history (`popstate`) re-fetches. Content-load events bubble from the target pane or inserted pane.
 
 | Event | Cancelable | Detail | Notes |
 | --- | --- | --- | --- |
+| `het:beforeFetch` | Yes | `request`, `initiator`, `target` | Listeners may cancel the enhanced request before HET calls `fetch`. |
 | `het:afterLoadContent` | No | `alsoElements` | Dispatched after target/select/also replacements. |
 
 For request diagnostics and full `error.cause` fields, see the [error reference](errors.md#request-errors).

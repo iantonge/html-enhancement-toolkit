@@ -149,6 +149,13 @@ const fetchAndSwap = async (
     request.headers.set(nonceHeader, nonce);
   }
   request.headers.set('X-HET-Target', target.name);
+  const beforeFetchEvent = new CustomEvent('het:beforeFetch', {
+    detail: { request, initiator, target: target.el },
+    cancelable: true,
+    bubbles: true,
+  });
+  initiator.dispatchEvent(beforeFetchEvent);
+  if (beforeFetchEvent.defaultPrevented) return;
   const requestLoggingContext = {
     ...loggingContext,
     requestUrl: request.url,
