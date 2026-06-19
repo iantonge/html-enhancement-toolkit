@@ -50,6 +50,7 @@ app.use(
 
 app.use('/css', express.static(path.join(__dirname, '../node_modules/bootstrap/dist/css')));
 app.use('/js/het', express.static(path.join(__dirname, '../dist')));
+app.use('/js/signals-core', express.static(path.join(__dirname, '../node_modules/@preact/signals-core/dist')));
 app.use('/assets', express.static(path.join(__dirname, 'assets')));
 
 app.use('/', pageRoutes);

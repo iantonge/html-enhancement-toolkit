@@ -6,6 +6,13 @@
       <meta name="description" content="{{description}}" />
     {{/if}}
     <link rel='stylesheet' href='/css/bootstrap.css' />
+    <script nonce="{{{cspNonce}}}" type="importmap">
+      {
+        "imports": {
+          "@preact/signals-core": "/js/signals-core/signals-core.mjs"
+        }
+      }
+    </script>
     <script nonce="{{{cspNonce}}}" src="/js/het/het.iife.js"></script>
   </head>
   <body class="bg-light">

@@ -17,6 +17,7 @@ await Promise.all([
   esbuild.build({
     ...common,
     format: 'esm',
+    external: ['@preact/signals-core'],
     outfile: 'dist/het.js',
   }),
   esbuild.build({

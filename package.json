@@ -7,8 +7,12 @@
     "test-app": "npm run build && node ./test-app/app.js",
     "test": "playwright test"
   },
+  "peerDependencies": {
+    "@preact/signals-core": "^1.14.3"
+  },
   "devDependencies": {
     "@playwright/test": "^1.61.0",
+    "@preact/signals-core": "^1.14.3",
     "bootstrap": "^5.3.8",
     "esbuild": "^0.28.1",
     "express": "^5.2.1",
