@@ -1,6 +1,18 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('link progressive enhancement (core)', () => {
+  test('throws on links targeting a missing pane', async ({ page }) => {
+    await page.goto('/requests/progressive-enhancement/links/missing-pane');
+    await page.click('#link');
+    await page.waitForFunction(() =>
+      window.hetErrors.some((error) => error.message === 'HET Error: Target pane not found on the page',),
+    );
+    const errors = await page.evaluate(() => window.hetErrors.map((error) => error.message));
+    expect(errors).toContain(
+      'HET Error: Target pane not found on the page',
+    );
+  });
+
   test('does not intercept links without het-target', async ({ page }) => {
     await page.goto('/requests/progressive-enhancement/links/no-target');
     await Promise.all([
