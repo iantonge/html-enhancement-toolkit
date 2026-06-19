@@ -11,6 +11,7 @@ import hetPropsRoutes from './het-props/routes.js';
 import lifecycleRoutes from './lifecycle/routes.js';
 import negationRoutes from './negation/routes.js';
 import registrationRoutes from './registration/routes.js';
+import scopedRefsRoutes from './scoped-refs/routes.js';
 
 const router = Router();
 
@@ -31,5 +32,6 @@ router.use('/het-props', hetPropsRoutes);
 router.use('/lifecycle', lifecycleRoutes);
 router.use('/negation', negationRoutes);
 router.use('/registration', registrationRoutes);
+router.use('/scoped-refs', scopedRefsRoutes);
 
 export default router;
