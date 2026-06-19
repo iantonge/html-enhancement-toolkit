@@ -80,6 +80,12 @@ router.get('/assignment-unknown-type-hint', (request, response) => {
   });
 });
 
+router.get('/toggle', (request, response) => {
+  response.render('components/het-on/toggle', {
+    title: 'Toggle',
+  });
+});
+
 router.get('/modifiers', (request, response) => {
   response.render('components/het-on/modifiers', {
     title: 'Modifiers',

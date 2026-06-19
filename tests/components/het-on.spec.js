@@ -56,6 +56,17 @@ test.describe('components het-on', () => {
     await expect(page.locator('#assignment-enabled')).toHaveText('true');
   });
 
+  test('toggles signals with het-on expressions', async ({ page }) => {
+    await page.goto('/components/het-on/toggle');
+
+    await expect(page.locator('#toggle-enabled')).toHaveText('false');
+    await expect(page.locator('#toggle-expanded')).toHaveText('true');
+
+    await page.click('#toggle-button');
+    await expect(page.locator('#toggle-enabled')).toHaveText('true');
+    await expect(page.locator('#toggle-expanded')).toHaveText('false');
+  });
+
   test('supports prevent, stop, capture, debounce, throttle, key filters, and once modifiers', async ({ page }) => {
     await page.goto('/components/het-on/modifiers');
 
