@@ -65,6 +65,16 @@ test.describe('form progressive enhancement (core)', () => {
     expect(content).toContain('Default form submitted');
   });
 
+  test('defaults to current URL when action is omitted', async ({ page }) => {
+    await page.goto('/requests/progressive-enhancement/forms/default-action-form');
+    await Promise.all([
+      page.waitForSelector('#response-message'),
+      page.click('#submit'),
+    ]);
+    const content = await page.textContent('#response-message');
+    expect(content).toContain('Default action submitted');
+  });
+
   test('throws on cross-origin form submissions', async ({ page }) => {
     await page.goto('/requests/progressive-enhancement/forms/external-form');
     await page.click('#external-submit');

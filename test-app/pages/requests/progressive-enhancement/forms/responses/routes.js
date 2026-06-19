@@ -18,6 +18,13 @@ router.get('/default-form', (request, response) => {
   });
 });
 
+router.get('/default-action', (request, response) => {
+  response.render('requests/progressive-enhancement/forms/responses/default-action', {
+    title: 'Form Progressive Enhancement (Core)',
+    message: `Default action submitted: ${request.query['default-action']}`,
+  });
+});
+
 router.get('/no-target', (request, response) => {
   response.render('requests/progressive-enhancement/forms/responses/no-target', {
     title: 'Form Progressive Enhancement (Core)',

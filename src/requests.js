@@ -121,13 +121,12 @@ const getSubmitContext = (event) => {
   const formTargetName = event.target.getAttribute('het-target');
   const targetName = formTargetName;
   if (!targetName) return;
+  event.preventDefault();
   const form = event.target;
   const submitter = event.submitter;
   const formMethod = (form.getAttribute('method') || 'GET').toUpperCase();
   const resolvedMethod = formMethod;
-  const formAction = form.getAttribute('action');
-  if (!formAction) return;
-  event.preventDefault();
+  const formAction = form.getAttribute('action') || window.location.href;
   const resolvedAction = formAction;
   const loggingContext = {
     formElement: form,
