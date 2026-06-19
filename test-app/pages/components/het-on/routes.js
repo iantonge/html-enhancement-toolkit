@@ -38,6 +38,12 @@ router.get('/invalid-expression-extra-equals', (request, response) => {
   });
 });
 
+router.get('/invalid-negation', (request, response) => {
+  response.render('components/het-on/invalid-negation', {
+    title: 'Invalid negation',
+  });
+});
+
 router.get('/multiple-handlers', (request, response) => {
   response.render('components/het-on/multiple-handlers', {
     title: 'Multiple handlers',
