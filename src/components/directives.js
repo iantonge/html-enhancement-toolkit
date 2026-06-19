@@ -56,6 +56,19 @@ const DIRECTIVES = [
     },
   },
   {
+    name: 'het-bool-attrs',
+    keyRequired: true,
+    sourceType: SIGNAL_SOURCE_TYPE,
+    allowMultiple: true,
+    write: (el, key, value) => {
+      if (value) {
+        el.setAttribute(key, '');
+      } else {
+        el.removeAttribute(key);
+      }
+    },
+  },
+  {
     name: 'het-model',
     keyRequired: false,
     sourceType: SIGNAL_SOURCE_TYPE,

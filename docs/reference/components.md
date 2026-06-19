@@ -85,7 +85,7 @@ HET bindings support a limited subset of JavaScript for pure, side-effect-free e
 
 Expressions are used by:
 
-- output bindings such as `het-text`, `het-props`, and `het-attrs`
+- output bindings such as `het-text`, `het-props`, `het-attrs`, and `het-bool-attrs`
 - assignment-style `het-on`
 - `het-seed`
 - `het-sync`
@@ -161,7 +161,7 @@ Examples:
 Bindings that support multiple declarations use top-level semicolons:
 
 ```html
-<div het-attrs="data-state=state; ariaLabel=label"></div>
+<button het-bool-attrs="disabled=isInvalid || loading"></button>
 ```
 
 Whitespace alone does not separate declarations.
@@ -194,6 +194,15 @@ Use `het-attrs` to bind expressions to attributes whose meaning comes from their
 
 ```html
 <button het-attrs="aria-expanded=isOpen ? 'true' : 'false'"></button>
+```
+
+### `het-bool-attrs`
+
+Use `het-bool-attrs` to bind expressions to boolean attribute presence.
+Truthy values add the attribute. Falsy values remove it.
+
+```html
+<input het-bool-attrs="disabled=isSaving || !isValid">
 ```
 
 ## Input and event bindings
@@ -352,6 +361,7 @@ Bindings declared in HTML are cleaned up automatically.
 | `het-text` | Write expression to `textContent` | No | Output expression only. |
 | `het-props` | Write expressions to DOM properties | Yes | Semicolon-separated declarations. |
 | `het-attrs` | Write expressions to attributes | Yes | Use for value-bearing attributes. |
+| `het-bool-attrs` | Toggle boolean attributes | Yes | Truthy adds, falsy removes. |
 | `het-model` | Two-way control binding | No | Always seeded from the control. |
 | `het-model:int` | Two-way control binding with integer coercion | No | Reads with `$int` semantics. |
 | `het-model:float` | Two-way control binding with float coercion | No | Reads with `$float` semantics. |

@@ -33,7 +33,7 @@ This error does not include a structured `cause`.
 
 ### `HET Error: Binding declaration must contain exactly one "="`
 
-A binding such as `het-props` or `het-attrs` did not contain exactly one top-level `=` between its target and expression.
+A binding such as `het-props`, `het-attrs`, or `het-bool-attrs` did not contain exactly one top-level `=` between its target and expression.
 
 ```html
 <div het-component>
@@ -244,7 +244,7 @@ This error attaches the normal structured binding `cause`.
 
 ### `HET Error: Output binding expression cannot use contextual values`
 
-An output binding such as `het-text`, `het-props`, or `het-attrs` used contextual snapshot values like `$target`, `$event`, or `$attrs`.
+An output binding such as `het-text`, `het-props`, `het-attrs`, or `het-bool-attrs` used contextual snapshot values like `$target`, `$event`, or `$attrs`.
 
 ```html
 <div het-component>
