@@ -3,15 +3,20 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "test-app": "node ./test-app/app.js",
+    "build": "node build.js",
+    "test-app": "npm run build && node ./test-app/app.js",
     "test": "playwright test"
   },
   "devDependencies": {
     "@playwright/test": "^1.61.0",
     "bootstrap": "^5.3.8",
+    "esbuild": "^0.28.1",
     "express": "^5.2.1",
     "hbs": "^4.2.1",
     "helmet": "^8.2.0",
     "multer": "^2.2.0"
+  },
+  "allowScripts": {
+    "esbuild@0.28.1": true
   }
 }
