@@ -50,6 +50,12 @@ router.get('/assignment-invalid-expression', (request, response) => {
   });
 });
 
+router.get('/assignment-unknown-type-hint', (request, response) => {
+  response.render('components/het-on/assignment-unknown-type-hint', {
+    title: 'Assignment unknown type hint',
+  });
+});
+
 router.get('/modifiers', (request, response) => {
   response.render('components/het-on/modifiers', {
     title: 'Modifiers',
