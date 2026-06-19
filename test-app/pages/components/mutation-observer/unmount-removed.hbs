@@ -13,6 +13,11 @@
   </div>
 </section>
 <script nonce="{{{cspNonce}}}">
+  window.hetInitConfig = {
+    structuralUnmountDelay: 120,
+    structuralUnmountClass: 'pending-unmount',
+  };
+
   window.HET.registerComponent('observer-removed', ({ refs, onCleanup }) => {
     refs.state.textContent = 'mounted';
     onCleanup(() => {

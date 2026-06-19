@@ -18,6 +18,7 @@ test.describe('components mutation observer', () => {
     await page.goto('/components/mutation-observer/unmount-removed');
     await page.click('#remove-component');
     await expect(page.locator('#cleanup-state')).toHaveText('cleaned');
+    await expect(page.locator('.pending-unmount')).toHaveCount(0);
   });
 
 });
