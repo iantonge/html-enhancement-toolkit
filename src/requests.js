@@ -218,7 +218,14 @@ const fetchAndSwap = async (
     );
   }
   const responseTarget = candidates[0];
-  const newContent = responseTarget;
+  const beforeLoadContentEvent = new CustomEvent('het:beforeLoadContent', {
+    detail: { newContent: responseTarget },
+    cancelable: true,
+    bubbles: true,
+  });
+  finalTarget.el.dispatchEvent(beforeLoadContentEvent);
+  if (beforeLoadContentEvent.defaultPrevented) return;
+  const newContent = beforeLoadContentEvent.detail.newContent;
   const responseDoc = parsedDocument;
   const insertedElements = [];
   let alsoElements = [];

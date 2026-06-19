@@ -6,6 +6,7 @@ test.describe('request lifecycle events', () => {
       window.hetLifecycleCounts = {
         beforeFetch: 0,
         afterFetch: 0,
+        beforeLoadContent: 0,
         afterLoadContent: 0,
       };
 
@@ -14,6 +15,9 @@ test.describe('request lifecycle events', () => {
       });
       document.addEventListener('het:afterFetch', () => {
         window.hetLifecycleCounts.afterFetch += 1;
+      });
+      document.addEventListener('het:beforeLoadContent', () => {
+        window.hetLifecycleCounts.beforeLoadContent += 1;
       });
       document.addEventListener('het:afterLoadContent', (event) => {
         window.hetLifecycleCounts.afterLoadContent += 1;
@@ -32,6 +36,7 @@ test.describe('request lifecycle events', () => {
     const counts = await page.evaluate(() => window.hetLifecycleCounts);
     expect(counts.beforeFetch).toBe(1);
     expect(counts.afterFetch).toBe(1);
+    expect(counts.beforeLoadContent).toBe(1);
     expect(counts.afterLoadContent).toBe(1);
   });
 
@@ -99,4 +104,34 @@ test.describe('request lifecycle events', () => {
     ]);
   });
 
+  test('allows het:beforeLoadContent to cancel swapping', async ({ page }) => {
+    await page.addInitScript(() => {
+      document.addEventListener('het:beforeLoadContent', (event) => {
+        event.preventDefault();
+      });
+    });
+
+    await page.goto('/requests/lifecycle-events');
+    await page.click('#link');
+    await page.waitForTimeout(200);
+
+    await expect(page.locator('#original-content')).toHaveText('Original lifecycle page content.');
+    await expect(page.locator('#response-message')).toHaveCount(0);
+  });
+
+  test('allows het:beforeLoadContent to replace new content', async ({ page }) => {
+    await page.addInitScript(() => {
+      document.addEventListener('het:beforeLoadContent', (event) => {
+        const replacement = event.detail.newContent.cloneNode(true);
+        replacement.querySelector('#response-message').textContent = 'Before load replacement loaded.';
+        event.detail.newContent = replacement;
+      });
+    });
+
+    await page.goto('/requests/lifecycle-events');
+    await Promise.all([
+      page.waitForSelector('#response-message:has-text("Before load replacement loaded.")'),
+      page.click('#link'),
+    ]);
+  });
 });
