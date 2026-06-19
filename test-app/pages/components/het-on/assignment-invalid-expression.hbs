@@ -1,0 +1,15 @@
+<section class="card shadow-sm border-0">
+  <div class="card-body">
+    <h1 class="h4 mb-3">{{title}}</h1>
+    <div het-component="het-on-assignment-invalid-expression">
+      <button id="assignment-invalid-expression-button" type="button" het-on="click->count=">
+        Run
+      </button>
+    </div>
+  </div>
+</section>
+<script nonce="{{{cspNonce}}}">
+  window.HET.registerComponent('het-on-assignment-invalid-expression', ({ signals }) => {
+    signals.count = window.HET.signals.signal(0);
+  });
+</script>

@@ -100,6 +100,13 @@ test.describe('components het-on', () => {
     );
   });
 
+  test('reports error for invalid assignment expression', async ({ page }) => {
+    await page.goto('/components/het-on/assignment-invalid-expression');
+    await page.waitForFunction(() =>
+      window.hetErrors.some((error) => error.message === 'HET Error: Event assignment requires a signal name and source'),
+    );
+  });
+
   test('reports error for invalid modifier duration', async ({ page }) => {
     await page.goto('/components/het-on/invalid-modifier-duration');
     await page.waitForFunction(() =>

@@ -44,6 +44,12 @@ router.get('/assignment-missing-source', (request, response) => {
   });
 });
 
+router.get('/assignment-invalid-expression', (request, response) => {
+  response.render('components/het-on/assignment-invalid-expression', {
+    title: 'Assignment invalid expression',
+  });
+});
+
 router.get('/modifiers', (request, response) => {
   response.render('components/het-on/modifiers', {
     title: 'Modifiers',
