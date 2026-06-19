@@ -3,9 +3,10 @@ import { Router } from 'express';
 const router = Router();
 
 router.get('/get-form', (request, response) => {
+  const someField = request.query['some-field'] ?? '';
   response.render('requests/progressive-enhancement/forms/responses/get-form', {
     title: 'Form Progressive Enhancement (Core)',
-    message: 'GET form submitted',
+    message: `GET form submitted: ${someField}`,
   });
 });
 

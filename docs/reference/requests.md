@@ -40,7 +40,8 @@ Add `het-target="<pane-name>"` to a same-origin form to submit it with `fetch` a
 </form>
 ```
 
-- HET submits `GET` forms with `fetch`.
+- HET respects native form control values.
+- HET submits `GET` forms as query strings.
 
 ## Panes
 

@@ -20,7 +20,7 @@ test.describe('form progressive enhancement (core)', () => {
       page.click('#get-submit'),
     ]);
     const content = await page.textContent('#response-message');
-    expect(content).toContain('GET form submitted');
+    expect(content).toContain('GET form submitted: relative get value');
   });
 
   test('does not intercept forms without het-target', async ({ page }) => {

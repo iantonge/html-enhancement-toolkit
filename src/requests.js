@@ -147,7 +147,8 @@ const getSubmitContext = (event) => {
   if (formTargetName) {
     loggingContext.formTargetName = formTargetName;
   }
-  const request = buildGetRequest(resolvedActionUrl);
+  const formData = new FormData(form);
+  const request = buildGetRequest(resolvedActionUrl, formData);
   const target = getTarget(targetName, loggingContext);
   loggingContext.targetPaneElement = target.el;
   return {
@@ -160,8 +161,11 @@ const getSubmitContext = (event) => {
   };
 };
 
-const buildGetRequest = (actionUrl) => {
-  return new Request(actionUrl.href, { method: 'GET' });
+const buildGetRequest = (actionUrl, formData) => {
+  const url = new URL(actionUrl.href);
+  const params = new URLSearchParams(formData);
+  url.search = params.size ? `?${params.toString()}` : '';
+  return new Request(url.href, { method: 'GET' });
 };
 
 const getTarget = (targetName, loggingContext) => {
