@@ -16,6 +16,7 @@ const clickPipeline = async (event) => {
     await fetchAndSwap(
       ctx.request,
       ctx.target,
+      ctx.also,
       ctx.loggingContext,
       ctx.initiator,
     );
@@ -31,6 +32,7 @@ const submitPipeline = async (event) => {
     await fetchAndSwap(
       ctx.request,
       ctx.target,
+      ctx.also,
       ctx.loggingContext,
       ctx.initiator,
     );
@@ -42,6 +44,7 @@ const submitPipeline = async (event) => {
 const fetchAndSwap = async (
   request,
   target,
+  also,
   loggingContext,
   initiator,
 ) => {
@@ -72,9 +75,26 @@ const fetchAndSwap = async (
       { cause: multipleTargetLoggingContext },
     );
   }
-  const newContent = candidates[0];
+  const responseTarget = candidates[0];
+  const newContent = responseTarget;
+  const responseDoc = parsedDocument;
+  let alsoElements = [];
+  const alsoLoggingContext = {
+    ...swapLoggingContext,
+    requestDirectiveAttribute: also ? 'het-also' : '',
+  };
+  if (also && also.length) {
+    alsoElements = applyAlsoReplacements(
+      also,
+      target.el,
+      newContent,
+      responseDoc,
+      alsoLoggingContext,
+    );
+  }
   const loadedContent = replaceContent(target.el, newContent);
   const afterLoadContentEvent = new CustomEvent('het:afterLoadContent', {
+    detail: { alsoElements },
     bubbles: true,
   });
   loadedContent.dispatchEvent(afterLoadContentEvent);
@@ -110,15 +130,29 @@ const getClickContext = (event) => {
       'HET Error: Links with a target attribute cannot be progressively enhanced',
       { cause: { ...loggingContext } },
     );
+  const alsoLoggingContext = {
+    ...loggingContext,
+    requestDirectiveAttribute: 'het-also',
+  };
+  const also = getAlsoIds(link.getAttribute('het-also'), alsoLoggingContext);
   const target = getTarget(targetName, loggingContext);
   loggingContext.targetPaneElement = target.el;
   const request = new Request(link.href);
   return {
     request,
     target,
+    also,
     initiator: link,
     loggingContext,
   };
+};
+
+const getEffectiveDirectiveValue = (form, submitter, attributeName) => {
+  if (submitter?.hasAttribute(attributeName)) {
+    const value = submitter.getAttribute(attributeName);
+    return value === '' ? undefined : value;
+  }
+  return form.getAttribute(attributeName);
 };
 
 const getSubmitContext = (event) => {
@@ -175,6 +209,14 @@ const getSubmitContext = (event) => {
   if (submitterEnctype) {
     loggingContext.submitterEnctype = submitterEnctype;
   }
+  const alsoLoggingContext = {
+    ...loggingContext,
+    requestDirectiveAttribute: 'het-also',
+  };
+  const also = getAlsoIds(
+    getEffectiveDirectiveValue(form, submitter, 'het-also'),
+    alsoLoggingContext,
+  );
   const resolvedActionUrl = new URL(resolvedAction, window.location.href);
   if (resolvedActionUrl.origin !== window.location.origin)
     throw new Error(
@@ -197,6 +239,7 @@ const getSubmitContext = (event) => {
     request,
     target,
     form,
+    also,
     initiator: form,
     submitter,
     loggingContext,
@@ -242,6 +285,93 @@ const buildPostRequest = (
     },
     body: params,
   });
+};
+
+const getDescendantById = (root, id) => {
+  const escapedId = CSS?.escape
+    ? CSS.escape(id)
+    : id.replace(/"/g, '\\"').replace(/'/g, "\\'");
+  const selector = `[id="${escapedId}"]`;
+  return root.querySelector(selector);
+};
+
+const getAlsoIds = (raw, loggingContext) => {
+  if (!raw) return;
+  const ids = raw.split(/\s+/).filter(Boolean);
+  if (ids.length === 0) {
+    const emptyDirectiveLoggingContext = {
+      ...loggingContext,
+      requestDirectiveDeclaration: raw,
+    };
+    throw new Error(
+      'HET Error: Also directive must list at least one id',
+      { cause: emptyDirectiveLoggingContext },
+    );
+  }
+  return ids;
+};
+
+const applyAlsoReplacements = (
+  ids,
+  targetEl,
+  responseTarget,
+  responseDoc,
+  loggingContext,
+) => {
+  const replacements = [];
+  ids.forEach((id) => {
+    const currentEl = getDescendantById(document, id);
+    if (!currentEl) {
+      const missingCurrentLoggingContext = {
+        ...loggingContext,
+        alsoId: id,
+        targetPaneElement: targetEl,
+      };
+      throw new Error(
+        'HET Error: het-also element not found on the page',
+        { cause: missingCurrentLoggingContext },
+      );
+    }
+    if (targetEl.contains(currentEl)) {
+      const nestedCurrentLoggingContext = {
+        ...loggingContext,
+        alsoId: id,
+        targetPaneElement: targetEl,
+        currentElement: currentEl,
+      };
+      throw new Error(
+        'HET Error: het-also element found inside the target pane on the page',
+        { cause: nestedCurrentLoggingContext },
+      );
+    }
+    const replacement = getDescendantById(responseDoc, id);
+    if (!replacement) {
+      const missingResponseLoggingContext = {
+        ...loggingContext,
+        alsoId: id,
+        targetPaneElement: targetEl,
+        currentElement: currentEl,
+      };
+      throw new Error(
+        'HET Error: het-also element not found in the server response',
+        { cause: missingResponseLoggingContext },
+      );
+    }
+    if (responseTarget.contains(replacement)) {
+      const nestedResponseLoggingContext = {
+        ...loggingContext,
+        alsoId: id,
+        targetPaneElement: targetEl,
+        currentElement: currentEl,
+      };
+      throw new Error(
+        'HET Error: het-also element found inside the target pane in the server response',
+        { cause: nestedResponseLoggingContext },
+      );
+    }
+    replacements.push(replaceContent(currentEl, replacement));
+  });
+  return replacements;
 };
 
 const getTarget = (targetName, loggingContext) => {

@@ -327,7 +327,7 @@ const container = document.querySelector('#profile-editor');
 container.dispatchEvent(new CustomEvent('het:sync', { bubbles: true }));
 ```
 
-HET's requests module dispatches `het:sync` automatically after request-driven content updates. Other DOM-updating integrations must dispatch `het:sync` themselves.
+HET's requests module dispatches `het:sync` automatically after request-driven content updates, including `het-also` replacements. Other DOM-updating integrations must dispatch `het:sync` themselves.
 
 ## Signal sharing
 

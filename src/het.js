@@ -27,6 +27,10 @@ function initializeSyncBridge() {
 
   afterLoadContentListener = (afterLoadContentEvent) => {
     dispatchSyncEvent(afterLoadContentEvent.target);
+
+    for (const el of afterLoadContentEvent.detail?.alsoElements || []) {
+      dispatchSyncEvent(el);
+    }
   };
 
   document.addEventListener('het:afterLoadContent', afterLoadContentListener);

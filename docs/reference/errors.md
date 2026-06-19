@@ -456,3 +456,10 @@ The request-related errors below are unchanged by the component expression rewri
 - `HET Error: Target pane not found in server response`
 - `HET Error: Multiple target panes found in server response`
 
+### `het-also`
+
+- `HET Error: Also directive must list at least one id`
+- `HET Error: het-also element not found on the page`
+- `HET Error: het-also element found inside the target pane on the page`
+- `HET Error: het-also element not found in the server response`
+- `HET Error: het-also element found inside the target pane in the server response`
