@@ -74,7 +74,6 @@ const getClickContext = (event) => {
   const link = event.target.closest('a[het-target]');
   if (!link) return;
   if (link.hasAttribute('target')) return;
-  if (new URL(link.href).origin !== window.location.origin) return;
   event.preventDefault();
   const targetName = link.getAttribute('het-target');
   const loggingContext = {
@@ -83,6 +82,11 @@ const getClickContext = (event) => {
     linkTargetName: targetName,
     resolvedTargetName: targetName,
   };
+  if (new URL(link.href).origin !== window.location.origin)
+    throw new Error(
+      'HET Error: Cross-origin links cannot be progressively enhanced',
+      { cause: { ...loggingContext } },
+    );
   const target = getTarget(targetName, loggingContext);
   loggingContext.targetPaneElement = target.el;
   const request = new Request(link.href);

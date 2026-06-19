@@ -2,6 +2,7 @@ import { Router } from 'express';
 
 import duplicatePaneRoutes from './duplicate-pane-form/routes.js';
 import duplicateTargetResponseRoutes from './duplicate-target-response/routes.js';
+import externalRoutes from './external/routes.js';
 import internalRoutes from './internal/routes.js';
 import internalSpanRoutes from './internal-span/routes.js';
 import missingPaneRoutes from './missing-pane/routes.js';
@@ -19,6 +20,7 @@ router.get('/', (request, response) => {
 
 router.use(duplicatePaneRoutes);
 router.use(duplicateTargetResponseRoutes);
+router.use(externalRoutes);
 router.use(internalRoutes);
 router.use(internalSpanRoutes);
 router.use(missingPaneRoutes);

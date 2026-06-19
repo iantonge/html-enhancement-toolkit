@@ -1,6 +1,30 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('link progressive enhancement (core)', () => {
+  test('throws on cross-origin link with het-target', async ({ page }) => {
+    await page.goto('/requests/progressive-enhancement/links/external');
+    await page.click('#link');
+    await page.waitForFunction(() =>
+      window.hetErrors.some((error) => error.message === 'HET Error: Cross-origin links cannot be progressively enhanced',),
+    );
+    const errors = await page.evaluate(() => window.hetErrors.map((error) => error.message));
+    expect(errors).toContain(
+      'HET Error: Cross-origin links cannot be progressively enhanced',
+    );
+    const cause = await page.evaluate(() => ({
+      linkElementId: window.hetErrors.at(-1).cause.linkElement.id,
+      linkUrl: window.hetErrors.at(-1).cause.linkUrl,
+      linkTargetName: window.hetErrors.at(-1).cause.linkTargetName,
+      resolvedTargetName: window.hetErrors.at(-1).cause.resolvedTargetName,
+    }));
+    expect(cause).toEqual({
+      linkElementId: 'link',
+      linkUrl: 'https://example.com/',
+      linkTargetName: 'main',
+      resolvedTargetName: 'main',
+    });
+  });
+
   test('throws on links targeting a missing pane', async ({ page }) => {
     await page.goto('/requests/progressive-enhancement/links/missing-pane');
     await page.click('#link');

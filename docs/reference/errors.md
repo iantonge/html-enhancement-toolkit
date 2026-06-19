@@ -443,6 +443,10 @@ Fix structural-template errors by keeping template roots valid, component-backed
 
 The request-related errors below are unchanged by the component expression rewrite. Use the request reference for the underlying behavior and treat these messages as pane-targeting and partial-update diagnostics.
 
+### Request eligibility
+
+- `HET Error: Cross-origin links cannot be progressively enhanced`
+
 ### Target panes
 
 - `HET Error: Target pane not found on the page`
