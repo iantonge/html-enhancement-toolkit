@@ -89,11 +89,21 @@ const fetchAndSwap = async (
     targetPaneElement: target.el,
   };
   const finalResponse = await fetch(request);
+  const targetOverride = finalResponse.headers.get('X-HET-Target-Override');
+  const finalTarget = getFinalTarget(target, targetOverride, requestLoggingContext);
+  const finalTargetChanged = finalTarget.el !== target.el;
   const swapLoggingContext = { ...requestLoggingContext };
+  if (targetOverride) {
+    swapLoggingContext.responseTargetHeader = targetOverride;
+  }
+  if (finalTargetChanged) {
+    swapLoggingContext.effectiveTargetPaneName = finalTarget.name;
+    swapLoggingContext.effectiveTargetPaneElement = finalTarget.el;
+  }
   const responseHtml = await finalResponse.text();
   const htmlForParse = trustedTypesPolicy?.createHTML(responseHtml) ?? responseHtml;
   const parsedDocument = parser.parseFromString(htmlForParse, 'text/html');
-  const candidates = parsedDocument.querySelectorAll(`[het-pane="${target.name}"]`);
+  const candidates = parsedDocument.querySelectorAll(`[het-pane="${finalTarget.name}"]`);
   if (candidates.length === 0)
     throw new Error(
       'HET Error: Target pane not found in server response',
@@ -123,14 +133,14 @@ const fetchAndSwap = async (
     if (also && also.length) {
       alsoElements = applyAlsoReplacements(
         also,
-        target.el,
+        finalTarget.el,
         newContent,
         responseDoc,
         alsoLoggingContext,
       );
       insertedElements.push(...alsoElements);
     }
-    loadedContent = replaceContent(target.el, newContent);
+    loadedContent = replaceContent(finalTarget.el, newContent);
     insertedElements.push(loadedContent);
     const afterLoadContentEvent = new CustomEvent('het:afterLoadContent', {
       detail: { alsoElements },
@@ -145,32 +155,41 @@ const fetchAndSwap = async (
   };
   validateSelectedIds(
     select,
-    target.el,
+    finalTarget.el,
     newContent,
     selectLoggingContext,
   );
   for (const id of select) {
-    const currentEl = getDescendantById(target.el, id);
+    const currentEl = getDescendantById(finalTarget.el, id);
     const replacement = getDescendantById(newContent, id);
     insertedElements.push(replaceContent(currentEl, replacement));
   }
   if (also && also.length) {
     alsoElements = applyAlsoReplacements(
       also,
-      target.el,
+      finalTarget.el,
       newContent,
       responseDoc,
       alsoLoggingContext,
     );
     insertedElements.push(...alsoElements);
   }
-  loadedContent = target.el;
+  loadedContent = finalTarget.el;
   const afterLoadContentEvent = new CustomEvent('het:afterLoadContent', {
     detail: { alsoElements },
     bubbles: true,
   });
   loadedContent.dispatchEvent(afterLoadContentEvent);
   return;
+};
+
+const getFinalTarget = (target, targetOverride, requestLoggingContext) => {
+  if (!targetOverride) return target;
+  const targetLookupLoggingContext = {
+    ...requestLoggingContext,
+    responseTargetHeader: targetOverride,
+  };
+  return getTarget(targetOverride, targetLookupLoggingContext);
 };
 
 const getClickContext = (event) => {

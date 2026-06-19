@@ -38,6 +38,40 @@ router.get('/x-het-target/responses/form', (request, response) => {
   });
 });
 
+router.get('/x-het-target-override', (request, response) => {
+  response.render('requests/headers/x-het-target-override/index', {
+    title: 'X-HET-Target-Override tests',
+  });
+});
+
+router.get('/x-het-target-override/link', (request, response) => {
+  response.render('requests/headers/x-het-target-override/link', {
+    title: 'X-HET-Target-Override link test',
+  });
+});
+
+router.get('/x-het-target-override/form', (request, response) => {
+  response.render('requests/headers/x-het-target-override/form', {
+    title: 'X-HET-Target-Override form test',
+  });
+});
+
+router.get('/x-het-target-override/responses/link', (request, response) => {
+  response
+    .set('X-HET-Target-Override', 'child')
+    .render('requests/headers/x-het-target-override/responses/link', {
+      title: 'X-HET-Target-Override link response',
+    });
+});
+
+router.get('/x-het-target-override/responses/form', (request, response) => {
+  response
+    .set('X-HET-Target-Override', 'child')
+    .render('requests/headers/x-het-target-override/responses/form', {
+      title: 'X-HET-Target-Override form response',
+    });
+});
+
 router.get('/nonce', (request, response) => {
   response.render('requests/headers/nonce/index', {
     title: 'Nonce header tests',

@@ -110,8 +110,11 @@ Use `het-also` to replace elements outside the target pane from the same respons
 
 Enhanced requests include an `X-HET-Target` header containing the resolved target pane name.
 
-Responses must be HTML containing exactly one matching target pane, regardless of HTTP status code.
+Responses must be HTML containing exactly one matching target pane, regardless of HTTP status code. Servers may also return override headers:
 
+| Header | Effect |
+| --- | --- |
+| `X-HET-Target-Override` | Replace a different pane than originally targeted. The override pane must exist in the current document and response. |
 ## Request coordination
 
 HET coordinates in-flight requests by target pane so overlapping updates do not race and leave the UI in an inconsistent state.
