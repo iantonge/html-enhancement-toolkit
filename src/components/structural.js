@@ -7,7 +7,7 @@ import { handleError } from './error-handler.js';
 import { getBindingCause } from './logging.js';
 
 let structuralUnmountDelay = 0;
-const structuralUnmountClass = 'het-unmounting';
+let structuralUnmountClass = 'het-unmounting';
 
 function initializeStructuralBindings(ctx, structuralBindings, mountApi) {
   for (const binding of structuralBindings) {
@@ -225,6 +225,7 @@ function destroyStructuralBlock(block, mountApi) {
 
 function configureStructuralTeardown(config) {
   structuralUnmountDelay = config?.structuralUnmountDelay ?? structuralUnmountDelay;
+  structuralUnmountClass = config?.structuralUnmountClass ?? structuralUnmountClass;
 }
 
 function scheduleStructuralCloneUnmount(block, clone, mountApi) {

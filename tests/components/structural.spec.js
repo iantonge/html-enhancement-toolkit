@@ -59,7 +59,7 @@ test.describe('components structural templates', () => {
 
     await page.click('#hide-item');
     await expect(page.locator('#if-host > article')).toHaveCount(1);
-    await expect(page.locator('#if-host > article')).toHaveClass(/het-unmounting/);
+    await expect(page.locator('#if-host > article')).toHaveClass(/pending-unmount/);
     await expect.poll(
       () => page.evaluate(() => window.structuralIfDelayedCleanupIds.slice()),
     ).toEqual([]);
@@ -78,10 +78,10 @@ test.describe('components structural templates', () => {
     await expect(page.locator('#if-host .if-mount')).toHaveText('1');
 
     await page.click('#hide-item');
-    await expect(page.locator('#if-host > article')).toHaveClass(/het-unmounting/);
+    await expect(page.locator('#if-host > article')).toHaveClass(/pending-unmount/);
 
     await page.click('#swap-item');
-    await expect(page.locator('#if-host > article')).not.toHaveClass(/het-unmounting/);
+    await expect(page.locator('#if-host > article')).not.toHaveClass(/pending-unmount/);
     await expect(page.locator('#if-host .if-label')).toHaveText('Replacement');
     await expect(page.locator('#if-host .if-mount')).toHaveText('1');
 
@@ -100,7 +100,7 @@ test.describe('components structural templates', () => {
 
     await page.click('#shrink-list');
     await expect(page.locator('#for-list > li')).toHaveCount(3);
-    await expect(page.locator('#for-list .het-unmounting')).toHaveCount(2);
+    await expect(page.locator('#for-list .pending-unmount')).toHaveCount(2);
     await expect.poll(
       () => page.evaluate(() => window.structuralForDelayedCleanupIds.slice()),
     ).toEqual([]);
@@ -109,7 +109,7 @@ test.describe('components structural templates', () => {
     await expect(page.locator('#for-list .item-message')).toHaveText(['Alpha', 'Delta', 'Gamma']);
     await expect(page.locator('#for-list .item-mount').nth(0)).toHaveText('1');
     await expect(page.locator('#for-list .item-mount').nth(1)).toHaveText('2');
-    await expect(page.locator('#for-list .het-unmounting')).toHaveCount(1);
+    await expect(page.locator('#for-list .pending-unmount')).toHaveCount(1);
 
     await page.waitForTimeout(150);
     await expect(page.locator('#for-list > li')).toHaveCount(2);

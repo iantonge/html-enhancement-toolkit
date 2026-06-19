@@ -158,7 +158,7 @@ test.describe('components lifecycle and registration', () => {
 
     await page.click('#show-item');
     await page.click('#hide-item');
-    await expect(page.locator('#if-host > article')).toHaveClass(/het-unmounting/);
+    await expect(page.locator('#if-host > article')).toHaveClass(/pending-unmount/);
 
     await page.evaluate(() => {
       window.HET.destroy();

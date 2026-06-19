@@ -373,7 +373,7 @@ Each structural template must:
 
 `het-if="signalName"` mounts the template root when the signal value is truthy and removes it when the signal value is falsy.
 
-When `init({ structuralUnmountDelay })` is greater than `0`, falsy transitions can keep the clone mounted briefly for exit animations. HET adds `het-unmounting` to the clone root during that delay.
+When `init({ structuralUnmountDelay })` is greater than `0`, falsy transitions can keep the clone mounted briefly for exit animations. HET adds the configured `structuralUnmountClass` to the clone root during that delay.
 
 ### `het-for`
 

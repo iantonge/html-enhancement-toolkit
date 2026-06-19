@@ -37,6 +37,16 @@ HET.init({
 });
 ```
 
+#### `structuralUnmountClass`
+
+CSS class HET adds to a structural clone root while a delayed `het-if` or `het-for` removal is pending. Default: `"het-unmounting"`.
+
+```js
+HET.init({
+  structuralUnmountDelay: 180,
+  structuralUnmountClass: 'is-exiting',
+});
+```
 
 ## `destroy()`
 
