@@ -14,6 +14,12 @@ router.get('/invokes-method', (request, response) => {
   });
 });
 
+router.get('/multiple-handlers', (request, response) => {
+  response.render('components/het-on/multiple-handlers', {
+    title: 'Multiple handlers',
+  });
+});
+
 router.get('/assigns-signal', (request, response) => {
   response.render('components/het-on/assigns-signal', {
     title: 'Assigns signal',

@@ -7,6 +7,13 @@ test.describe('components het-on', () => {
     await expect(page.locator('#count-value')).toHaveText('1');
   });
 
+  test('supports multiple het-on handlers in one attribute', async ({ page }) => {
+    await page.goto('/components/het-on/multiple-handlers');
+    await page.click('#multi-handler-button');
+    await expect(page.locator('#count-a')).toHaveText('1');
+    await expect(page.locator('#count-b')).toHaveText('1');
+  });
+
   test('assigns signals from contextual values, signals, literals, and intrinsics', async ({ page }) => {
     await page.goto('/components/het-on/assigns-signal');
 
