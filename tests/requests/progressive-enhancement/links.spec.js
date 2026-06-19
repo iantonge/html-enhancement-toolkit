@@ -1,6 +1,16 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('link progressive enhancement (core)', () => {
+  test('does not intercept links without het-target', async ({ page }) => {
+    await page.goto('/requests/progressive-enhancement/links/no-target');
+    await Promise.all([
+      page.waitForURL('**/requests/progressive-enhancement/links/responses/internal-link'),
+      page.click('#link'),
+    ]);
+    const content = await page.textContent('#internal-page-message');
+    expect(content).toContain('This is an internal page.');
+  });
+
   test('throws when response does not include the target pane', async ({
     page,
   }) => {
