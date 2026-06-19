@@ -6,7 +6,7 @@
         <input id="done-checkbox" type="checkbox" het-model="isDone" class="form-check-input">
         <label class="form-check-label" for="done-checkbox">Done</label>
       </div>
-      <p id="done-value" het-text="isDone" class="mt-2 mb-0 text-muted"></p>
+      <p id="done-value" het-props="textContent=isDone" class="mt-2 mb-0 text-muted"></p>
       <button id="set-done" type="button" het-on="click->setDone" class="btn btn-sm btn-primary mt-2">
         Set true from signal
       </button>

@@ -3,7 +3,7 @@
     <h1 class="h4 mb-3">{{title}}</h1>
     <div het-component="het-model-typed-int">
       <input id="count-input" het-model:int="count" class="form-control" value="7">
-      <p id="count-value" het-text="count" class="mt-2 mb-0 text-muted"></p>
+      <p id="count-value" het-props="textContent=count" class="mt-2 mb-0 text-muted"></p>
       <button id="set-count" type="button" het-on="click->setCount" class="btn btn-sm btn-primary mt-2">
         Set from signal
       </button>
