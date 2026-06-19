@@ -156,4 +156,11 @@ test.describe('components het-on', () => {
     );
   });
 
+  test('reports error for extra equals in het-on expression', async ({ page }) => {
+    await page.goto('/components/het-on/invalid-expression-extra-equals');
+    await page.waitForFunction(() =>
+      window.hetErrors.some((error) => error.message === 'HET Error: Event binding must contain exactly one "->"'),
+    );
+  });
+
 });

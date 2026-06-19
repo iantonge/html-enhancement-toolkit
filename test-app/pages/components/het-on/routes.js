@@ -32,6 +32,12 @@ router.get('/invalid-expression-empty-method', (request, response) => {
   });
 });
 
+router.get('/invalid-expression-extra-equals', (request, response) => {
+  response.render('components/het-on/invalid-expression-extra-equals', {
+    title: 'Invalid expression: extra equals',
+  });
+});
+
 router.get('/multiple-handlers', (request, response) => {
   response.render('components/het-on/multiple-handlers', {
     title: 'Multiple handlers',
