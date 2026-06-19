@@ -85,7 +85,7 @@ HET bindings support a limited subset of JavaScript for pure, side-effect-free e
 
 Expressions are used by:
 
-- output bindings such as `het-text` and `het-props`
+- output bindings such as `het-text`, `het-props`, and `het-attrs`
 - assignment-style `het-on`
 - `het-seed`
 - `het-sync`
@@ -161,7 +161,7 @@ Examples:
 Bindings that support multiple declarations use top-level semicolons:
 
 ```html
-<div het-props="textContent=label; title=label"></div>
+<div het-attrs="data-state=state; ariaLabel=label"></div>
 ```
 
 Whitespace alone does not separate declarations.
@@ -186,6 +186,14 @@ Use `het-props` to bind expressions to element properties such as `textContent`,
 
 ```html
 <div het-props="textContent=count; title=count === 1 ? 'item' : 'items'"></div>
+```
+
+### `het-attrs`
+
+Use `het-attrs` to bind expressions to attributes whose meaning comes from their value.
+
+```html
+<button het-attrs="aria-expanded=isOpen ? 'true' : 'false'"></button>
 ```
 
 ## Input and event bindings
@@ -343,6 +351,7 @@ Bindings declared in HTML are cleaned up automatically.
 | --- | --- | --- | --- |
 | `het-text` | Write expression to `textContent` | No | Output expression only. |
 | `het-props` | Write expressions to DOM properties | Yes | Semicolon-separated declarations. |
+| `het-attrs` | Write expressions to attributes | Yes | Use for value-bearing attributes. |
 | `het-model` | Two-way control binding | No | Always seeded from the control. |
 | `het-model:int` | Two-way control binding with integer coercion | No | Reads with `$int` semantics. |
 | `het-model:float` | Two-way control binding with float coercion | No | Reads with `$float` semantics. |

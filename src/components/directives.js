@@ -47,6 +47,15 @@ const DIRECTIVES = [
     },
   },
   {
+    name: 'het-attrs',
+    keyRequired: true,
+    sourceType: SIGNAL_SOURCE_TYPE,
+    allowMultiple: true,
+    write: (el, key, value) => {
+      el.setAttribute(key, String(value));
+    },
+  },
+  {
     name: 'het-model',
     keyRequired: false,
     sourceType: SIGNAL_SOURCE_TYPE,
