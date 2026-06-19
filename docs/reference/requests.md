@@ -24,6 +24,8 @@ Add `het-target="<pane-name>"` to a same-origin link to fetch the link URL and r
 </main>
 ```
 
+- Modifier clicks such as Ctrl, Cmd, Shift, and middle click are not enhanced.
+
 ## Panes
 
 Use `het-pane="<name>"` to mark replaceable content. The current document and the response HTML must each contain exactly one pane with the resolved target name.

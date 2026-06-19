@@ -63,6 +63,14 @@ const fetchAndSwap = async (
 };
 
 const getClickContext = (event) => {
+  if (
+    event.button !== 0 ||
+    event.ctrlKey ||
+    event.metaKey ||
+    event.shiftKey
+  ) {
+    return;
+  }
   const link = event.target.closest('a[het-target]');
   if (!link) return;
   if (link.hasAttribute('target')) return;

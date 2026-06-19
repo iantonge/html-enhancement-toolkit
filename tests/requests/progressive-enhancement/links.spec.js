@@ -1,6 +1,34 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('link progressive enhancement (core)', () => {
+  const modifiers = [
+    { name: 'Ctrl key', options: { modifiers: ['Control'] }, skipWebkit: false },
+    { name: 'Shift key', options: { modifiers: ['Shift'] }, skipWebkit: false },
+    { name: 'Middle mouse button', options: { button: 'middle' }, skipWebkit: true },
+  ];
+
+  for (const { name, options, skipWebkit } of modifiers) {
+    test(`skips click events when ${name} modifier used`, async ({
+      page,
+      browserName,
+    }) => {
+      test.skip(skipWebkit && browserName === 'webkit', `Webkit doesn't support synthetic ${name} events`);
+      await page.goto('/requests/progressive-enhancement/links/internal');
+      let requestCount = 0;
+      await page.route('**/requests/progressive-enhancement/links/responses/internal-link', async (route) => {
+        requestCount += 1;
+        await route.continue();
+      });
+
+      await page.click('#link', options);
+      await page.waitForTimeout(250);
+
+      const content = await page.textContent('#original-content');
+      expect(content).toContain('Original page content.');
+      expect(requestCount).toBe(0);
+    });
+  }
+
   test('intercepts internal link with het-target', async ({ page }) => {
     await page.goto('/requests/progressive-enhancement/links/internal');
     await Promise.all([
