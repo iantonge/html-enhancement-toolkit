@@ -4,6 +4,7 @@
 
 - [Core attributes](#core-attributes)
 - [Links](#links)
+- [Forms](#forms)
 - [Panes](#panes)
 - [Server contract](#server-contract)
 
@@ -12,7 +13,7 @@
 | Attribute | Valid elements | Value shape | Multiple values | Notes |
 | --- | --- | --- | --- | --- |
 | `het-pane` | Replaceable pane element | Pane name | No | Current document and response must each contain exactly one matching pane. |
-| `het-target` | Same-origin links | Pane name | No | The matching pane is replaced with the response pane. |
+| `het-target` | Same-origin links and forms | Pane name | No | The matching pane is replaced with the response pane. |
 
 ## Links
 
@@ -27,6 +28,19 @@ Add `het-target="<pane-name>"` to a same-origin link to fetch the link URL and r
 - Do not put `het-target` on links to another origin; HET treats that as an error.
 - Do not put `het-target` on links with a native `target` attribute; HET treats that as an error.
 - Modifier clicks such as Ctrl, Cmd, Shift, and middle click are not enhanced.
+
+## Forms
+
+Add `het-target="<pane-name>"` to a same-origin form to submit it with `fetch` and replace the matching pane from the response.
+
+```html
+<form method="get" action="/search" het-target="main">
+  <input name="q">
+  <button type="submit">Search</button>
+</form>
+```
+
+- HET submits `GET` forms with `fetch`.
 
 ## Panes
 

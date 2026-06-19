@@ -24,6 +24,21 @@ const clickPipeline = async (event) => {
   }
 };
 
+const submitPipeline = async (event) => {
+  try {
+    const ctx = getSubmitContext(event);
+    if (!ctx) return;
+    await fetchAndSwap(
+      ctx.request,
+      ctx.target,
+      ctx.loggingContext,
+      ctx.initiator,
+    );
+  } catch (error) {
+    onError(error);
+  }
+};
+
 const fetchAndSwap = async (
   request,
   target,
@@ -102,6 +117,53 @@ const getClickContext = (event) => {
   };
 };
 
+const getSubmitContext = (event) => {
+  const formTargetName = event.target.getAttribute('het-target');
+  const targetName = formTargetName;
+  if (!targetName) return;
+  const form = event.target;
+  const submitter = event.submitter;
+  const formMethod = form.getAttribute('method');
+  const formAction = form.getAttribute('action');
+  if (!formMethod) return;
+  if (!formAction) return;
+  const resolvedMethod = formMethod.toUpperCase();
+  if (resolvedMethod !== 'GET') return;
+  const resolvedAction = formAction;
+  const resolvedActionUrl = new URL(resolvedAction, window.location.href);
+  if (resolvedActionUrl.origin !== window.location.origin) return;
+  event.preventDefault();
+  const loggingContext = {
+    formElement: form,
+    resolvedTargetName: targetName,
+    formAction,
+    formMethod,
+    resolvedActionUrl: resolvedActionUrl.href,
+    resolvedMethod,
+  };
+  if (submitter) {
+    loggingContext.submitterElement = submitter;
+  }
+  if (formTargetName) {
+    loggingContext.formTargetName = formTargetName;
+  }
+  const request = buildGetRequest(resolvedActionUrl);
+  const target = getTarget(targetName, loggingContext);
+  loggingContext.targetPaneElement = target.el;
+  return {
+    request,
+    target,
+    form,
+    initiator: form,
+    submitter,
+    loggingContext,
+  };
+};
+
+const buildGetRequest = (actionUrl) => {
+  return new Request(actionUrl.href, { method: 'GET' });
+};
+
 const getTarget = (targetName, loggingContext) => {
   const candidates = document.querySelectorAll(`[het-pane="${targetName}"]`);
   if (candidates.length === 0) {
@@ -132,8 +194,10 @@ const getTarget = (targetName, loggingContext) => {
 export function init(config) {
   onError = config?.onError ?? onError;
   document.addEventListener('click', clickPipeline);
+  document.addEventListener('submit', submitPipeline);
 }
 
 export function destroy() {
   document.removeEventListener('click', clickPipeline);
+  document.removeEventListener('submit', submitPipeline);
 }
