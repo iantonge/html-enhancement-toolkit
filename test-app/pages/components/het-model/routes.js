@@ -20,4 +20,10 @@ router.get('/checkbox', (request, response) => {
   });
 });
 
+router.get('/radio', (request, response) => {
+  response.render('components/het-model/radio', {
+    title: 'Radio',
+  });
+});
+
 export default router;
