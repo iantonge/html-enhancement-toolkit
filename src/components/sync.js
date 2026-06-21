@@ -79,7 +79,7 @@ function syncComponent(rootEl) {
           : undefined;
       }
 
-      binding.write(binding.el, binding.key, nextValue);
+      binding.write(binding.el, binding.key, nextValue, binding);
     }
 
     rootEl.removeAttribute('het-mount-pending');

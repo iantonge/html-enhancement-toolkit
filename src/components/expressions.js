@@ -172,10 +172,34 @@ function assertExpressionSignalsExist(binding, signals) {
 
 function getBindingInputValue(ctx, binding, event) {
   if (binding.dirName === 'het-model') {
-    return coerceValue(binding.el[binding.key], binding.modelType);
+    return getModelBindingInputValue(ctx, binding);
   }
 
   return evaluateBindingExpression(binding, ctx, event);
+}
+
+function getModelBindingInputValue(ctx, binding) {
+  if (isCheckboxModelBinding(binding)) {
+    const currentValue = ctx.signals?.[binding.source]?.value;
+    if (Array.isArray(currentValue)) {
+      return getNextCheckboxArrayValue(currentValue, binding);
+    }
+  }
+
+  if (isRadioModelBinding(binding)) {
+    return binding.el.checked ? getModelOptionValue(binding) : undefined;
+  }
+
+  return coerceValue(binding.el[binding.key], binding.modelType);
+}
+
+function getNextCheckboxArrayValue(currentValue, binding) {
+  const optionValue = getModelOptionValue(binding);
+  const nextValue = currentValue.filter((value) => value !== optionValue);
+  if (binding.el.checked) {
+    nextValue.push(optionValue);
+  }
+  return nextValue;
 }
 
 function evaluateBindingExpression(binding, ctx, event) {
@@ -298,6 +322,59 @@ function coerceValue(rawValue, modelType) {
   return rawValue;
 }
 
+function getModelOptionValue(binding) {
+  return coerceValue(binding.el.value, binding.modelType);
+}
+
+function getModelGroupSeedValue(bindings) {
+  if (bindings.every(isCheckboxModelBinding)) {
+    return bindings
+      .filter((binding) => binding.el.checked)
+      .map(getModelOptionValue);
+  }
+
+  if (bindings.every(isRadioModelBinding)) {
+    const checkedBinding = bindings.find((binding) => binding.el.checked);
+    return checkedBinding ? getModelOptionValue(checkedBinding) : undefined;
+  }
+
+  return undefined;
+}
+
+function isCheckboxModelBinding(binding) {
+  return (
+    binding.dirName === 'het-model' &&
+    binding.el instanceof HTMLInputElement &&
+    binding.el.type === 'checkbox'
+  );
+}
+
+function isRadioModelBinding(binding) {
+  return (
+    binding.dirName === 'het-model' &&
+    binding.el instanceof HTMLInputElement &&
+    binding.el.type === 'radio'
+  );
+}
+
+function isModelGroupBinding(binding) {
+  return isCheckboxModelBinding(binding) || isRadioModelBinding(binding);
+}
+
+function writeModelValue(el, key, value, binding) {
+  if (binding && isCheckboxModelBinding(binding) && Array.isArray(value)) {
+    el.checked = value.includes(getModelOptionValue(binding));
+    return;
+  }
+
+  if (binding && isRadioModelBinding(binding)) {
+    el.checked = getModelOptionValue(binding) === value;
+    return;
+  }
+
+  el[key] = value;
+}
+
 function getContextualValue(name, runtimeContext) {
   if (name === '$event') return runtimeContext.event;
   if (name === '$target') return runtimeContext.event?.target ?? runtimeContext.binding.el;
@@ -354,6 +431,9 @@ export {
   evaluateBindingExpression,
   getBindingInputValue,
   getExpressionMetadata,
+  getModelGroupSeedValue,
   inferInputEvent,
   inferModelKey,
+  isModelGroupBinding,
+  writeModelValue,
 };

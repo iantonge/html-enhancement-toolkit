@@ -32,18 +32,43 @@ test.describe('components het-model', () => {
     await expect(page.locator('#done-value')).toHaveText('true');
   });
 
-  test('binds radio with two-way updates using change events', async ({ page }) => {
-    await page.goto('/components/het-model/radio');
+  test('binds checkbox groups to arrays using shared het-model values', async ({ page }) => {
+    await page.goto('/components/het-model/checkbox-array');
 
-    await expect(page.locator('#choice-radio')).not.toBeChecked();
-    await expect(page.locator('#chosen-value')).toHaveText('false');
+    await expect(page.locator('#notify-email')).toBeChecked();
+    await expect(page.locator('#notify-sms')).not.toBeChecked();
+    await expect(page.locator('#notify-push')).not.toBeChecked();
+    await expect(page.locator('#channels-value')).toHaveText('email');
 
-    await page.click('#choice-radio');
-    await expect(page.locator('#chosen-value')).toHaveText('true');
+    await page.click('#notify-sms');
+    await expect(page.locator('#channels-value')).toHaveText('email,sms');
 
-    await page.click('#set-chosen');
-    await expect(page.locator('#choice-radio')).toBeChecked();
-    await expect(page.locator('#chosen-value')).toHaveText('true');
+    await page.click('#notify-email');
+    await expect(page.locator('#channels-value')).toHaveText('sms');
+
+    await page.click('#set-channels');
+    await expect(page.locator('#notify-email')).toBeChecked();
+    await expect(page.locator('#notify-sms')).not.toBeChecked();
+    await expect(page.locator('#notify-push')).toBeChecked();
+    await expect(page.locator('#channels-value')).toHaveText('email,push');
+  });
+
+  test('binds radio groups to the selected value using shared het-model values', async ({ page }) => {
+    await page.goto('/components/het-model/radio-group');
+
+    await expect(page.locator('#size-small')).not.toBeChecked();
+    await expect(page.locator('#size-medium')).toBeChecked();
+    await expect(page.locator('#size-large')).not.toBeChecked();
+    await expect(page.locator('#size-value')).toHaveText('medium');
+
+    await page.click('#size-large');
+    await expect(page.locator('#size-value')).toHaveText('large');
+
+    await page.click('#set-size');
+    await expect(page.locator('#size-small')).toBeChecked();
+    await expect(page.locator('#size-medium')).not.toBeChecked();
+    await expect(page.locator('#size-large')).not.toBeChecked();
+    await expect(page.locator('#size-value')).toHaveText('small');
   });
 
   test('binds typed int models using declaration suffixes', async ({ page }) => {

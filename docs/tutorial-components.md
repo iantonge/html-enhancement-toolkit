@@ -89,6 +89,7 @@ In a real application, components may be added and removed as the page is update
   <button type="button" het-ref="alertButton">Alert</button>
 </section>
 
+<script src="het.iife.js"></script>
 <script>
   HET.registerComponent('alerter', ({ refs, onCleanup }) => {
     function handleClick() {
@@ -102,6 +103,7 @@ In a real application, components may be added and removed as the page is update
     });
   });
 </script>
+<script>HET.init();</script>
 ```
 
 For this example we only need to register one callback function to remove the event listener. You can call `onCleanup()` multiple times and register as many callbacks as you need to. All registered callbacks will be run when the component is unmounted.
@@ -129,6 +131,7 @@ We're already using refs to attach an event listener, but of course you can also
   <p het-ref="status">Waiting</p>
 </section>
 
+<script src="het.iife.js"></script>
 <script>
   HET.registerComponent('statusButton', ({ refs, onCleanup }) => {
     function handleClick() {
@@ -142,6 +145,7 @@ We're already using refs to attach an event listener, but of course you can also
     });
   });
 </script>
+<script>HET.init();</script>
 ```
 
 This example adds another ref and writes to the element's `textContent` property. We're not really seeing anything new here, just extending what we've already seen.
@@ -160,6 +164,7 @@ Most components will require some kind of internal state. The simplest way to ac
   <p het-ref="countText">0</p>
 </section>
 
+<script src="het.iife.js"></script>
 <script>
   HET.registerComponent('counter', ({ refs, onCleanup }) => {
     let count = 0;
@@ -176,6 +181,7 @@ Most components will require some kind of internal state. The simplest way to ac
     });
   });
 </script>
+<script>HET.init();</script>
 ```
 
 This works fine in a simple component like this, but keeping track of when state is mutated and ensuring the UI is up to date can get tricky. In the next section we'll explore a better way to manage mutable state.
@@ -190,6 +196,7 @@ HET uses Preact Signals for storing mutable component state. Signals allow us to
   <p het-ref="countText">0</p>
 </section>
 
+<script src="het.iife.js"></script>
 <script>
   HET.registerComponent('counter', ({ refs, onCleanup }) => {
     const count = HET.signals.signal(0);
@@ -211,6 +218,7 @@ HET uses Preact Signals for storing mutable component state. Signals allow us to
     });
   });
 </script>
+<script>HET.init();</script>
 ```
 
 The equivalent ESM javascript is:
@@ -261,6 +269,7 @@ Another improvement we can make is to remove the manual event wiring. The impera
   <p het-ref="countText">0</p>
 </section>
 
+<script src="het.iife.js"></script>
 <script>
   HET.registerComponent('counter', ({ refs, onCleanup }) => {
     const count = HET.signals.signal(0);
@@ -278,6 +287,7 @@ Another improvement we can make is to remove the manual event wiring. The impera
     };
   });
 </script>
+<script>HET.init();</script>
 ```
 
 `het-on="click->increment"` tells HET to listen for the button's `click` event and call the `increment()` method returned from setup.
@@ -302,7 +312,7 @@ Reference documentation:
 
 ## 8. Assign to signals directly in `het-on`
 
-If an event handler only needs to set the value of a signal, `het-on` can perform the signal assignment itself.
+The next improvement we can make is to remove the `inrement` method entirely. As an alternative to calling a method, `het-on` can assign a signal value directly from the result of an expression. In this case we're just incrementing a number, so the expression is quite simple and can be inlined.
 
 ```html
 <section het-component="counter">
@@ -310,6 +320,7 @@ If an event handler only needs to set the value of a signal, `het-on` can perfor
   <p het-ref="countText">0</p>
 </section>
 
+<script src="het.iife.js"></script>
 <script>
   HET.registerComponent('counter', ({ refs, signals, onCleanup }) => {
     signals.count = HET.signals.signal(0);
@@ -321,13 +332,16 @@ If an event handler only needs to set the value of a signal, `het-on` can perfor
     onCleanup(dispose);
   });
 </script>
+<script>HET.init();</script>
 ```
 
-`count=count + 1` is evaluated when the click happens, so there is no separate `increment()` function anymore. Setup is now only creating the signal and reflecting that signal into the DOM. In order to reference a signal by name in a binding, the signal **must** be assigned to the `signals` object that is passed into the setup function.
+It's important to understand the format here is not `het-on="expression"`. The format is `het-on="signal=expression"`. This format is referred to as assignment-style in this tutorial. Expressions are not arbitrary javascript, they are an intentionally restricted subset of javascript and assignment is not allowed. This is why we cannot use `het-on="count++"` or `het-on="count += 1"`. Expressions are limited to pure, single line code snippets. You can use arithmetic operators, comparison operators, logical operators, and ternaries. Code blocks, arbitrary function calls, or any other operations are not supported.
 
-This also introduces the newer expression syntax. In assignment-style `het-on`, the right-hand side can be a limited javascript expression built from component signals and supported contextual values. Here the expression is just arithmetic, but the same syntax also supports comparisons, ternaries, logical operators, and simple unary operators. Note that we cannot use `count += 1` or `count++` here; the restricted subset of javascript excludes assignment operators like `+=` and `++`.
+Signals are referenced by name only in expressions. `.value` is not used when reading from signal values, nor is it used in the `signal=` portion of the binding.
 
-That expression support is what lets you keep small interactions in HTML without immediately dropping back to a custom method.
+As you might expect, `count + 1` is evaluated when the click happens. There is no longer a need for a separate `increment()` function, which further reduces boilerplate and noise in the setup function.
+
+IMPORTANT: In order to reference a signal by name in a binding, the signal **must** be assigned to the `signals` object that is passed into the setup function.
 
 Reference documentation:
 
@@ -336,7 +350,7 @@ Reference documentation:
 
 ## 9. Create signals from HTML with `het-seed`
 
-Instead of creating a signal with an initial value using `signals.count = HET.signals.signal(0)`, we can declare a signal with an initial value using `het-seed`.
+Instead of creating the `count` signal with an initial value using `signals.count = HET.signals.signal(0)`, we can declare the signal with an initial value using `het-seed`.
 
 ```html
 <section het-component="counter" het-seed="count=0">
@@ -344,6 +358,7 @@ Instead of creating a signal with an initial value using `signals.count = HET.si
   <p het-ref="countText">0</p>
 </section>
 
+<script src="het.iife.js"></script>
 <script>
   HET.registerComponent('counter', ({ refs, signals, onCleanup }) => {
     const dispose = HET.signals.effect(() => {
@@ -353,11 +368,10 @@ Instead of creating a signal with an initial value using `signals.count = HET.si
     onCleanup(dispose);
   });
 </script>
+<script>HET.init();</script>
 ```
 
-`het-seed` handles that initialization step. By the time `setup` runs, `signals.count` already exists with its initial value of `0`, so we can reference it directly in the effect.
-
-Seeding lets HTML provide the initial state for a component, which is especially helpful when you are enhancing server-rendered markup rather than generating everything on the client.
+`het-seed` initializes the signal and assings it to the `signals` object before `setup()` is called. The initial value for the signal is the result of the expression on the RHS, in this case the literal number `0`. By the time `setup()` runs, `signals.count` already exists with its initial value of `0`, so we can reference it directly in the effect.
 
 Reference documentation:
 
@@ -365,7 +379,7 @@ Reference documentation:
 
 ## 10. Bind `textContent` with `het-props`
 
-`het-props` takes the value from a signal expression and writes it to a DOM property. Here it replaces the manual effect and the `textContent` assignment.
+The last thing is the `setup()` function is the effect we are creating and assocaited call to `onCleanup()`. We can remove those too by using the `het-props` attribute.
 
 ```html
 <section het-component="counter" het-seed="count=0">
@@ -373,24 +387,16 @@ Reference documentation:
   <p het-props="textContent=count"></p>
 </section>
 
+<script src="het.iife.js"></script>
 <script>
   HET.registerComponent('counter');
 </script>
+<script>HET.init();</script>
 ```
 
-All three parts of the counter now live in HTML:
+`het-props` creates an effect that takes the result of an expression and writes it to the specified DOM property. When signals referenced in the expression are mutated, the expression runs again just like it does in the manual version. The dispose function is also automatically called when the component in unmounted, just like the manual version. The sample code here is functionally identical to previous example, but now without any work required in the `setup()` function.
 
-1. `het-seed` creates the signal
-2. `het-on` updates it
-3. `het-props` writes it to the DOM
-
-This is the basic component data flow in declarative form:
-
-1. a DOM event updates a signal
-2. the output binding reacts to that signal
-3. HET writes the new value into the element property
-
-Note that there is no work to do in the setup function now, so we can omit it entirely.
+Since there is no work to do in the setup function now, we can omit it entirely.
 
 Attributes and classes can also be bound using the same `target=expression` pattern:
 
@@ -406,7 +412,7 @@ Reference documentation:
 
 ## 11. Use `het-text` for text output
 
-`het-text` does the same job as `het-props="textContent=..."`, but it is specialized for text output and reads more directly.
+For setting the text content of an element, even `het-props="textContent=..."` can feel like unnecessary boilerplate. Specifically for text, `het-text` exists for settinge setting text content.
 
 ```html
 <section het-component="counter" het-seed="count=0">
@@ -414,9 +420,11 @@ Reference documentation:
   <p het-text="count"></p>
 </section>
 
+<script src="het.iife.js"></script>
 <script>
   HET.registerComponent('counter');
 </script>
+<script>HET.init();</script>
 ```
 
 `het-text="count"` is just sugar for `het-props="textContent=count"`.
@@ -427,7 +435,7 @@ Reference documentation:
 
 ## 12. Use an anonymous component when setup is unnecessary
 
-Once the event update, signal creation, and output binding all live in HTML, a named component is no longer required. HET can still mount the root, but there is no javascript setup function left to register.
+As we have seen, a named component can be registered without a setup function if one is not required. Anonymous components allow a component to be mounted without anything to be registered at all. 
 
 ```html
 <section het-component het-seed="count=0">
@@ -436,14 +444,12 @@ Once the event update, signal creation, and output binding all live in HTML, a n
 </section>
 
 <script src="het.iife.js"></script>
-<script>
-  HET.init();
-</script>
+<script>HET.init();</script>
 ```
 
-This is the same fully declarative counter as the previous step, just without any registered setup function. Anonymous components are a good fit when the entire behavior can be described with declarative bindings.
+To make a component anonymous, simply omit value of the `het-component` attribute.
 
-If you still want a component name for legibility, you can keep one, but it is no longer required for HET to do its work.
+If you still want a component name for legibility you can keep one, but it is entirely optional.
 
 Reference documentation:
 
@@ -543,7 +549,9 @@ Typed variants move coercion into the declaration:
 HET infers:
 
 - `value` plus `input` events for most controls
-- `checked` plus `change` events for checkbox and radio inputs
+- boolean `checked` values plus `change` events for single checkboxes
+- arrays of checked input values for checkbox groups that share the same `het-model`
+- selected input values for radio groups that share the same `het-model`
 
 Use `het-model` when the control matches HET's standard form conventions. Use separate `het-seed`, `het-props`, and `het-on` bindings when you need something more explicit or unusual.
 

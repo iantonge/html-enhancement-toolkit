@@ -1,0 +1,32 @@
+<section class="card shadow-sm border-0">
+  <div class="card-body">
+    <h1 class="h4 mb-3">{{title}}</h1>
+    <div het-component="het-model-radio-group">
+      <div class="form-check">
+        <input id="size-small" type="radio" name="size" value="small" het-model="size" class="form-check-input">
+        <label class="form-check-label" for="size-small">Small</label>
+      </div>
+      <div class="form-check">
+        <input id="size-medium" type="radio" name="size" value="medium" het-model="size" class="form-check-input" checked>
+        <label class="form-check-label" for="size-medium">Medium</label>
+      </div>
+      <div class="form-check">
+        <input id="size-large" type="radio" name="size" value="large" het-model="size" class="form-check-input">
+        <label class="form-check-label" for="size-large">Large</label>
+      </div>
+      <p id="size-value" het-props="textContent=size" class="mt-2 mb-0 text-muted"></p>
+      <button id="set-size" type="button" het-on="click->setSize" class="btn btn-sm btn-primary mt-2">
+        Set small from signal
+      </button>
+    </div>
+  </div>
+</section>
+<script nonce="{{{cspNonce}}}">
+  window.HET.registerComponent('het-model-radio-group', ({ signals }) => {
+    return {
+      setSize() {
+        signals.size.value = 'small';
+      },
+    };
+  });
+</script>

@@ -258,15 +258,20 @@ Use `het-class` to add or remove classes based on expression truthiness.
 ### `het-model`
 
 Use `het-model` for two-way signal binding on standard form controls.
-HET infers `value` for most controls and `checked` for checkbox/radio inputs.
-It listens for `input` on `value` bindings and `change` on `checked` bindings.
+HET infers `value` plus `input` events for most controls, and `change` events for checkbox/radio inputs.
 The signal is always seeded from the control before `setup` runs.
 
 ```html
 <input het-model="name" value="Ada">
 <input het-model:int="age" value="37">
 <input type="checkbox" het-model:bool="isEnabled">
+<input type="checkbox" value="email" het-model="channels">
+<input type="checkbox" value="sms" het-model="channels">
+<input type="radio" name="size" value="small" het-model="size">
+<input type="radio" name="size" value="large" het-model="size">
 ```
+
+Single checkboxes bind to booleans. Multiple checkboxes that share the same `het-model` value bind to an array of checked input values. Multiple radio inputs that share the same `het-model` value bind to the selected input value.
 
 Typed variants apply coercion when reading from the control into the signal:
 

@@ -5,6 +5,7 @@ import {
   FUNC_SOURCE_TYPE,
   STRUCTURAL_ATTRS,
 } from './constants.js';
+import { writeModelValue } from './expressions.js';
 
 function escapeAttributeSelectorName(name) {
   return name.replace(/:/g, '\\:');
@@ -87,9 +88,7 @@ const DIRECTIVES = [
     keyRequired: false,
     sourceType: SIGNAL_SOURCE_TYPE,
     allowMultiple: false,
-    write: (el, key, value) => {
-      el[key] = value;
-    },
+    write: writeModelValue,
   },
 ];
 

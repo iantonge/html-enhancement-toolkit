@@ -3,7 +3,11 @@ import { PREACT_SIGNAL_BRAND } from './constants.js';
 import { DIRECTIVES_SELECTOR, STRUCTURAL_TEMPLATES_SELECTOR } from './directives.js';
 import { scopedQuerySelectorAll, isComponentRoot, getNodeDepth } from './dom-scope.js';
 import { handleError } from './error-handler.js';
-import { getBindingInputValue } from './expressions.js';
+import {
+  getBindingInputValue,
+  getModelGroupSeedValue,
+  isModelGroupBinding,
+} from './expressions.js';
 import { createHetError, getComponentCause, getBindingCause } from './logging.js';
 import { getMountableComponent } from './registry.js';
 import { getBindings, getStructuralBindings } from './bindings/parse.js';
@@ -96,20 +100,22 @@ function mountComponent(rootEl, setup, options = {}) {
     componentLoggingContext,
   );
 
-  for (const binding of bindingsToInit) {
-    if (signalMeta[binding.source] === 'imported' || signalMeta[binding.source] === 'forwarded') {
+  const initBindingGroups = getInitBindingGroups(bindingsToInit);
+  for (const [source, sourceBindings] of initBindingGroups) {
+    const binding = sourceBindings[0];
+    if (signalMeta[source] === 'imported' || signalMeta[source] === 'forwarded') {
       throw new Error(
         'HET Error: Imported signal conflicts with local initialization',
-        { cause: getBindingCause(binding, { signalName: binding.source }) },
+        { cause: getBindingCause(binding, { signalName: source }) },
       );
     }
-    if (rawSignals[binding.source]) {
-      const existingBinding = signalInitBindings[binding.source];
+    if (rawSignals[source]) {
+      const existingBinding = signalInitBindings[source];
       throw new Error(
         'HET Error: Duplicate signal initialization',
         {
           cause: getBindingCause(binding, {
-            signalName: binding.source,
+            signalName: source,
             existingBindingAttribute: existingBinding.attrName ?? existingBinding.dirName,
             existingBindingDeclaration: existingBinding.exp,
             existingBindingElement: existingBinding.el,
@@ -117,9 +123,9 @@ function mountComponent(rootEl, setup, options = {}) {
         },
       );
     }
-    rawSignals[binding.source] = signal(getBindingInputValue({ signals: rawSignals }, binding));
-    signalMeta[binding.source] = 'local';
-    signalInitBindings[binding.source] = binding;
+    rawSignals[source] = signal(getSeedValue(rawSignals, sourceBindings));
+    signalMeta[source] = 'local';
+    signalInitBindings[source] = binding;
   }
   const methods = (setup && setup(ctx)) || {};
 
@@ -160,6 +166,43 @@ function removeMountPendingAttributes(components) {
 function destroyComponent(el) {
   el.__het_instance?.cleanup();
   delete el.__het_instance;
+}
+
+function getInitBindingGroups(bindingsToInit) {
+  const groups = new Map();
+  for (const binding of bindingsToInit) {
+    const sourceBindings = groups.get(binding.source) || [];
+    sourceBindings.push(binding);
+    groups.set(binding.source, sourceBindings);
+  }
+  return groups;
+}
+
+function getSeedValue(rawSignals, sourceBindings) {
+  if (sourceBindings.length === 1) {
+    return getBindingInputValue({ signals: rawSignals }, sourceBindings[0]);
+  }
+
+  if (
+    sourceBindings.every(isModelGroupBinding) &&
+    sourceBindings.every((binding) => binding.el.type === sourceBindings[0].el.type)
+  ) {
+    return getModelGroupSeedValue(sourceBindings);
+  }
+
+  const binding = sourceBindings[1];
+  const existingBinding = sourceBindings[0];
+  throw new Error(
+    'HET Error: Duplicate signal initialization',
+    {
+      cause: getBindingCause(binding, {
+        signalName: binding.source,
+        existingBindingAttribute: existingBinding.attrName ?? existingBinding.dirName,
+        existingBindingDeclaration: existingBinding.exp,
+        existingBindingElement: existingBinding.el,
+      }),
+    },
+  );
 }
 
 function createRefsProxy(target, componentLoggingContext) {

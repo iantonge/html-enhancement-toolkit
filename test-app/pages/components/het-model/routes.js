@@ -26,9 +26,15 @@ router.get('/checkbox', (request, response) => {
   });
 });
 
-router.get('/radio', (request, response) => {
-  response.render('components/het-model/radio', {
-    title: 'Radio',
+router.get('/checkbox-array', (request, response) => {
+  response.render('components/het-model/checkbox-array', {
+    title: 'Checkbox array',
+  });
+});
+
+router.get('/radio-group', (request, response) => {
+  response.render('components/het-model/radio-group', {
+    title: 'Radio group',
   });
 });
 

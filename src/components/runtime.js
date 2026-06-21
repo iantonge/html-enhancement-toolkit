@@ -142,6 +142,7 @@ function configureSignalBinding(ctx, binding) {
         binding.el,
         binding.key,
         boundSignal.value,
+        binding,
       );
     } catch (error) {
       handleError(error);
