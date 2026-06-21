@@ -56,12 +56,13 @@ function mountComponent(rootEl, setup, options = {}) {
   const componentLoggingContext = getComponentCause(rootEl);
   const signals = createSignalsProxy(rawSignals, componentLoggingContext);
   const importDeclarations = getImportDeclarations(rootEl, componentLoggingContext);
-  const refs = Object.fromEntries(
+  const rawRefs = Object.fromEntries(
     scopedQuerySelectorAll(rootEl, '[het-ref]').map((refEl) => [
       refEl.getAttribute('het-ref'),
       refEl,
     ]),
   );
+  const refs = createRefsProxy(rawRefs, componentLoggingContext);
   const cleanups = [];
   const onCleanup = (fn) => {
     if (typeof fn !== 'function') {
@@ -161,8 +162,49 @@ function destroyComponent(el) {
   delete el.__het_instance;
 }
 
+function createRefsProxy(target, componentLoggingContext) {
+  return new Proxy(target, {
+    get(obj, prop) {
+      if (
+        typeof prop === 'string' &&
+        !(prop in obj)
+      ) {
+        throw new Error(
+          'HET Error: Component ref is not defined',
+          {
+            cause: {
+              ...componentLoggingContext,
+              refName: prop,
+              availableRefs: Object.keys(obj),
+            },
+          },
+        );
+      }
+      return Reflect.get(obj, prop);
+    },
+  });
+}
+
 function createSignalsProxy(target, componentLoggingContext) {
   return new Proxy(target, {
+    get(obj, prop) {
+      if (
+        typeof prop === 'string' &&
+        !(prop in obj)
+      ) {
+        throw new Error(
+          'HET Error: Component signal is not defined',
+          {
+            cause: {
+              ...componentLoggingContext,
+              signalName: prop,
+              availableSignals: Object.keys(obj),
+            },
+          },
+        );
+      }
+      return Reflect.get(obj, prop);
+    },
     set(obj, prop, value) {
       if (
         typeof prop === 'string' &&

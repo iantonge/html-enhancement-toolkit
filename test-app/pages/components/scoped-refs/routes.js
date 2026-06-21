@@ -20,4 +20,10 @@ router.get('/excludes-nested-component-refs', (request, response) => {
   });
 });
 
+router.get('/missing-ref-error', (request, response) => {
+  response.render('components/scoped-refs/missing-ref-error', {
+    title: 'Missing ref error',
+  });
+});
+
 export default router;

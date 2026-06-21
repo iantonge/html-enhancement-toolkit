@@ -3,6 +3,7 @@ import { handleError } from './error-handler.js';
 import { evaluateBindingExpression, getBindingInputValue } from './expressions.js';
 import { syncImportedSignals } from './imports.js';
 import { isComponentRoot } from './dom-scope.js';
+import { getBindingCause } from './logging.js';
 
 let syncListener;
 
@@ -51,6 +52,12 @@ function syncComponent(rootEl) {
     syncImportedSignals(rootEl, instance);
 
     for (const binding of instance.syncBindings) {
+      if (!(binding.source in instance.signals)) {
+        throw new Error(
+          'HET Error: Bound signal does not exist',
+          { cause: getBindingCause(binding, { signalName: binding.source }) },
+        );
+      }
       const currentSignal = instance.signals[binding.source];
       const nextValue = getBindingInputValue({ signals: instance.rawSignals }, binding);
       currentSignal.value = nextValue;
@@ -61,11 +68,15 @@ function syncComponent(rootEl) {
 
       let nextValue;
       if (binding.dirName === 'het-model') {
-        nextValue = instance.signals[binding.source]?.value;
+        nextValue = binding.source in instance.signals
+          ? instance.signals[binding.source].value
+          : undefined;
       } else if (binding.expression) {
         nextValue = evaluateBindingExpression(binding, { signals: instance.signals });
       } else {
-        nextValue = instance.signals[binding.source]?.value;
+        nextValue = binding.source in instance.signals
+          ? instance.signals[binding.source].value
+          : undefined;
       }
 
       binding.write(binding.el, binding.key, nextValue);

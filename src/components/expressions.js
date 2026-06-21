@@ -161,7 +161,7 @@ function assertExpressionSignalsExist(binding, signals) {
   if (!binding.expression) return;
 
   for (const signalName of binding.expression.signalNames) {
-    if (!signals?.[signalName]) {
+    if (!signals || !(signalName in signals)) {
       throw new Error(
         'HET Error: Bound signal does not exist',
         { cause: getBindingCause(binding, { signalName }) },
@@ -246,13 +246,13 @@ function readIdentifierValue(name, runtimeContext) {
     return getContextualValue(name, runtimeContext);
   }
 
-  const signalRef = runtimeContext.signals?.[name];
-  if (!signalRef) {
+  if (!runtimeContext.signals || !(name in runtimeContext.signals)) {
     throw new Error(
       'HET Error: Bound signal does not exist',
       { cause: getBindingCause(runtimeContext.binding, { signalName: name }) },
     );
   }
+  const signalRef = runtimeContext.signals[name];
   return signalRef.value;
 }
 

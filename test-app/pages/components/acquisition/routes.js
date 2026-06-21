@@ -110,6 +110,12 @@ router.get('/signal-reassignment', (request, response) => {
   });
 });
 
+router.get('/missing-signal-error', (request, response) => {
+  response.render('components/acquisition/missing-signal-error', {
+    title: 'Missing signal error',
+  });
+});
+
 router.get('/model-seed', (request, response) => {
   response.render('components/acquisition/model-seed', {
     title: 'het-model seed',

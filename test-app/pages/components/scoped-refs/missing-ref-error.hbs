@@ -1,0 +1,13 @@
+<section class="card">
+  <div class="card-body">
+    <div id="missing-ref-component" het-component="refs-missing" het-ref="root">
+      <span het-ref="foo">Available ref</span>
+    </div>
+  </div>
+</section>
+
+<script nonce="{{{cspNonce}}}">
+  window.HET.registerComponent('refs-missing', ({ refs }) => {
+    refs.fooo.value = 'typo';
+  });
+</script>

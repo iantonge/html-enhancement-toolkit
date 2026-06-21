@@ -21,13 +21,13 @@ function initializeStructuralBindings(ctx, structuralBindings, mountApi) {
 }
 
 function initializeForBinding(ctx, binding, mountApi) {
-  const signalRef = ctx.signals[binding.source];
-  if (!signalRef) {
+  if (!(binding.source in ctx.signals)) {
     throw new Error(
       'HET Error: Bound signal does not exist',
       { cause: getBindingCause(binding, { signalName: binding.source }) },
     );
   }
+  const signalRef = ctx.signals[binding.source];
 
   const block = createStructuralBlock(binding);
   const dispose = effect(() => {
@@ -45,13 +45,13 @@ function initializeForBinding(ctx, binding, mountApi) {
 }
 
 function initializeIfBinding(ctx, binding, mountApi) {
-  const signalRef = ctx.signals[binding.source];
-  if (!signalRef) {
+  if (!(binding.source in ctx.signals)) {
     throw new Error(
       'HET Error: Bound signal does not exist',
       { cause: getBindingCause(binding, { signalName: binding.source }) },
     );
   }
+  const signalRef = ctx.signals[binding.source];
 
   const block = createStructuralBlock(binding);
   const dispose = effect(() => {

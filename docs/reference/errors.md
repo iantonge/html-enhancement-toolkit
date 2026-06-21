@@ -64,6 +64,49 @@ Cause fields:
 | `componentName` | Value of the `het-component` attribute. |
 | `componentElement` | Component root element that could not mount. |
 
+### `HET Error: Component ref is not defined`
+
+A component setup function tried to read a property from `refs` that does not match any `het-ref` in that component scope. This usually means the JavaScript ref name is misspelled or the expected element is missing from the component HTML.
+
+```html
+<div het-component="profileForm">
+  <input het-ref="emailInput" type="email">
+</div>
+```
+
+```js
+HET.registerComponent('profileForm', ({ refs }) => {
+  refs.emaliInput.focus();
+});
+```
+
+Fix the code by using the same ref name in HTML and JavaScript.
+
+```js
+HET.registerComponent('profileForm', ({ refs }) => {
+  refs.emailInput.focus();
+});
+```
+
+If the ref is optional, check whether the key exists before reading it.
+
+```js
+HET.registerComponent('profileForm', ({ refs }) => {
+  if ('emailInput' in refs) {
+    refs.emailInput.focus();
+  }
+});
+```
+
+Cause fields:
+
+| `cause` property | Meaning |
+| --- | --- |
+| `componentName` | Value of the `het-component` attribute. |
+| `componentElement` | Component root element whose setup function accessed the missing ref. |
+| `refName` | Missing ref property that was accessed. |
+| `availableRefs` | Ref names collected for the component scope. |
+
 ## Binding Syntax
 
 ### `HET Error: Binding declaration must contain exactly one "="`
@@ -435,6 +478,45 @@ HET.registerComponent('counter', ({ signals }) => {
   signals.count.value = 2;
 });
 ```
+
+### `HET Error: Component signal is not defined`
+
+A component setup function or returned method tried to read a property from `signals` that has not been initialized, acquired, imported, or forwarded. This usually means the JavaScript signal name is misspelled or the expected signal declaration is missing.
+
+```js
+HET.registerComponent('counter', ({ signals }) => {
+  signals.count = HET.signals.signal(1);
+  signals.cuont.value += 1;
+});
+```
+
+Fix the code by using the same signal name everywhere.
+
+```js
+HET.registerComponent('counter', ({ signals }) => {
+  signals.count = HET.signals.signal(1);
+  signals.count.value += 1;
+});
+```
+
+If the signal is optional, check whether the key exists before reading it.
+
+```js
+HET.registerComponent('counter', ({ signals }) => {
+  if ('count' in signals) {
+    signals.count.value += 1;
+  }
+});
+```
+
+Cause fields:
+
+| `cause` property | Meaning |
+| --- | --- |
+| `componentName` | Value of the `het-component` attribute. |
+| `componentElement` | Component root element whose setup function or method accessed the missing signal. |
+| `signalName` | Missing signal property that was accessed. |
+| `availableSignals` | Signal names initialized, acquired, imported, or forwarded for the component. |
 
 ### `HET Error: Signal initialized with a non-signal value`
 

@@ -129,6 +129,33 @@ test.describe('components acquisition and sync expressions', () => {
     );
   });
 
+  test('reports missing setup signal access with component context', async ({ page }) => {
+    await page.goto('/components/acquisition/missing-signal-error');
+
+    const error = await page.evaluate(() => {
+      const [hetError] = window.hetErrors;
+      return {
+        message: hetError.message,
+        cause: {
+          componentName: hetError.cause.componentName,
+          componentElementId: hetError.cause.componentElement.id,
+          signalName: hetError.cause.signalName,
+          availableSignals: hetError.cause.availableSignals,
+        },
+      };
+    });
+
+    expect(error).toEqual({
+      message: 'HET Error: Component signal is not defined',
+      cause: {
+        componentName: 'acquisition-missing-signal',
+        componentElementId: 'missing-signal-component',
+        signalName: 'countt',
+        availableSignals: ['count'],
+      },
+    });
+  });
+
   test('seeds signals through het-model', async ({ page }) => {
     await page.goto('/components/acquisition/model-seed');
     await expect(page.locator('#model-seed-input')).toHaveValue('Seeded');

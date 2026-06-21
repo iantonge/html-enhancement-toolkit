@@ -40,13 +40,13 @@ function configureEventBinding(methods, binding, onCleanup) {
 }
 
 function configureAssignmentBinding(ctx, binding) {
-  const signalRef = ctx.signals[binding.source];
-  if (!signalRef) {
+  if (!(binding.source in ctx.signals)) {
     throw new Error(
       'HET Error: Bound signal does not exist',
       { cause: getBindingCause(binding, { signalName: binding.source }) },
     );
   }
+  const signalRef = ctx.signals[binding.source];
   assertExpressionSignalsExist(binding, ctx.signals);
 
   const listener = (event) => {
@@ -125,16 +125,16 @@ function configureSignalBinding(ctx, binding) {
     assertExpressionSignalsExist(binding, ctx.signals);
   }
 
-  const boundSignal = binding.expression
-    ? computed(() => binding.expression && getBindingInputValue(ctx, binding))
-    : ctx.signals[binding.source];
-
-  if (!boundSignal) {
+  if (!binding.expression && !(binding.source in ctx.signals)) {
     throw new Error(
       'HET Error: Bound signal does not exist',
       { cause: getBindingCause(binding, { signalName: binding.source }) },
     );
   }
+
+  const boundSignal = binding.expression
+    ? computed(() => binding.expression && getBindingInputValue(ctx, binding))
+    : ctx.signals[binding.source];
 
   const dispose = effect(() => {
     try {

@@ -49,7 +49,18 @@ The `refs` object includes elements marked with `het-ref` on the component root 
 
 ```js
 HET.registerComponent('profileForm', ({ refs }) => {
-  refs.emailInput?.focus();
+  refs.emailInput.focus();
+});
+```
+
+Accessing a ref name that was not collected throws `HET Error: Component ref is not defined`.
+If a ref is optional, check for it before reading the property.
+
+```js
+HET.registerComponent('profileForm', ({ refs }) => {
+  if ('emailInput' in refs) {
+    refs.emailInput.focus();
+  }
 });
 ```
 
@@ -92,6 +103,17 @@ Example:
 HET.registerComponent('counter', ({ signals }) => {
   signals.count = HET.signals.signal(0);
   signals.doubleCount = HET.signals.computed(() => signals.count.value * 2);
+});
+```
+
+Accessing a signal name that has not been initialized, acquired, imported, or forwarded throws `HET Error: Component signal is not defined`.
+If a signal is optional, check for it before reading the property.
+
+```js
+HET.registerComponent('counter', ({ signals }) => {
+  if ('count' in signals) {
+    signals.count.value += 1;
+  }
 });
 ```
 

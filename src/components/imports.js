@@ -129,8 +129,7 @@ function resolveImports(
       );
     }
 
-    const parentSignal = parentInstance.signals?.[source];
-    if (!parentSignal) {
+    if (!parentInstance.signals || !(source in parentInstance.signals)) {
       const missingExportedSignalLoggingContext = withOptionalComponentName(
         {
           ...componentLoggingContext,
@@ -147,6 +146,7 @@ function resolveImports(
         { cause: missingExportedSignalLoggingContext },
       );
     }
+    const parentSignal = parentInstance.signals[source];
 
     if (signalMeta[local] !== 'imported') {
       rawSignals[local] = createImportedSignalWrapper(parentSignal);
