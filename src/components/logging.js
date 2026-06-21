@@ -27,6 +27,17 @@ function getBindingCause(binding, extra = {}) {
   );
 }
 
+function createHetError(message, cause, stackTop) {
+  const error = new Error(message, { cause });
+  if (
+    stackTop &&
+    typeof Error.captureStackTrace === 'function'
+  ) {
+    Error.captureStackTrace(error, stackTop);
+  }
+  return error;
+}
+
 function throwInvalidBindingExpression(bindingLoggingContext, reason = 'Invalid binding expression') {
   const invalidBindingLoggingContext = {
     ...bindingLoggingContext,
@@ -39,6 +50,7 @@ function throwInvalidBindingExpression(bindingLoggingContext, reason = 'Invalid 
 }
 
 export {
+  createHetError,
   getBindingCause,
   getComponentCause,
   throwInvalidBindingExpression,

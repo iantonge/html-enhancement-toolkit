@@ -4,7 +4,7 @@ import { DIRECTIVES_SELECTOR, STRUCTURAL_TEMPLATES_SELECTOR } from './directives
 import { scopedQuerySelectorAll, isComponentRoot, getNodeDepth } from './dom-scope.js';
 import { handleError } from './error-handler.js';
 import { getBindingInputValue } from './expressions.js';
-import { getComponentCause, getBindingCause } from './logging.js';
+import { createHetError, getComponentCause, getBindingCause } from './logging.js';
 import { getMountableComponent } from './registry.js';
 import { getBindings, getStructuralBindings } from './bindings/parse.js';
 import {
@@ -164,47 +164,31 @@ function destroyComponent(el) {
 
 function createRefsProxy(target, componentLoggingContext) {
   return new Proxy(target, {
-    get(obj, prop) {
-      if (
-        typeof prop === 'string' &&
-        !(prop in obj)
-      ) {
-        throw new Error(
-          'HET Error: Component ref is not defined',
-          {
-            cause: {
-              ...componentLoggingContext,
-              refName: prop,
-              availableRefs: Object.keys(obj),
-            },
-          },
-        );
-      }
-      return Reflect.get(obj, prop);
-    },
+    get: getComponentRef,
   });
+
+  function getComponentRef(obj, prop) {
+    if (
+      typeof prop === 'string' &&
+      !(prop in obj)
+    ) {
+      throw createHetError(
+        'HET Error: Component ref is not defined',
+        {
+          ...componentLoggingContext,
+          refName: prop,
+          availableRefs: Object.keys(obj),
+        },
+        getComponentRef,
+      );
+    }
+    return Reflect.get(obj, prop);
+  }
 }
 
 function createSignalsProxy(target, componentLoggingContext) {
   return new Proxy(target, {
-    get(obj, prop) {
-      if (
-        typeof prop === 'string' &&
-        !(prop in obj)
-      ) {
-        throw new Error(
-          'HET Error: Component signal is not defined',
-          {
-            cause: {
-              ...componentLoggingContext,
-              signalName: prop,
-              availableSignals: Object.keys(obj),
-            },
-          },
-        );
-      }
-      return Reflect.get(obj, prop);
-    },
+    get: getComponentSignal,
     set(obj, prop, value) {
       if (
         typeof prop === 'string' &&
@@ -233,6 +217,24 @@ function createSignalsProxy(target, componentLoggingContext) {
       return true;
     },
   });
+
+  function getComponentSignal(obj, prop) {
+    if (
+      typeof prop === 'string' &&
+      !(prop in obj)
+    ) {
+      throw createHetError(
+        'HET Error: Component signal is not defined',
+        {
+          ...componentLoggingContext,
+          signalName: prop,
+          availableSignals: Object.keys(obj),
+        },
+        getComponentSignal,
+      );
+    }
+    return Reflect.get(obj, prop);
+  }
 }
 
 export {
