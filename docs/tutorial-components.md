@@ -312,7 +312,7 @@ Reference documentation:
 
 ## 8. Assign to signals directly in `het-on`
 
-The next improvement we can make is to remove the `inrement` method entirely. As an alternative to calling a method, `het-on` can assign a signal value directly from the result of an expression. In this case we're just incrementing a number, so the expression is quite simple and can be inlined.
+The next improvement we can make is to remove the `increment` method entirely. As an alternative to calling a method, `het-on` can assign a signal value directly from the result of an expression. In this case we're just incrementing a number, so the expression is quite simple and can be inlined.
 
 ```html
 <section het-component="counter">
@@ -335,7 +335,7 @@ The next improvement we can make is to remove the `inrement` method entirely. As
 <script>HET.init();</script>
 ```
 
-It's important to understand the format here is not `het-on="expression"`. The format is `het-on="signal=expression"`. This format is referred to as assignment-style in this tutorial. Expressions are not arbitrary javascript, they are an intentionally restricted subset of javascript and assignment is not allowed. This is why we cannot use `het-on="count++"` or `het-on="count += 1"`. Expressions are limited to pure, single line code snippets. You can use arithmetic operators, comparison operators, logical operators, and ternaries. Code blocks, arbitrary function calls, or any other operations are not supported.
+It's important to understand the format here is not `het-on="event->expression"`. The format is `het-on="event->signal=expression"`. This format is referred to as assignment-style in this tutorial. Expressions are not arbitrary javascript, they are an intentionally restricted subset of javascript and assignment is not allowed. This is why we cannot use `het-on="click->count++"` or `het-on="click->count += 1"`. Expressions are limited to pure, single line code snippets. You can use arithmetic operators, comparison operators, logical operators, and ternaries. Code blocks, arbitrary function calls, or any other operations are not supported.
 
 Signals are referenced by name only in expressions. `.value` is not used when reading from signal values, nor is it used in the `signal=` portion of the binding.
 
@@ -371,7 +371,7 @@ Instead of creating the `count` signal with an initial value using `signals.coun
 <script>HET.init();</script>
 ```
 
-`het-seed` initializes the signal and assings it to the `signals` object before `setup()` is called. The initial value for the signal is the result of the expression on the RHS, in this case the literal number `0`. By the time `setup()` runs, `signals.count` already exists with its initial value of `0`, so we can reference it directly in the effect.
+`het-seed` initializes the signal and assigns it to the `signals` object before `setup()` is called. The initial value for the signal is the result of the expression on the RHS, in this case the literal number `0`. By the time `setup()` runs, `signals.count` already exists with its initial value of `0`, so we can reference it directly in the effect.
 
 Reference documentation:
 
@@ -379,7 +379,7 @@ Reference documentation:
 
 ## 10. Bind `textContent` with `het-props`
 
-The last thing is the `setup()` function is the effect we are creating and assocaited call to `onCleanup()`. We can remove those too by using the `het-props` attribute.
+The last thing in the `setup()` function is the effect we are creating and the associated call to `onCleanup()`. We can remove those too by using the `het-props` attribute.
 
 ```html
 <section het-component="counter" het-seed="count=0">
@@ -394,7 +394,7 @@ The last thing is the `setup()` function is the effect we are creating and assoc
 <script>HET.init();</script>
 ```
 
-`het-props` creates an effect that takes the result of an expression and writes it to the specified DOM property. When signals referenced in the expression are mutated, the expression runs again just like it does in the manual version. The dispose function is also automatically called when the component in unmounted, just like the manual version. The sample code here is functionally identical to previous example, but now without any work required in the `setup()` function.
+`het-props` creates an effect that takes the result of an expression and writes it to the specified DOM property. When signals referenced in the expression are mutated, the expression runs again just like it does in the manual version. The dispose function is also automatically called when the component is unmounted, just like the manual version. The sample code here is functionally identical to the previous example, but now without any work required in the `setup()` function.
 
 Since there is no work to do in the setup function now, we can omit it entirely.
 
@@ -412,7 +412,7 @@ Reference documentation:
 
 ## 11. Use `het-text` for text output
 
-For setting the text content of an element, even `het-props="textContent=..."` can feel like unnecessary boilerplate. Specifically for text, `het-text` exists for settinge setting text content.
+For setting the text content of an element, even `het-props="textContent=..."` can feel like unnecessary boilerplate. Specifically for text, `het-text` exists for setting text content.
 
 ```html
 <section het-component="counter" het-seed="count=0">
@@ -435,7 +435,7 @@ Reference documentation:
 
 ## 12. Use an anonymous component when setup is unnecessary
 
-As we have seen, a named component can be registered without a setup function if one is not required. Anonymous components allow a component to be mounted without anything to be registered at all. 
+As we have seen, a named component can be registered without a setup function if one is not required. Anonymous components allow a component to be mounted without anything to be registered at all.
 
 ```html
 <section het-component het-seed="count=0">
@@ -447,7 +447,7 @@ As we have seen, a named component can be registered without a setup function if
 <script>HET.init();</script>
 ```
 
-To make a component anonymous, simply omit value of the `het-component` attribute.
+To make a component anonymous, simply omit the value of the `het-component` attribute.
 
 If you still want a component name for legibility you can keep one, but it is entirely optional.
 
@@ -457,7 +457,7 @@ Reference documentation:
 
 ## 13. Format output with expressions
 
-So far the output has been a raw signal value. Output bindings can also do light formatting, as long as the expression stays within HET's limited expression syntax.
+So far we have used `het-props` and `het-text` to set the text content of an element to raw signal values. As noted, however, these output bindings update the DOM based on the results of expressions. This means that, as long as the expression stays within HET's limited expression syntax, more interesting logic can be applied.
 
 ```html
 <section het-component het-seed="count=0">
@@ -466,9 +466,7 @@ So far the output has been a raw signal value. Output bindings can also do light
 </section>
 ```
 
-This is where the expression syntax becomes especially useful. Instead of creating a method or a separate derived signal just to format display text, the binding can express the simple rule directly: singular text for `1`, plural text otherwise.
-
-Output bindings can use signal-based expressions such as:
+Instead of creating a method or a separate derived signal to format display text, the binding can express the logic directly. This is not limited to just formatting text. Output bindings can use expressions which include:
 
 - arithmetic
 - comparisons
@@ -485,7 +483,7 @@ Reference documentation:
 
 ## 14. Binding form controls
 
-The same pattern works for form controls. Here the input already has an initial value in the HTML, `het-seed` reads that value into a signal during mount, `het-props` pushes later signal state back into the control, and `het-on` reads user input back out of the event target.
+`het-seed`, `het-props` and `het-on` can be combined on an input element to achieve a two-way binding, that reads the initial value from the DOM, writes changes into the DOM on signal changes, and updates the signal value when the input value changes. This requires using contextual values, which allow expressions to access values from the current element or event.
 
 ```html
 <section het-component>
@@ -496,7 +494,7 @@ The same pattern works for form controls. Here the input already has an initial 
       value="Nothing yet"
       het-seed="message=$props.value"
       het-props="value=message"
-      het-on="input->message=$target.value">
+      het-on="input->message=$event.target.value">
   </label>
 
   <button type="button" het-on="click->message=''">Reset</button>
@@ -512,19 +510,56 @@ The same pattern works for form controls. Here the input already has an initial 
 
 Output bindings such as `het-text`, `het-props`, `het-attrs`, `het-bool-attrs`, and `het-class` use signal expressions and cannot read contextual values directly.
 
-`het-on="input->message=$target.value"` assigns the value of the input event target element's `value` property to the `message` signal when the event is dispatched. `$target` is another contextual value available in assignment-style `het-on` attribute expressions. Other event based contextual values are:
-- `$event` provides access to the full event object.
+`$event` is another contextual value available in assignment-style `het-on` attribute expressions. Other event-based contextual values are:
+- `$target` is sugar for `$event.target`.
 - `$currentTarget` is sugar for `$event.currentTarget`.
+
+`het-sync` is the related feature to use when DOM snapshots can change after mount. `het-seed` reads once during mount; `het-sync` reads during mount and again whenever a `het:sync` event bubbles through the component subtree. This is useful whenever anything outside the component, such as the HET requests module, updates the DOM and those changes need to be reflected in component state.
 
 Reference documentation:
 
 - [`het-props`](reference/components.md#het-props)
 - [`het-on`](reference/components.md#het-on)
+- [`het-seed`](reference/components.md#het-seed)
+- [`het-sync`](reference/components.md#het-sync)
 - [Contextual values](reference/components.md#contextual-values)
 
-## 15. Use `het-model` for standard form controls
+## 15. Parse DOM values with conversion helpers
 
-`het-model` packages the explicit form-control pattern into one attribute for standard form controls. It stands in for the `het-seed`, `het-props`, and `het-on` bindings from the previous step.
+Seeding a signal value from `$props.value` is great if the signal value happens to be a string, but you might want to parse the value as another type. For values like that, conversion helpers exist and can be called like functions from any expression.
+
+```html
+<section het-component>
+  <label>
+    Count
+    <input
+      type="number"
+      value="12"
+      het-seed="count=$int($props.value)"
+      het-props="value=count"
+      het-on="input->count=$int($event.target.value)">
+  </label>
+
+  <button type="button" het-on="click->count=count + 1">Increment</button>
+  <p>Current count: <span het-text="count"></span></p>
+</section>
+```
+
+The conversion helpers are:
+
+- `$int(value)` parses an integer
+- `$float(value)` parses a floating-point number
+- `$bool(value)` treats only `true` and `"true"` as true
+
+These helpers work anywhere expressions are supported. They are especially useful in `het-seed`, `het-sync`, and assignment-style `het-on`, where contextual snapshots such as `$text`, `$props`, `$attrs`, and `$target.value` often start as strings.
+
+Reference documentation:
+
+- [Contextual functions](reference/components.md#contextual-functions)
+
+## 16. Use `het-model` for standard form controls
+
+Using `het-seed`, `het-props`, and `het-on` on every form control is a lot of boilerplate. `het-model` achieves the same outcome without needing to wire everything up explicitly.
 
 ```html
 <section het-component>
@@ -546,61 +581,15 @@ Typed variants move coercion into the declaration:
 <input type="checkbox" het-model:bool="isEnabled">
 ```
 
-HET infers:
-
-- `value` plus `input` events for most controls
-- boolean `checked` values plus `change` events for single checkboxes
-- arrays of checked input values for checkbox groups that share the same `het-model`
-- selected input values for radio groups that share the same `het-model`
-
-Use `het-model` when the control matches HET's standard form conventions. Use separate `het-seed`, `het-props`, and `het-on` bindings when you need something more explicit or unusual.
+`het-model` reads from and writes to the `value` property for most form controls, and listens for the `input` event. Some form controls are treated differently:
+- For inputs with `type="checkbox"` or `type="radio"`, HET reads and writes the `checked` property and listens for the `change` event.
+- For single inputs with `type="checkbox"`, the signal reflects the boolean `checked` property.
+- For multiple inputs with `type="checkbox"` and the same value for `het-model`, the signal is an array containing the `value` property of the selected checkboxes. Typed `het-model` variants are honored on the individual array items.
+- For multiple inputs with `type="radio"` and the same value for `het-model`, the signal is the `value` property of the currently selected radio button or `undefined` if no radio button is selected.
 
 Reference documentation:
 
 - [`het-model`](reference/components.md#het-model)
-
-## 16. Parse DOM values with conversion helpers
-
-DOM values are usually strings. When a seeded or event-assigned signal should hold a number or boolean instead, use HET's conversion helpers inside the expression.
-
-```html
-<output het-component het-seed="count=$int($text)" het-text="count">0</output>
-```
-
-```html
-<section het-component
-  data-price="3.5"
-  data-enabled="true"
-  het-seed="price=$float($attrs.dataPrice); enabled=$bool($attrs.dataEnabled)">
-  <label>
-    Quantity
-    <input
-      type="number"
-      value="7"
-      het-seed="quantity=$int($props.value)"
-      het-on="input->quantity=$int($target.value)">
-  </label>
-
-  <p het-text="quantity * price"></p>
-  <p het-text="enabled ? 'Enabled' : 'Disabled'"></p>
-</section>
-```
-
-The conversion helpers are:
-
-- `$int(value)` parses an integer
-- `$float(value)` parses a floating-point number
-- `$bool(value)` treats only `true` and `"true"` as true
-
-These helpers work anywhere expressions are supported. They are especially useful in `het-seed`, `het-sync`, and assignment-style `het-on`, where contextual snapshots such as `$text`, `$props`, `$attrs`, and `$target` often start as strings.
-
-`het-sync` is the related feature to use when DOM snapshots can change after mount. `het-seed` reads once during mount; `het-sync` reads during mount and again whenever a `het:sync` event bubbles through the component subtree. This is useful whenever anything outside the component, such as the HET requests module, updates the DOM and those changes need to be reflected in component state.
-
-Reference documentation:
-
-- [`het-seed`](reference/components.md#het-seed)
-- [`het-sync`](reference/components.md#het-sync)
-- [Contextual functions](reference/components.md#contextual-functions)
 
 ## 17. Use `het-on` modifiers
 
@@ -689,7 +678,11 @@ Reference documentation:
 
 ## 19. Conditionally mount DOM with `het-if`
 
-Visibility bindings keep DOM mounted. Structural templates create and destroy component instances. Use `het-if` when the component should only exist while a signal is truthy.
+If you need some content to be shown or hidden depending on some criteria, it's fairly simple to define a CSS class like `hidden` with `display: none;` and toggle it on or off using `het-class`. Most of the time, this will be what you want, but it might not be suitable in every case.
+
+When toggling a class, the setup function only runs when the component is mounted, not every time the content is shown. The elements remain in the DOM even while they are not visible. Cleanup functions only run when the component is unmounted, not every time the content is hidden.
+
+If adding and removing a component is a better fit, `het-if` mounts and unmounts it as visibility changes.
 
 ```html
 <section het-component="detailsToggle">
@@ -725,11 +718,11 @@ Visibility bindings keep DOM mounted. Structural templates create and destroy co
 
 Structural templates have stricter rules than ordinary markup:
 
-- put `het-if` on a `<template>`
-- include exactly one root element inside the template
-- make that root element a component
-
-Use ordinary visibility bindings such as `het-bool-attrs="hidden=isHidden"` when the DOM should stay mounted.
+- `het-if` **must** be on a `<template>` element. It is not valid on any other element.
+- There **must** be exactly one root element inside the template.
+- That root element **must** be a component.
+- The value of `het-if` **must** be the name of a signal.
+- Properties of the signal referenced in `het-if` **must** also be signals if they are referenced in the child component.
 
 Reference documentation:
 
@@ -789,6 +782,8 @@ Reference documentation:
 
 Structural clones are normally destroyed as soon as `het-if` or `het-for` removes them. If you need time for a CSS exit animation, put `het-unmount-delay` on the root element inside the template.
 
+When a delayed clone is due to be removed, HET adds a CSS class to the cloned root element for the duration of the delay. By default, that class is `het-unmounting`.
+
 ```html
 <template het-if="notification">
   <article
@@ -800,9 +795,9 @@ Structural clones are normally destroyed as soon as `het-if` or `het-for` remove
 </template>
 ```
 
-When `notification` becomes falsy, HET keeps the cloned `notificationCard` mounted for 200 milliseconds before destroying it.
+When `notification` becomes falsy, HET keeps the cloned `notificationCard` mounted for 200 milliseconds before destroying it. During that delay, the cloned `notificationCard` root has the `het-unmounting` class.
 
-The same behavior can be configured globally:
+The same behavior can be configured globally, including the class HET adds while removal is pending:
 
 ```js
 HET.init({
@@ -812,6 +807,8 @@ HET.init({
 ```
 
 `het-unmount-delay` only applies to structural clones created by `het-if` and `het-for`. It is exit-only: it does not add enter hooks or affect ordinary component teardown.
+
+The delay can be overridden per clone with `het-unmount-delay`, however the unmount class is only configured globally with `structuralUnmountClass`.
 
 Reference documentation:
 
