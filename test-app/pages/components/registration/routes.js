@@ -26,4 +26,10 @@ router.get('/register-without-name', (request, response) => {
   });
 });
 
+router.get('/unregistered-name', (request, response) => {
+  response.render('components/registration/unregistered-name', {
+    title: 'Unregistered component name',
+  });
+});
+
 export default router;

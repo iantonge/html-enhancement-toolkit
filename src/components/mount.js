@@ -29,7 +29,12 @@ function mountComponents(root) {
   for (const el of componentsToMount) {
     try {
       const component = getMountableComponent(el);
-      if (!component) continue;
+      if (!component) {
+        throw new Error(
+          'HET Error: Component is not registered',
+          { cause: getComponentCause(el) },
+        );
+      }
 
       if (mountComponent(el, component.setup)) {
         mountedComponents.push(el);

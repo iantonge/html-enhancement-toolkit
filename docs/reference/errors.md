@@ -29,6 +29,42 @@ HET.registerComponent('counter', () => ({}));
 
 This error does not include a structured `cause`.
 
+### `HET Error: Component is not registered`
+
+A named `het-component` root was found during mounting, but no component had been registered with that name.
+
+```html
+<div het-component="counter"></div>
+```
+
+```js
+HET.registerComponent('countre', () => ({}));
+``
+
+Fix the component by registering the matching name before `init()` runs.
+
+
+```html
+<div het-component="counter"></div>
+```
+
+```js
+HET.registerComponent('counter', () => ({}));
+```
+
+If no setup function is needed, remove the attribute value to make the root anonymous.
+
+```html
+<div het-component></div>
+```
+
+Cause fields:
+
+| `cause` property | Meaning |
+| --- | --- |
+| `componentName` | Value of the `het-component` attribute. |
+| `componentElement` | Component root element that could not mount. |
+
 ## Binding Syntax
 
 ### `HET Error: Binding declaration must contain exactly one "="`

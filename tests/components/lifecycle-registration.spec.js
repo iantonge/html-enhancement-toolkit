@@ -61,6 +61,30 @@ test.describe('components lifecycle and registration', () => {
     );
   });
 
+  test('reports error when a named component is not registered', async ({ page }) => {
+    await page.goto('/components/registration/unregistered-name');
+    await page.waitForFunction(() =>
+      window.hetErrors.some((error) => error.message === 'HET Error: Component is not registered'),
+    );
+
+    const cause = await page.evaluate(() => {
+      const error = window.hetErrors.find(
+        (candidate) => candidate.message === 'HET Error: Component is not registered',
+      );
+      return {
+        componentName: error.cause.componentName,
+        componentElementId: error.cause.componentElement.id,
+        isMounted: Boolean(error.cause.componentElement.__het_instance),
+      };
+    });
+
+    expect(cause).toEqual({
+      componentName: 'unregistered-name',
+      componentElementId: 'unregistered-root',
+      isMounted: false,
+    });
+  });
+
   test('removes het-mount-pending after initial component mount', async ({ page }) => {
     await page.goto('/components/lifecycle/mount-pending');
 
