@@ -1,21 +1,19 @@
 # Components Tutorial
 
-This tutorial starts with a component written as ordinary DOM code inside `setup`, then introduces HET features one layer at a time as the component grows. The goal is not just to show the shortest syntax, but to make it clear what each feature is replacing and why you might want it.
+This tutorial will walk you through building HET components starting from the basics and working up to more advanced features. HET is backend framework agnostic, and you are free to use whatever server-side technology you like for this tutorial; even a plain HTML file will be fine.
 
-Examples use the standalone build so you can follow along without a build pipeline. If you are using the ESM bundle instead, the same component concepts apply, but the import syntax is different.
+The code samples will be using the standalone IIFE build, which is the simplest way to get started. If you want to use the ESM bundle instead you'll need to either set up a build pipeline or configure an import map. The component code will be almost identical regardless of which version you use, but where there are differences they'll be called out.
 
 ## 1. Load HET on the page
 
-Start by including the standalone script and calling `HET.init()`.
+The first thing to do is reference the HET javascript file on your page, and then initialize it with `HET.init()`.
 
 ```html
 <script src="het.iife.js"></script>
-<script>
-  HET.init();
-</script>
+<script>HET.init();</script>
 ```
 
-The equivalent ESM JavaScript is:
+For the ESM build, the equivalent javascript is:
 
 ```js
 import { init } from './het.js';
@@ -23,107 +21,107 @@ import { init } from './het.js';
 init();
 ```
 
-`HET.init()` scans the page for HET panes and components, then mounts anything it recognizes.
+For components, `HET.init()` scans the page and mounts anything it recognizes. It also initializes HET's request enhancement behavior. Various configuration options can be passed into `HET.init()`, but we'll be sticking with the defaults for this tutorial.
 
-Named components must be registered before `HET.init()` runs. If HET initializes before a component is registered, it cannot mount an existing root for that component.
-
-Relevant reference:
+Reference documentation:
 
 - [`init(config)`](reference/api.md#initconfig)
 
 ## 2. Register a component
 
-This is the smallest useful HET component: a root element in HTML and a setup function in JavaScript. When HET mounts the component, it calls `setup` once and gives it access to any refs inside that root.
+We'll start with something simple. This component is just a button you can click to open an alert dialog.
 
 ```html
-<section het-component="logger">
-  <button type="button" het-ref="logButton">Log</button>
+<section het-component="alerter">
+  <button type="button" het-ref="alertButton">Alert</button>
 </section>
 
 <script src="het.iife.js"></script>
 <script>
-  HET.registerComponent('logger', ({ refs }) => {
+  HET.registerComponent('alerter', ({ refs }) => {
     function handleClick() {
-      console.log('Clicked');
+      alert('Clicked');
     }
 
-    refs.logButton.addEventListener('click', handleClick);
+    refs.alertButton.addEventListener('click', handleClick);
   });
-
-  HET.init();
 </script>
+<script>HET.init();</script>
 ```
 
-The equivalent ESM JavaScript is:
+The equivalent ESM javascript is:
 
 ```js
 import { init, registerComponent } from './het.js';
 
-registerComponent('logger', ({ refs }) => {
+registerComponent('alerter', ({ refs }) => {
   function handleClick() {
-    console.log('Clicked');
+    alert('Clicked');
   }
 
-  refs.logButton.addEventListener('click', handleClick);
+  refs.alertButton.addEventListener('click', handleClick);
 });
 
 init();
 ```
 
-There are three important pieces here:
+The first thing to draw your attention to is `het-component="alerter"` and `registerComponent('alerter', ...)`. When you add `het-component` to an element you are telling HET that element is the root of a component. In this example, we are also telling HET that the name of this component is "alerter", so HET will look for a component that has been registered with that name. Components are registered with the `registerComponent` function. The first argument is the component name, which must match the name in the `het-component` attribute, and the second argument is the component's setup function which we'll look at shortly.
 
-- `het-component="logger"` marks the component root
-- `registerComponent('logger', setup)` connects that name to setup code
-- `het-ref="logButton"` exposes the button on `refs.logButton`
+Try changing the names in `het-component` and `registerComponent` so that they do not match anymore and reload the page. Using your browser dev tools, check the javascript console and you should find the error message "HET Error: Component is not registered". The default error handler also logs `error.cause`, a context object with a reference to the root component element and the unregistered component name. Almost all HET component errors include similar contextual data to help diagnose the root cause of the error. As you progress through the tutorial, try to break the samples in different ways to familiarize yourself with the kinds of errors you receive.
 
-`het-ref="logButton"` puts the button on `refs.logButton`, so the setup function can attach a listener without querying the document. Refs are scoped to their component, which means a component only sees the elements inside its own root, not the whole page.
+The setup function runs once when each component instance mounts. It is where you perform any setup logic that your component requires. The setup function is passed a context object as an argument which has various properties that can be useful when building a component, in this case we're using destructuring to pull out the `refs` property from the context object since that's the only property we need right now. We'll get into the details of the `refs` property next, while the other context properties will be covered later in the tutorial.
 
-Apart from that scoping, the click listener and the `console.log()` call are just ordinary DOM code. This is the starting point for the rest of the tutorial: first do the work manually, then let HET remove the repetitive parts.
+By adding `het-ref="alertButton"` to the button element, we're telling HET that we want a reference to this element to be made available in our component setup function. As you may have guessed, this is provided on the `refs` property of the context object passed into the setup function. We can then use normal imperative javascript code to wire up an event listener with `refs.alertButton.addEventListener('click', handleClick);`. Refs are scoped only to their component, meaning a component cannot access refs belonging to any parent, child or sibling components.
 
-Relevant reference:
+Reference documentation:
 
 - [`registerComponent(name, setup)`](reference/api.md#registercomponentname-setup)
 - [Component roots and mounting](reference/components.md#component-roots-and-mounting)
 - [`het-ref`](reference/components.md#het-ref)
+- [`errors`](reference/errors.md)
 
-## 3. Clean up event listeners with `onCleanup`
+## 3. Cleaning up resources
 
-This listener is attached during mount, so it should also be removed during unmount. `onCleanup()` registers a function HET will call when the component is destroyed.
+In a real application, components may be added and removed as the page is updated. If event listeners, timeouts, third party javascript widgets, or any other resources are created in `setup()` then they need to be disposed of properly when the component unmounts. The `onCleanup()` function on the context object passed into `setup()` is for registering callback functions that are called when the component is unmounted.
 
 ```html
-<section het-component="logger">
-  <button type="button" het-ref="logButton">Log</button>
+<section het-component="alerter">
+  <button type="button" het-ref="alertButton">Alert</button>
 </section>
 
 <script>
-  HET.registerComponent('logger', ({ refs, onCleanup }) => {
+  HET.registerComponent('alerter', ({ refs, onCleanup }) => {
     function handleClick() {
-      console.log('Clicked');
+      alert('Clicked');
     }
 
-    refs.logButton.addEventListener('click', handleClick);
+    refs.alertButton.addEventListener('click', handleClick);
 
     onCleanup(() => {
-      refs.logButton.removeEventListener('click', handleClick);
+      refs.alertButton.removeEventListener('click', handleClick);
     });
   });
 </script>
 ```
 
-In a real application, components may be added and removed as the page changes. If setup creates event listeners, timers, subscriptions, or other resources, cleanup is where you tear them down again.
+For this example we only need to register one callback function to remove the event listener. You can call `onCleanup()` multiple times and register as many callbacks as you need to. All registered callbacks will be run when the component is unmounted.
 
-For this small example, the cleanup only removes the click listener. The pattern matters more than the size of the example: whenever setup creates something manually, cleanup should usually undo it manually.
+Callbacks registered with `onCleanup()` only run when a specific instance of a component is unmounted. If you need to shut HET down entirely, call `HET.destroy()`. That destroys all mounted components, runs their cleanup callbacks, and disposes of all internal HET resources.
 
-`onCleanup()` is per component instance. If your application needs to shut HET down entirely, call `HET.destroy()`. That destroys mounted components, runs their cleanup callbacks, aborts in-flight enhanced requests, and removes HET-managed document and window listeners. This is mostly useful in tests, hot reload flows, or pages that mount and unmount HET manually.
+Try adding a `console.log('destroying component');` or `alert('destroying component');` to the cleanup callback, and trigger it in the following ways:
+1. Open your browser's dev tools and manually run `HET.destroy()`. If you are using the ESM build, you could try manually wiring up a button outside of a HET component to call `destroy()`.
+2. Open your browser's dev tools and manually run `document.querySelector('[het-component=alerter]').remove()` or otherwise remove the element from the page.
 
-Relevant reference:
+In both cases you should see your message logged to the console or your alert fire. If you ran `HET.destroy()` you can also try clicking on the button now and confirming that the alert is no longer popping up.
+
+Reference documentation:
 
 - [Cleanup](reference/components.md#cleanup)
 - [`destroy()`](reference/api.md#destroy)
 
-## 4. Write to the DOM manually with `het-ref`
+## 4. Write to the DOM
 
-Refs are not only for inputs and buttons. Any element with `het-ref` becomes available in `setup`, which means you can use the same pattern to update output elements directly.
+We're already using refs to attach an event listener, but of course you can also write any imperative javascript to work with the DOM.
 
 ```html
 <section het-component="statusButton">
@@ -146,17 +144,15 @@ Refs are not only for inputs and buttons. Any element with `het-ref` becomes ava
 </script>
 ```
 
-The click handler decides when the text changes and what value it writes. HET is still only providing component boundaries, scoped refs, and lifecycle hooks. The state change and DOM update are both manual.
+This example adds another ref and writes to the element's `textContent` property. We're not really seeing anything new here, just extending what we've already seen.
 
-That is often a useful way to begin: if you can write the behavior in plain DOM code first, it becomes easier to see exactly which parts HET should later automate.
-
-Relevant reference:
+Reference documentation:
 
 - [`het-ref`](reference/components.md#het-ref)
 
-## 5. Store local state in `setup`
+## 5. Adding local state
 
-Once a component needs to remember something between clicks, the simplest place to put that value is a local variable inside `setup`. A render function reads that variable and pushes the current value into the DOM.
+Most components will require some kind of internal state. The simplest way to achieve that is to add a local variable inside `setup`. The click handler updates that variable and writes the current value into the DOM.
 
 ```html
 <section het-component="counter">
@@ -168,13 +164,9 @@ Once a component needs to remember something between clicks, the simplest place 
   HET.registerComponent('counter', ({ refs, onCleanup }) => {
     let count = 0;
 
-    function render() {
-      refs.countText.textContent = count;
-    }
-
     function handleClick() {
       count += 1;
-      render();
+      refs.countText.textContent = count;
     }
 
     refs.button.addEventListener('click', handleClick);
@@ -186,18 +178,11 @@ Once a component needs to remember something between clicks, the simplest place 
 </script>
 ```
 
-This works, but the component now has several moving parts:
+This works fine in a simple component like this, but keeping track of when state is mutated and ensuring the UI is up to date can get tricky. In the next section we'll explore a better way to manage mutable state.
 
-- local state
-- a render function
-- a listener
-- cleanup
+## 6. Using signals for component state
 
-That combination is common in handwritten DOM code. The rest of the tutorial will remove those manual pieces one by one so the component becomes more declarative without skipping over what it is replacing.
-
-## 6. Use signals for component state
-
-Signals are HET's state primitive. Here, a local `count` signal holds the same value the local `count` variable held before, and an effect keeps the DOM in sync automatically whenever that signal changes.
+HET uses Preact Signals for storing mutable component state. Signals allow us to describe what should happen when state is mutated so we don't need to manage it manually ourselves. There is a link to the official Preact Signals documentation at the bottom of this section.
 
 ```html
 <section het-component="counter">
@@ -228,7 +213,7 @@ Signals are HET's state primitive. Here, a local `count` signal holds the same v
 </script>
 ```
 
-The equivalent ESM JavaScript is:
+The equivalent ESM javascript is:
 
 ```js
 import { registerComponent } from './het.js';
@@ -255,18 +240,20 @@ registerComponent('counter', ({ refs, onCleanup }) => {
 });
 ```
 
-Signal values live on `.value`: reading `count.value` gets the current value, and assigning to it updates the signal. The effect reads `count.value`, so HET's signals system re-runs that effect each time the count changes and updates the paragraph automatically. The DOM update is now reactive instead of being driven by an explicit `render()` call.
+We create a new signal with `HET.signals.signal(0)`. The `0` is the initial value of the signal. In this case it's a number, but it could be any javascript value, such as a string or an object. Once the signal is created we write to it, and read from it, using `.value` instead of using `count` directly. This is why we can now say `const count = ...` rather than `let count = ...`.
 
-The IIFE build exposes the common Preact Signals helpers on `HET.signals`: `signal`, `computed`, `effect`, `batch`, and `untracked`. This tutorial only needs `signal` and `effect`; use the other helpers the same way you would in Preact Signals code. See the [official Preact Signals documentation](https://preactjs.com/guide/v10/signals/) for details.
+We can also set up a callback that runs once immediately, then re-runs any time the value of `count` changes using `HET.signals.effect()`. In this case we're saying that any time the `count` signal changes, we want to write the new value of the signal into `refs.countText.textContent`. Note that we do not need to explicitly call this effect in the `handleClick` function, all we need to do is update the value of the signal, and the effect callback runs automatically. It's also important to note that `HET.signals.effect()` returns a dispose function which needs to be registered as part of the component cleanup with `onCleanup()`.
 
-Relevant reference:
+There's much more to signals than just `signal()` and `effect()`. The IIFE build exposes the signals API through `HET.signals` which includes: `signal`, `computed`, `effect`, `batch`, and `untracked`. See the [official Preact Signals documentation](https://github.com/preactjs/signals) for more details.
+
+Reference documentation:
 
 - [Signals](reference/components.md#signals)
 - [Signal helpers](reference/api.md#signal-helpers)
 
 ## 7. Use `het-on` instead of `addEventListener`
 
-Now that the state lives in a signal, we can remove the listener setup. `het-on` moves the event wiring into HTML.
+Another improvement we can make is to remove the manual event wiring. The imperative approach works, but it's boilerplate heavy and adds noise to the setup function. Instead, we can use the `het-on` attribute to declare the event wiring.
 
 ```html
 <section het-component="counter">
@@ -293,9 +280,13 @@ Now that the state lives in a signal, we can remove the listener setup. `het-on`
 </script>
 ```
 
-The button no longer needs `addEventListener()` or `onCleanup()`. `het-on="click->increment"` tells HET to listen for the button's `click` event and call the `increment()` method returned from setup. Any method that is called from a binding **must** be included in the object returned from the setup function.
+`het-on="click->increment"` tells HET to listen for the button's `click` event and call the `increment()` method returned from setup.
 
-Use method syntax for returned handlers:
+IMPORTANT: Any method referenced by name from a binding **must** be included in the object returned from the setup function.
+
+The event listener is automatically wired up when the component is mounted, and automatically removed when the component is unmounted. This means we can remove the manual call to `addEventListener()` and associated cleanup callback, and the button no longer needs a `het-ref` attribute.
+
+Prefer method syntax for returned handlers, especially when one handler needs to call another handler with `this`:
 
 ```js
 increment() {
@@ -305,7 +296,7 @@ increment() {
 
 HET calls returned methods with the methods object as `this`, so method syntax also allows one handler to call another with `this.otherMethod()`. This example does not need that yet, but it becomes useful as components grow.
 
-Relevant reference:
+Reference documentation:
 
 - [`het-on`](reference/components.md#het-on)
 
@@ -334,14 +325,14 @@ If an event handler only needs to set the value of a signal, `het-on` can perfor
 
 `count=count + 1` is evaluated when the click happens, so there is no separate `increment()` function anymore. Setup is now only creating the signal and reflecting that signal into the DOM. In order to reference a signal by name in a binding, the signal **must** be assigned to the `signals` object that is passed into the setup function.
 
-This also introduces the newer expression syntax. In assignment-style `het-on`, the right-hand side can be a limited JavaScript expression built from component signals and supported contextual values. Here the expression is just arithmetic, but the same syntax also supports comparisons, ternaries, logical operators, and simple unary operators. Note that we cannot use `count += 1` or `count++` here; the restricted subset of JavaScript excludes assignment operators like `+=` and `++`.
+This also introduces the newer expression syntax. In assignment-style `het-on`, the right-hand side can be a limited javascript expression built from component signals and supported contextual values. Here the expression is just arithmetic, but the same syntax also supports comparisons, ternaries, logical operators, and simple unary operators. Note that we cannot use `count += 1` or `count++` here; the restricted subset of javascript excludes assignment operators like `+=` and `++`.
 
 That expression support is what lets you keep small interactions in HTML without immediately dropping back to a custom method.
 
-Relevant reference:
+Reference documentation:
 
 - [`het-on`](reference/components.md#het-on)
-- [Limited JavaScript expressions](reference/components.md#limited-javascript-expressions)
+- [Limited javascript expressions](reference/components.md#limited-javascript-expressions)
 
 ## 9. Create signals from HTML with `het-seed`
 
@@ -368,7 +359,7 @@ Instead of creating a signal with an initial value using `signals.count = HET.si
 
 Seeding lets HTML provide the initial state for a component, which is especially helpful when you are enhancing server-rendered markup rather than generating everything on the client.
 
-Relevant reference:
+Reference documentation:
 
 - [`het-seed`](reference/components.md#het-seed)
 
@@ -408,7 +399,7 @@ Attributes and classes can also be bound using the same `target=expression` patt
 - `het-bool-attrs` toggles boolean attribute presence, such as `disabled`
 - `het-class` toggles classes based on expression truthiness
 
-Relevant reference:
+Reference documentation:
 
 - [`het-props`](reference/components.md#het-props)
 - [Output bindings](reference/components.md#output-bindings)
@@ -430,13 +421,13 @@ Relevant reference:
 
 `het-text="count"` is just sugar for `het-props="textContent=count"`.
 
-Relevant reference:
+Reference documentation:
 
 - [`het-text`](reference/components.md#het-text)
 
 ## 12. Use an anonymous component when setup is unnecessary
 
-Once the event update, signal creation, and output binding all live in HTML, a named component is no longer required. HET can still mount the root, but there is no JavaScript setup function left to register.
+Once the event update, signal creation, and output binding all live in HTML, a named component is no longer required. HET can still mount the root, but there is no javascript setup function left to register.
 
 ```html
 <section het-component het-seed="count=0">
@@ -454,7 +445,7 @@ This is the same fully declarative counter as the previous step, just without an
 
 If you still want a component name for legibility, you can keep one, but it is no longer required for HET to do its work.
 
-Relevant reference:
+Reference documentation:
 
 - [Component roots and mounting](reference/components.md#component-roots-and-mounting)
 
@@ -481,9 +472,9 @@ Output bindings can use signal-based expressions such as:
 
 The expression language is intentionally limited. It is meant for small, local transformations that are easy to read in markup. If the logic stops feeling obvious in one line, that is a sign to move it back into setup code.
 
-Relevant reference:
+Reference documentation:
 
-- [Limited JavaScript expressions](reference/components.md#limited-javascript-expressions)
+- [Limited javascript expressions](reference/components.md#limited-javascript-expressions)
 - [Output bindings](reference/components.md#output-bindings)
 
 ## 14. Binding form controls
@@ -519,7 +510,7 @@ Output bindings such as `het-text`, `het-props`, `het-attrs`, `het-bool-attrs`, 
 - `$event` provides access to the full event object.
 - `$currentTarget` is sugar for `$event.currentTarget`.
 
-Relevant reference:
+Reference documentation:
 
 - [`het-props`](reference/components.md#het-props)
 - [`het-on`](reference/components.md#het-on)
@@ -556,7 +547,7 @@ HET infers:
 
 Use `het-model` when the control matches HET's standard form conventions. Use separate `het-seed`, `het-props`, and `het-on` bindings when you need something more explicit or unusual.
 
-Relevant reference:
+Reference documentation:
 
 - [`het-model`](reference/components.md#het-model)
 
@@ -597,7 +588,7 @@ These helpers work anywhere expressions are supported. They are especially usefu
 
 `het-sync` is the related feature to use when DOM snapshots can change after mount. `het-seed` reads once during mount; `het-sync` reads during mount and again whenever a `het:sync` event bubbles through the component subtree. This is useful whenever anything outside the component, such as the HET requests module, updates the DOM and those changes need to be reflected in component state.
 
-Relevant reference:
+Reference documentation:
 
 - [`het-seed`](reference/components.md#het-seed)
 - [`het-sync`](reference/components.md#het-sync)
@@ -648,7 +639,7 @@ Other supported modifiers are:
 
 Keyboard modifiers are usually paired with keyboard events, for example `keydown.enter->submit`.
 
-Relevant reference:
+Reference documentation:
 
 - [`het-on`](reference/components.md#het-on)
 
@@ -683,7 +674,7 @@ If the local name and exported name are the same, the import can be shorter:
 
 When multiple ancestors export the same signal name, HET imports from the nearest matching ancestor.
 
-Relevant reference:
+Reference documentation:
 
 - [`het-exports`](reference/components.md#het-exports)
 - [`het-imports`](reference/components.md#het-imports)
@@ -732,7 +723,7 @@ Structural templates have stricter rules than ordinary markup:
 
 Use ordinary visibility bindings such as `het-bool-attrs="hidden=isHidden"` when the DOM should stay mounted.
 
-Relevant reference:
+Reference documentation:
 
 - [`het-if`](reference/components.md#het-if)
 - [Structural templates](reference/components.md#structural-templates)
@@ -781,7 +772,7 @@ signals.items.value = [
 ];
 ```
 
-Relevant reference:
+Reference documentation:
 
 - [`het-for`](reference/components.md#het-for)
 - [Structural templates](reference/components.md#structural-templates)
@@ -814,7 +805,7 @@ HET.init({
 
 `het-unmount-delay` only applies to structural clones created by `het-if` and `het-for`. It is exit-only: it does not add enter hooks or affect ordinary component teardown.
 
-Relevant reference:
+Reference documentation:
 
 - [`het-unmount-delay`](reference/components.md#het-unmount-delay)
 - [`structuralUnmountDelay`](reference/api.md#structuralunmountdelay)
@@ -839,6 +830,6 @@ Declarative bindings run when a component mounts. If the pre-mounted HTML would 
 
 HET removes `het-mount-pending` automatically after mounting. HET does not provide CSS for this marker, so the page needs to define any hiding rule. Prefer `visibility: hidden` over `display: none` when hidden content should preserve layout.
 
-Relevant reference:
+Reference documentation:
 
 - [`het-mount-pending`](reference/components.md#het-mount-pending)
