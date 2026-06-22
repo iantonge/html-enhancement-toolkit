@@ -8,4 +8,10 @@ router.get('/', (request, response) => {
   });
 });
 
+router.get('/coordinated-attrs', (request, response) => {
+  response.render('components/het-bool-attrs/coordinated-attrs', {
+    title: 'Coordinated het-bool-attrs',
+  });
+});
+
 export default router;

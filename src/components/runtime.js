@@ -13,7 +13,9 @@ import {
 import { getBindingCause } from './logging.js';
 
 function initializeBindings(ctx, bindings, methods) {
-  for (const binding of bindings) {
+  const runtimeBindings = getRuntimeBindings(bindings);
+
+  for (const binding of runtimeBindings) {
     if (binding.sourceType === SIGNAL_SOURCE_TYPE) {
       configureSignalBinding(ctx, binding);
     } else if (binding.sourceType === FUNC_SOURCE_TYPE) {
@@ -22,6 +24,48 @@ function initializeBindings(ctx, bindings, methods) {
       configureAssignmentBinding(ctx, binding);
     }
   }
+}
+
+function getRuntimeBindings(bindings) {
+  const coordinatedBindings = new Map();
+  const coordinatedAttrBindings = new Set();
+  const coordinatedBoolBindings = new Set();
+
+  for (const binding of bindings) {
+    if (binding.sourceType !== SIGNAL_SOURCE_TYPE || binding.dirName !== 'het-attrs') {
+      continue;
+    }
+
+    const boolBinding = bindings.find((candidate) => (
+      candidate.sourceType === SIGNAL_SOURCE_TYPE &&
+      candidate.dirName === 'het-bool-attrs' &&
+      candidate.el === binding.el &&
+      candidate.key === binding.key
+    ));
+
+    if (!boolBinding) continue;
+
+    const coordinatedBinding = {
+      dirName: 'het-attrs+het-bool-attrs',
+      sourceType: SIGNAL_SOURCE_TYPE,
+      attrBinding: binding,
+      boolBinding,
+    };
+
+    coordinatedBindings.set(binding, coordinatedBinding);
+    coordinatedAttrBindings.add(binding);
+    coordinatedBoolBindings.add(boolBinding);
+  }
+
+  return bindings.flatMap((binding) => {
+    if (coordinatedAttrBindings.has(binding)) {
+      return [coordinatedBindings.get(binding)];
+    }
+    if (coordinatedBoolBindings.has(binding)) {
+      return [];
+    }
+    return [binding];
+  });
 }
 
 function configureEventBinding(methods, binding, onCleanup) {
@@ -121,6 +165,16 @@ function eventMatchesKeyModifier(event, keyModifier) {
 }
 
 function configureSignalBinding(ctx, binding) {
+  if (binding.dirName === 'het-attrs+het-bool-attrs') {
+    configureCoordinatedAttributeBinding(ctx, binding);
+    return;
+  }
+
+  if (binding.dirName === 'het-bool-attrs') {
+    configureBoolAttributeBinding(ctx, binding);
+    return;
+  }
+
   if (binding.expression) {
     assertExpressionSignalsExist(binding, ctx.signals);
   }
@@ -166,6 +220,83 @@ function configureSignalBinding(ctx, binding) {
     binding.el.addEventListener(eventName, updateFromEl);
     ctx.onCleanup(() => binding.el.removeEventListener(eventName, updateFromEl));
   }
+}
+
+function configureBoolAttributeBinding(ctx, binding) {
+  const initialValue = binding.el.getAttribute(binding.key);
+  let storedValue = initialValue ?? '';
+
+  configureSignalBindingEffect(ctx, binding, (value) => {
+    if (value) {
+      binding.el.setAttribute(binding.key, storedValue);
+      return;
+    }
+
+    if (binding.el.hasAttribute(binding.key)) {
+      storedValue = binding.el.getAttribute(binding.key) ?? '';
+    }
+    binding.el.removeAttribute(binding.key);
+  });
+}
+
+function configureCoordinatedAttributeBinding(ctx, binding) {
+  const { attrBinding, boolBinding } = binding;
+
+  assertSignalBinding(ctx, attrBinding);
+  assertSignalBinding(ctx, boolBinding);
+
+  const attrSignal = getBoundSignal(ctx, attrBinding);
+  const boolSignal = getBoundSignal(ctx, boolBinding);
+
+  const dispose = effect(() => {
+    try {
+      const attrValue = attrSignal.value;
+      const boolValue = boolSignal.value;
+
+      if (boolValue) {
+        attrBinding.el.setAttribute(attrBinding.key, String(attrValue));
+      } else {
+        attrBinding.el.removeAttribute(attrBinding.key);
+      }
+    } catch (error) {
+      handleError(error);
+    }
+  });
+  ctx.onCleanup(dispose);
+}
+
+function configureSignalBindingEffect(ctx, binding, write) {
+  assertSignalBinding(ctx, binding);
+
+  const boundSignal = getBoundSignal(ctx, binding);
+
+  const dispose = effect(() => {
+    try {
+      write(boundSignal.value);
+    } catch (error) {
+      handleError(error);
+    }
+  });
+  ctx.onCleanup(dispose);
+}
+
+function assertSignalBinding(ctx, binding) {
+  if (binding.expression) {
+    assertExpressionSignalsExist(binding, ctx.signals);
+  }
+
+  if (!binding.expression && !(binding.source in ctx.signals)) {
+    throw new Error(
+      'HET Error: Bound signal does not exist',
+      { cause: getBindingCause(binding, { signalName: binding.source }) },
+    );
+  }
+}
+
+function getBoundSignal(ctx, binding) {
+  return binding.expression
+    ? computed(() => binding.expression && getBindingInputValue(ctx, binding))
+    : ctx.signals[binding.source];
 }
 
 export {

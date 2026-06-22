@@ -240,9 +240,13 @@ Use `het-attrs` to bind expressions to attributes whose meaning comes from their
 
 Use `het-bool-attrs` to bind expressions to boolean attribute presence.
 Truthy values add the attribute. Falsy values remove it.
+If the attribute had a value before removal, that value is restored when the binding becomes truthy again.
+When the same element binds the same attribute with both `het-attrs` and `het-bool-attrs`, `het-bool-attrs` controls presence and `het-attrs` controls the restored value.
 
 ```html
 <input het-bool-attrs="disabled=isSaving || !isValid">
+<div hidden="until-found" het-bool-attrs="hidden=isHidden"></div>
+<div het-attrs="hidden='until-found'" het-bool-attrs="hidden=isHidden"></div>
 ```
 
 ### `het-class`

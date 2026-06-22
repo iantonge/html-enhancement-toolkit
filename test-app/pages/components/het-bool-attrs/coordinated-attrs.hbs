@@ -1,0 +1,60 @@
+<section class="card shadow-sm border-0">
+  <div class="card-body">
+    <h1 class="h4 mb-3">{{title}}</h1>
+    <div het-component="het-bool-attrs-coordinated">
+      <button id="show-valued-bool" type="button" het-on="click->showValuedBool">Show valued bool</button>
+      <button id="hide-valued-bool" type="button" het-on="click->hideValuedBool">Hide valued bool</button>
+      <button id="show-combined" type="button" het-on="click->showCombined">Show combined</button>
+      <button id="hide-combined" type="button" het-on="click->hideCombined">Hide combined</button>
+      <button id="set-combined-hidden" type="button" het-on="click->setCombinedHidden">Set combined hidden</button>
+      <button id="show-empty-bool" type="button" het-on="click->showEmptyBool">Show empty bool</button>
+
+      <div
+        id="valued-bool-target"
+        hidden="until-found"
+        het-bool-attrs="hidden=isValuedBoolHidden">
+        Valued bool target
+      </div>
+      <div
+        id="combined-target"
+        het-attrs="hidden=combinedHiddenValue"
+        het-bool-attrs="hidden=isCombinedHidden">
+        Combined target
+      </div>
+      <div
+        id="empty-bool-target"
+        het-bool-attrs="hidden=isEmptyBoolHidden">
+        Empty bool target
+      </div>
+    </div>
+  </div>
+</section>
+<script nonce="{{{cspNonce}}}">
+  window.HET.registerComponent('het-bool-attrs-coordinated', ({ signals }) => {
+    signals.isValuedBoolHidden = window.HET.signals.signal(false);
+    signals.isCombinedHidden = window.HET.signals.signal(false);
+    signals.combinedHiddenValue = window.HET.signals.signal('until-found');
+    signals.isEmptyBoolHidden = window.HET.signals.signal(false);
+
+    return {
+      showValuedBool() {
+        signals.isValuedBoolHidden.value = false;
+      },
+      hideValuedBool() {
+        signals.isValuedBoolHidden.value = true;
+      },
+      showCombined() {
+        signals.isCombinedHidden.value = false;
+      },
+      hideCombined() {
+        signals.isCombinedHidden.value = true;
+      },
+      setCombinedHidden() {
+        signals.combinedHiddenValue.value = 'hidden';
+      },
+      showEmptyBool() {
+        signals.isEmptyBoolHidden.value = true;
+      },
+    };
+  });
+</script>
