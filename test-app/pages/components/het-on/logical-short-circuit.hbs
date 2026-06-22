@@ -1,0 +1,42 @@
+<section class="card shadow-sm border-0">
+  <div class="card-body">
+    <h1 class="h4 mb-3">{{title}}</h1>
+    <div het-component="het-on-logical-short-circuit">
+      <button
+        id="logical-and-button"
+        type="button"
+        het-on="click->andResult=enabledFalse && missingSignal">
+        AND
+      </button>
+      <button
+        id="logical-or-button"
+        type="button"
+        het-on="click->orResult=enabledTrue || missingSignal">
+        OR
+      </button>
+      <p id="logical-and-result" het-props="textContent=andResult" class="mb-0 text-muted"></p>
+      <p id="logical-or-result" het-props="textContent=orResult" class="mb-0 text-muted"></p>
+      <p id="logical-access-count" het-props="textContent=accessCount" class="mb-0 text-muted"></p>
+    </div>
+  </div>
+</section>
+<script nonce="{{{cspNonce}}}">
+  window.HET.registerComponent('het-on-logical-short-circuit', ({ signals }) => {
+    const accessCount = window.HET.signals.signal(0);
+    const missingSignal = window.HET.signals.signal('unexpected');
+    Object.defineProperty(missingSignal, 'value', {
+      get() {
+        accessCount.value += 1;
+        return 'unexpected';
+      },
+      set() {},
+    });
+
+    signals.enabledFalse = window.HET.signals.signal(false);
+    signals.enabledTrue = window.HET.signals.signal(true);
+    signals.missingSignal = missingSignal;
+    signals.accessCount = accessCount;
+    signals.andResult = window.HET.signals.signal('');
+    signals.orResult = window.HET.signals.signal('');
+  });
+</script>

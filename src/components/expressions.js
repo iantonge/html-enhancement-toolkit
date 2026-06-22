@@ -7,6 +7,8 @@ import {
 import { getBindingCause, throwInvalidBindingExpression } from './logging.js';
 
 const expressionCache = new Map();
+const BINARY_OPERATORS = ['+', '-', '*', '/', '%', '===', '!==', '<', '<=', '>', '>='];
+const LOGICAL_OPERATORS = ['&&', '||'];
 
 function inferModelKey(el) {
   if (
@@ -73,14 +75,17 @@ function validateExpressionAst(node, metadata, bindingLoggingContext) {
       validateExpressionAst(node.argument, metadata, bindingLoggingContext);
       return;
     case 'BinaryExpression':
-      if (!['+', '-', '*', '/', '%', '===', '!==', '<', '<=', '>', '>='].includes(node.operator)) {
+      if (
+        !BINARY_OPERATORS.includes(node.operator) &&
+        !LOGICAL_OPERATORS.includes(node.operator)
+      ) {
         throwInvalidBindingExpression(bindingLoggingContext, 'Invalid expression');
       }
       validateExpressionAst(node.left, metadata, bindingLoggingContext);
       validateExpressionAst(node.right, metadata, bindingLoggingContext);
       return;
     case 'LogicalExpression':
-      if (!['&&', '||'].includes(node.operator)) {
+      if (!LOGICAL_OPERATORS.includes(node.operator)) {
         throwInvalidBindingExpression(bindingLoggingContext, 'Invalid expression');
       }
       validateExpressionAst(node.left, metadata, bindingLoggingContext);
@@ -225,15 +230,16 @@ function evaluateExpressionNode(node, runtimeContext) {
       return node.operator === '!' ? !value : -value;
     }
     case 'BinaryExpression':
+      if (LOGICAL_OPERATORS.includes(node.operator)) {
+        return evaluateLogicalExpression(node, runtimeContext);
+      }
       return evaluateBinaryExpression(
         node.operator,
         evaluateExpressionNode(node.left, runtimeContext),
         evaluateExpressionNode(node.right, runtimeContext),
       );
     case 'LogicalExpression':
-      return node.operator === '&&'
-        ? evaluateExpressionNode(node.left, runtimeContext) && evaluateExpressionNode(node.right, runtimeContext)
-        : evaluateExpressionNode(node.left, runtimeContext) || evaluateExpressionNode(node.right, runtimeContext);
+      return evaluateLogicalExpression(node, runtimeContext);
     case 'ConditionalExpression':
       return evaluateExpressionNode(node.test, runtimeContext)
         ? evaluateExpressionNode(node.consequent, runtimeContext)
@@ -245,6 +251,12 @@ function evaluateExpressionNode(node, runtimeContext) {
     default:
       throwInvalidBindingExpression(getBindingCause(runtimeContext.binding), 'Invalid expression');
   }
+}
+
+function evaluateLogicalExpression(node, runtimeContext) {
+  return node.operator === '&&'
+    ? evaluateExpressionNode(node.left, runtimeContext) && evaluateExpressionNode(node.right, runtimeContext)
+    : evaluateExpressionNode(node.left, runtimeContext) || evaluateExpressionNode(node.right, runtimeContext);
 }
 
 function evaluateBinaryExpression(operator, left, right) {

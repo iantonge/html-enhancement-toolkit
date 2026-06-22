@@ -86,6 +86,12 @@ router.get('/toggle', (request, response) => {
   });
 });
 
+router.get('/logical-short-circuit', (request, response) => {
+  response.render('components/het-on/logical-short-circuit', {
+    title: 'Logical short-circuit',
+  });
+});
+
 router.get('/modifiers', (request, response) => {
   response.render('components/het-on/modifiers', {
     title: 'Modifiers',

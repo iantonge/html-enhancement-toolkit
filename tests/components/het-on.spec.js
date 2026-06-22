@@ -70,6 +70,18 @@ test.describe('components het-on', () => {
     await expect(page.locator('#toggle-expanded')).toHaveText('false');
   });
 
+  test('short-circuits logical AND and OR expressions', async ({ page }) => {
+    await page.goto('/components/het-on/logical-short-circuit');
+
+    await page.click('#logical-and-button');
+    await page.click('#logical-or-button');
+
+    await expect(page.locator('#logical-and-result')).toHaveText('false');
+    await expect(page.locator('#logical-or-result')).toHaveText('true');
+    await expect(page.locator('#logical-access-count')).toHaveText('0');
+    await expect.poll(() => page.evaluate(() => window.hetErrors.map((error) => error.message))).toEqual([]);
+  });
+
   test('supports prevent, stop, capture, debounce, throttle, key filters, and once modifiers', async ({ page }) => {
     await page.goto('/components/het-on/modifiers');
 
