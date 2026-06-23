@@ -466,6 +466,10 @@ So far we have used `het-props` and `het-text` to set the text content of an ele
 </section>
 ```
 
+```js
+HET.init();
+```
+
 Instead of creating a method or a separate derived signal to format display text, the binding can express the logic directly. This is not limited to just formatting text. Output bindings can use expressions which include:
 
 - arithmetic
@@ -500,6 +504,10 @@ Reference documentation:
   <button type="button" het-on="click->message=''">Reset</button>
   <p het-text="message"></p>
 </section>
+```
+
+```js
+HET.init();
 ```
 
 `het-seed="message=$props.value"` handles the initial state by reading the input's current `value` property during mount and creating the `message` signal from it. `$props` provides access to a snapshot of all of the element's properties, and can be used in expressions belonging to `het-seed`, `het-sync` or assignment-style `het-on` attributes. In addition to `$props`, those expressions can also reference the following contextual snapshots:
@@ -545,6 +553,10 @@ Seeding a signal value from `$props.value` is great if the signal value happens 
 </section>
 ```
 
+```js
+HET.init();
+```
+
 The conversion helpers are:
 
 - `$int(value)` parses an integer
@@ -571,6 +583,10 @@ Using `het-seed`, `het-props`, and `het-on` on every form control is a lot of bo
   <button type="button" het-on="click->message=''">Reset</button>
   <p het-text="message"></p>
 </section>
+```
+
+```js
+HET.init();
 ```
 
 Typed variants move coercion into the declaration:
@@ -619,6 +635,8 @@ Some event handlers need event options or small event-policy rules in addition t
       },
     };
   });
+
+  HET.init();
 </script>
 ```
 
@@ -656,6 +674,7 @@ Signals are local to one component by default. When a descendant component needs
 <script>
   HET.registerComponent('searchPage');
   HET.registerComponent('searchSummary');
+  HET.init();
 </script>
 ```
 
@@ -711,6 +730,7 @@ If adding and removing a component is a better fit, `het-if` mounts and unmounts
   });
 
   HET.registerComponent('detailsPanel');
+  HET.init();
 </script>
 ```
 
@@ -735,6 +755,12 @@ Reference documentation:
 
 ```html
 <section het-component="todoList">
+  <label>
+    New todo
+    <input type="text" value="Ship it" het-model="newLabel">
+  </label>
+  <button type="button" het-on="click->addTodo">Add todo</button>
+
   <ul>
     <template het-for="items">
       <li het-component="todoItem">
@@ -756,13 +782,28 @@ Reference documentation:
       todo('Write HTML'),
       todo('Enhance behavior'),
     ]);
+
+    return {
+      addTodo() {
+        const label = signals.newLabel.value.trim();
+
+        if (!label) return;
+
+        signals.items.value = [
+          ...signals.items.value,
+          todo(label),
+        ];
+        signals.newLabel.value = '';
+      },
+    };
   });
 
   HET.registerComponent('todoItem');
+  HET.init();
 </script>
 ```
 
-Each item object is forwarded into its cloned component root, so every `todoItem` receives its own `label` signal.
+Each item object is forwarded into its cloned component root, so every `todoItem` receives its own `label` signal. The list component also owns the `newLabel` signal created by `het-model`, so the returned `addTodo()` handler can read the input value, append a new item object, and then clear the input.
 
 The source signal is still just a signal. To add an item, assign a new array:
 
@@ -785,23 +826,108 @@ Structural clones are normally destroyed as soon as `het-if` or `het-for` remove
 When a delayed clone is due to be removed, HET adds a CSS class to the cloned root element for the duration of the delay. By default, that class is `het-unmounting`.
 
 ```html
-<template het-if="notification">
-  <article
-    het-component="notificationCard"
-    het-unmount-delay="200"
-    class="notification">
-    <p het-text="message"></p>
-  </article>
-</template>
+<section het-component="notificationCenter" het-exports="notifications">
+  <label>
+    New notification
+    <input type="text" value="Deploy finished" het-model="newMessage">
+  </label>
+  <button type="button" het-on="click->addNotification">Add notification</button>
+
+  <div class="notifications">
+    <template het-for="notifications">
+      <article
+        het-component="notificationCard"
+        het-imports="notifications"
+        het-unmount-delay="300"
+        class="notification">
+        <p het-text="message"></p>
+        <button type="button" het-on="click->dismiss">Dismiss</button>
+      </article>
+    </template>
+  </div>
+</section>
 ```
 
-When `notification` becomes falsy, HET keeps the cloned `notificationCard` mounted for 200 milliseconds before destroying it. During that delay, the cloned `notificationCard` root has the `het-unmounting` class.
+```js
+let nextNotificationId = 1;
+
+function notification(message) {
+  return {
+    id: HET.signals.signal(nextNotificationId++),
+    message: HET.signals.signal(message),
+  };
+}
+
+HET.registerComponent('notificationCenter', ({ signals }) => {
+  signals.notifications = HET.signals.signal([
+    notification('Profile saved'),
+    notification('Report exported'),
+  ]);
+
+  return {
+    addNotification() {
+      const message = signals.newMessage.value.trim();
+
+      if (!message) return;
+
+      signals.notifications.value = [
+        ...signals.notifications.value,
+        notification(message),
+      ];
+      signals.newMessage.value = '';
+    },
+  };
+});
+
+HET.registerComponent('notificationCard', ({ signals }) => {
+  return {
+    dismiss() {
+      signals.notifications.value = signals.notifications.value.filter(
+        (item) => item.id.value !== signals.id.value,
+      );
+    },
+  };
+});
+
+HET.init({
+  structuralUnmountDelay: 300,
+  structuralUnmountClass: 'is-exiting',
+});
+```
+
+```css
+body {
+  padding: 1rem;
+}
+
+.notifications {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.notification {
+  border: 1px solid #ced4da;
+  border-radius: 0.375rem;
+  padding: 0.75rem;
+  transition:
+    opacity 300ms ease,
+    transform 300ms ease;
+}
+
+.notification.is-exiting {
+  opacity: 0;
+  transform: translateY(-0.5rem);
+}
+```
+
+When a notification is dismissed, the `notificationCard` removes its own item from the imported `notifications` array. HET keeps the cloned card mounted for 300 milliseconds before destroying it. During that delay, the cloned `notificationCard` root has the configured `is-exiting` class, giving the CSS transition time to run.
 
 The same behavior can be configured globally, including the class HET adds while removal is pending:
 
 ```js
 HET.init({
-  structuralUnmountDelay: 200,
+  structuralUnmountDelay: 300,
   structuralUnmountClass: 'is-exiting',
 });
 ```
@@ -821,17 +947,91 @@ Reference documentation:
 Declarative bindings run when a component mounts. If the pre-mounted HTML would briefly show the wrong state, add `het-mount-pending` to hide the component until the mount batch finishes.
 
 ```html
-<style>
-  [het-mount-pending] {
-    visibility: hidden;
-  }
-</style>
+<div class="comparison">
+  <div>
+    <h2>Without het-mount-pending</h2>
+    <section het-component het-seed="ready=true">
+      <p het-props="hidden=ready">This paragraph flashes before mount.</p>
+      <p het-props="hidden=!ready">This paragraph is visible after mount.</p>
+    </section>
+  </div>
 
-<section het-component het-mount-pending het-seed="count=0">
-  <button type="button" het-on="click->count=count + 1">+</button>
-  <p het-text="count"></p>
-</section>
+  <div>
+    <h2>With het-mount-pending</h2>
+    <section het-component het-mount-pending het-seed="ready=true">
+      <p het-props="hidden=ready">This paragraph flashes before mount.</p>
+      <p het-props="hidden=!ready">This paragraph is visible after mount.</p>
+    </section>
+  </div>
+</div>
 ```
+
+```js
+setTimeout(() => {
+  HET.init();
+}, 2500);
+```
+
+```css
+.comparison {
+  display: grid;
+  gap: 1rem;
+}
+
+.comparison > div {
+  border: 1px solid #ddd;
+  padding: 1rem;
+}
+
+.comparison h2 {
+  font-size: 1rem;
+  margin-top: 0;
+}
+
+[het-mount-pending] {
+  position: relative;
+}
+
+[het-mount-pending] > * {
+  visibility: hidden;
+}
+
+[het-mount-pending]::before {
+  align-items: center;
+  background: #f8f9fa;
+  border: 1px dashed #adb5bd;
+  border-radius: 0.5rem;
+  color: #495057;
+  content: "Loading...";
+  display: flex;
+  font-weight: 600;
+  inset: 0;
+  justify-content: center;
+  padding-left: 2rem;
+  position: absolute;
+}
+
+[het-mount-pending]::after {
+  animation: spin 0.8s linear infinite;
+  border: 0.2rem solid #ced4da;
+  border-top-color: #0d6efd;
+  border-radius: 50%;
+  content: "";
+  height: 1.5rem;
+  left: calc(50% - 4.5rem);
+  position: absolute;
+  top: calc(50% - 0.75rem);
+  width: 1.5rem;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+```
+
+This sample delays `HET.init()` so the pre-mounted state is visible. The first component briefly shows content that will be hidden once bindings run. The second component uses `het-mount-pending`, so the component can show a loading treatment until mount finishes.
 
 HET removes `het-mount-pending` automatically after mounting. HET does not provide CSS for this marker, so the page needs to define any hiding rule. Prefer `visibility: hidden` over `display: none` when hidden content should preserve layout.
 
