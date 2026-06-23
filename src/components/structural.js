@@ -73,6 +73,9 @@ function createStructuralBlock(binding) {
     binding,
     clones: [],
     activeCount: 0,
+    activeClonesByKey: new Map(),
+    activeKeys: [],
+    nextCloneId: 1,
   };
 }
 
@@ -84,27 +87,47 @@ function reconcileForBlock(ctx, binding, block, value, mountApi) {
     );
   }
 
-  const nextLength = value.length;
-  for (let index = 0; index < nextLength; index += 1) {
-    const itemSignals = getForwardedSignalsForValue(value[index], binding);
-    const existingClone = block.clones[index];
+  const nextItems = value.map((item) => getKeyedForItem(item, binding));
+  const nextKeys = nextItems.map((item) => item.key);
+  validateUniqueKeys(nextKeys, binding);
 
-    if (existingClone) {
-      cancelStructuralCloneUnmount(existingClone);
-      retargetForwardedSignals(existingClone, itemSignals, binding);
-      continue;
+  const nextKeySet = new Set(nextKeys);
+  for (const key of block.activeKeys) {
+    if (!nextKeySet.has(key)) {
+      const clone = block.activeClonesByKey.get(key);
+      block.activeClonesByKey.delete(key);
+      scheduleStructuralCloneUnmount(block, clone, mountApi);
+    }
+  }
+
+  const orderedActiveClones = [];
+  for (const item of nextItems) {
+    let clone = block.activeClonesByKey.get(item.key);
+
+    if (clone) {
+      retargetForwardedSignals(clone, item.signals, binding);
+    } else {
+      clone = createStructuralClone(
+        ctx,
+        binding,
+        item.signals,
+        block.clones.at(-1)?.rootEl,
+        mountApi,
+        { key: item.key },
+      );
+      clone.key = item.key;
+      clone.internalId = block.nextCloneId;
+      block.nextCloneId += 1;
+      block.clones.push(clone);
+      block.activeClonesByKey.set(item.key, clone);
     }
 
-    block.clones.push(
-      createStructuralClone(ctx, binding, itemSignals, block.clones.at(-1)?.rootEl, mountApi),
-    );
+    orderedActiveClones.push(clone);
   }
 
-  for (let index = block.activeCount - 1; index >= nextLength; index -= 1) {
-    scheduleStructuralCloneUnmount(block, block.clones[index], mountApi);
-  }
-
-  block.activeCount = nextLength;
+  orderForClones(binding, block, orderedActiveClones);
+  block.activeKeys = nextKeys;
+  block.activeCount = nextKeys.length;
 }
 
 function reconcileIfBlock(ctx, binding, block, value, mountApi) {
@@ -128,6 +151,48 @@ function reconcileIfBlock(ctx, binding, block, value, mountApi) {
   block.activeCount = 1;
 }
 
+function getKeyedForItem(value, binding) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    throw new Error(
+      `HET Error: ${binding.dirName} item must be an object`,
+      { cause: getBindingCause(binding, { signalName: binding.source }) },
+    );
+  }
+
+  if (!Object.prototype.hasOwnProperty.call(value, binding.key)) {
+    throw new Error(
+      'HET Error: het-for key is missing',
+      { cause: getBindingCause(binding, { signalName: binding.key }) },
+    );
+  }
+
+  const itemKey = value[binding.key];
+  if (typeof itemKey !== 'string' && typeof itemKey !== 'number') {
+    throw new Error(
+      'HET Error: het-for key must be a string or number',
+      { cause: getBindingCause(binding, { signalName: binding.key }) },
+    );
+  }
+
+  return {
+    key: itemKey,
+    signals: getForwardedSignalsForValue(value, binding),
+  };
+}
+
+function validateUniqueKeys(keys, binding) {
+  const seen = new Set();
+  for (const key of keys) {
+    if (seen.has(key)) {
+      throw new Error(
+        'HET Error: het-for keys must be unique',
+        { cause: getBindingCause(binding, { signalName: binding.key }) },
+      );
+    }
+    seen.add(key);
+  }
+}
+
 function getForwardedSignalsForValue(value, binding) {
   if (!value || typeof value !== 'object' || Array.isArray(value)) {
     throw new Error(
@@ -140,6 +205,10 @@ function getForwardedSignalsForValue(value, binding) {
   const signalsByName = Object.create(null);
 
   for (const [key, candidate] of entries) {
+    if (key === binding.key) {
+      continue;
+    }
+
     if (candidate?.brand !== PREACT_SIGNAL_BRAND) {
       throw new Error(
         'HET Error: Structural item property must be a signal',
@@ -152,7 +221,14 @@ function getForwardedSignalsForValue(value, binding) {
   return signalsByName;
 }
 
-function createStructuralClone(ctx, binding, importedSignals, previousRootEl, mountApi) {
+function createStructuralClone(
+  ctx,
+  binding,
+  importedSignals,
+  previousRootEl,
+  mountApi,
+  structuralContext,
+) {
   const fragment = binding.el.content.cloneNode(true);
   const rootEl = getClonedTemplateRoot(fragment);
   const anchor = previousRootEl ? previousRootEl.nextSibling : binding.el.nextSibling;
@@ -172,7 +248,7 @@ function createStructuralClone(ctx, binding, importedSignals, previousRootEl, mo
     );
   }
 
-  mountApi.mountComponent(rootEl, component.setup, { importedSignals });
+  mountApi.mountComponent(rootEl, component.setup, { importedSignals, structuralContext });
   mountApi.mountComponents(rootEl);
   mountApi.removeMountPendingAttributes([rootEl]);
 
@@ -181,7 +257,58 @@ function createStructuralClone(ctx, binding, importedSignals, previousRootEl, mo
     forwardedNames: Object.keys(importedSignals),
     pendingUnmountHandle: undefined,
     isPendingUnmount: false,
+    previousInert: undefined,
   };
+}
+
+function orderForClones(binding, block, orderedActiveClones) {
+  const remainingActiveClones = orderedActiveClones.slice();
+  const desiredClones = [];
+  const placedClones = new Set();
+
+  const placeActiveClonesThrough = (targetClone) => {
+    while (remainingActiveClones.length) {
+      const clone = remainingActiveClones.shift();
+      if (placedClones.has(clone)) continue;
+
+      desiredClones.push(clone);
+      placedClones.add(clone);
+      if (clone === targetClone) return;
+    }
+  };
+
+  for (const clone of block.clones) {
+    if (clone.isPendingUnmount) {
+      desiredClones.push(clone);
+      placedClones.add(clone);
+      continue;
+    }
+
+    if (remainingActiveClones.includes(clone)) {
+      placeActiveClonesThrough(clone);
+    }
+  }
+
+  placeActiveClonesThrough();
+
+  for (const clone of block.clones) {
+    if (!placedClones.has(clone)) {
+      desiredClones.push(clone);
+      placedClones.add(clone);
+    }
+  }
+
+  for (let index = 0; index < desiredClones.length; index += 1) {
+    const clone = desiredClones[index];
+    const previousRootEl = desiredClones[index - 1]?.rootEl;
+    const anchor = previousRootEl ? previousRootEl.nextSibling : binding.el.nextSibling;
+    if (clone.rootEl === anchor || clone.rootEl.nextSibling === anchor) {
+      continue;
+    }
+    binding.el.parentNode.insertBefore(clone.rootEl, anchor);
+  }
+
+  block.clones = desiredClones;
 }
 
 function getClonedTemplateRoot(fragment) {
@@ -221,6 +348,8 @@ function destroyStructuralBlock(block, mountApi) {
   }
 
   block.activeCount = 0;
+  block.activeClonesByKey.clear();
+  block.activeKeys = [];
 }
 
 function configureStructuralTeardown(config) {
@@ -238,6 +367,8 @@ function scheduleStructuralCloneUnmount(block, clone, mountApi) {
   }
 
   clone.isPendingUnmount = true;
+  clone.previousInert = clone.rootEl.inert;
+  clone.rootEl.inert = true;
   if (structuralUnmountClass) {
     clone.rootEl.classList.add(structuralUnmountClass);
   }
@@ -270,6 +401,10 @@ function cancelStructuralCloneUnmount(clone) {
   if (clone.isPendingUnmount) {
     if (structuralUnmountClass) {
       clone.rootEl.classList.remove(structuralUnmountClass);
+    }
+    if (clone.previousInert !== undefined) {
+      clone.rootEl.inert = clone.previousInert;
+      clone.previousInert = undefined;
     }
     clone.isPendingUnmount = false;
   }

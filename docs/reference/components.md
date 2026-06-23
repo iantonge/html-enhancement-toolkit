@@ -80,6 +80,14 @@ HET does not provide these styles. Prefer `visibility: hidden` over `display: no
 
 ## Signals
 
+`setup(context)` receives a context object with:
+
+- `el`: the component root element
+- `refs`: elements declared with `het-ref`
+- `signals`: local, acquired, imported, and forwarded signals
+- `onCleanup(fn)`: registers component cleanup callbacks
+- `key`: the static item key for components cloned by `het-for`, or `undefined` otherwise
+
 Component bindings expect Preact signal objects.
 Signals can come from three places:
 
@@ -155,6 +163,7 @@ HET provides these contextual snapshot values:
 - `$attrs`
 - `$boolAttrs`
 - `$classes`
+- `$key`
 
 These values are snapshots by design. They are not reactive state.
 
@@ -166,6 +175,7 @@ Context semantics:
 - `$boolAttrs.foo` reads `hasAttribute("foo")`
 - `$classes.foo` reads `classList.contains("foo")`
 - `$classes["foo-bar"]` reads `classList.contains("foo-bar")`
+- `$key` reads the static key for the current `het-for` clone
 
 `$classes`, `$attrs`, and `$boolAttrs` support bracket access, and only with a string literal name.
 
@@ -209,7 +219,7 @@ An optional trailing semicolon is allowed.
 
 ## Output bindings
 
-Output bindings evaluate signal-only expressions and write the result to the DOM. Output expressions must not use contextual values such as `$target` or `$attrs`.
+Output bindings evaluate signal-only expressions and write the result to the DOM. Output expressions must not use contextual values such as `$target` or `$attrs`. The only exception is `$key`, which is available inside components cloned by `het-for`.
 
 ### `het-text`
 
@@ -408,8 +418,17 @@ When `init({ structuralUnmountDelay })` is greater than `0`, falsy transitions c
 
 ### `het-for`
 
-`het-for="signalName"` expects the signal value to be an array.
-Each array item must be an object whose properties are Preact signals. HET forwards those signals into the cloned component root.
+`het-for="signalName:keyProperty"` expects the signal value to be an array.
+Each array item must be an object with a static key property and Preact signal properties. HET uses the key property to preserve clone identity as items move, and forwards the signal properties into the cloned component root.
+
+```html
+<template het-for="items:id">
+  <article het-component="todo-item" het-attrs="id=$key + '-section'"></article>
+</template>
+```
+
+The key property must be a string or number. It is not forwarded as a signal, and it does not reserve that name inside the item component.
+Use `$key` in binding expressions and `key` from the setup context in component methods.
 
 Prefer ordinary visibility bindings such as `het-bool-attrs="hidden=isHidden"` when the DOM should stay mounted. Structural directives create and destroy component instances.
 

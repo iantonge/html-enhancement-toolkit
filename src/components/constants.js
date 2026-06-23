@@ -20,6 +20,7 @@ const CONTEXTUAL_IDENTIFIERS = new Set([
   '$attrs',
   '$boolAttrs',
   '$classes',
+  '$key',
 ]);
 const INTRINSIC_IDENTIFIERS = new Set(['$int', '$float', '$bool']);
 const EMPTY_EXPORTS_SET = new Set();

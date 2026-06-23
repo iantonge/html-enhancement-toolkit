@@ -77,7 +77,14 @@ function mountComponent(rootEl, setup, options = {}) {
     }
     cleanups.push(fn);
   };
-  const ctx = { el: rootEl, refs, signals, onCleanup };
+  const ctx = {
+    el: rootEl,
+    key: options.structuralContext?.key,
+    refs,
+    signals,
+    onCleanup,
+    structuralContext: options.structuralContext,
+  };
   const boundEls = scopedQuerySelectorAll(rootEl, DIRECTIVES_SELECTOR);
   const structuralTemplateEls = scopedQuerySelectorAll(rootEl, STRUCTURAL_TEMPLATES_SELECTOR);
   const bindings = getBindings(boundEls, componentLoggingContext);
@@ -141,6 +148,7 @@ function mountComponent(rootEl, setup, options = {}) {
     bindings,
     syncBindings,
     structuralBindings,
+    structuralContext: options.structuralContext,
     cleanup: () => {
       cleanups.forEach((fn) => fn());
     },

@@ -1,0 +1,27 @@
+<section class="card shadow-sm border-0" het-component="structural-duplicate-key">
+  <div class="card-body">
+    <h1 class="h4 mb-3">{{title}}</h1>
+    <template het-for="items:id">
+      <div het-component="structural-duplicate-key-item">
+        <span het-text="label"></span>
+      </div>
+    </template>
+  </div>
+</section>
+
+<script nonce="{{{cspNonce}}}">
+  window.HET.registerComponent('structural-duplicate-key', ({ signals }) => {
+    signals.items = window.HET.signals.signal([
+      {
+        id: 'duplicate',
+        label: window.HET.signals.signal('Duplicate one'),
+      },
+      {
+        id: 'duplicate',
+        label: window.HET.signals.signal('Duplicate two'),
+      },
+    ]);
+  });
+
+  window.HET.registerComponent('structural-duplicate-key-item');
+</script>

@@ -59,7 +59,10 @@ function syncComponent(rootEl) {
         );
       }
       const currentSignal = instance.signals[binding.source];
-      const nextValue = getBindingInputValue({ signals: instance.rawSignals }, binding);
+      const nextValue = getBindingInputValue({
+        signals: instance.rawSignals,
+        structuralContext: instance.structuralContext,
+      }, binding);
       currentSignal.value = nextValue;
     }
 
@@ -72,7 +75,10 @@ function syncComponent(rootEl) {
           ? instance.signals[binding.source].value
           : undefined;
       } else if (binding.expression) {
-        nextValue = evaluateBindingExpression(binding, { signals: instance.signals });
+        nextValue = evaluateBindingExpression(binding, {
+          signals: instance.signals,
+          structuralContext: instance.structuralContext,
+        });
       } else {
         nextValue = binding.source in instance.signals
           ? instance.signals[binding.source].value

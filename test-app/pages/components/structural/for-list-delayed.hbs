@@ -1,6 +1,6 @@
 <script nonce="{{{cspNonce}}}">
   window.hetInitConfig = {
-    structuralUnmountDelay: 120,
+    structuralUnmountDelay: 500,
     structuralUnmountClass: 'pending-unmount',
   };
 </script>
@@ -10,15 +10,17 @@
     <div class="d-flex gap-2 mb-3">
       <button id="shrink-list" type="button" class="btn btn-sm btn-outline-secondary" het-on="click->shrinkList">Shrink list</button>
       <button id="regrow-list" type="button" class="btn btn-sm btn-outline-primary" het-on="click->regrowList">Regrow list</button>
+      <button id="remove-middle" type="button" class="btn btn-sm btn-outline-danger" het-on="click->removeMiddle">Remove middle</button>
+      <button id="readd-middle" type="button" class="btn btn-sm btn-outline-primary" het-on="click->readdMiddle">Re-add middle</button>
     </div>
 
     <ul id="for-list" class="list-unstyled mb-0">
-      <template het-for="items">
-        <li het-component="structural-for-delayed-item" het-imports="items" het-ref="root" class="mb-2 border rounded p-2">
+      <template het-for="items:id">
+        <li het-component="structural-for-delayed-item" het-imports="items" het-ref="root" class="mb-2 border rounded p-2" het-attrs="id=$key + '-delayed-row'">
           <div class="d-flex align-items-center gap-2">
-            <span class="item-id" het-text="id"></span>
             <span class="item-message" het-text="message"></span>
             <span class="item-mount badge text-bg-secondary" het-text="mountId"></span>
+            <button type="button" class="btn btn-sm btn-outline-dark pending-action" het-on="click->markClicked">Mark</button>
           </div>
         </li>
       </template>
@@ -26,12 +28,27 @@
   </div>
 </section>
 
+<style nonce="{{{cspNonce}}}">
+  #for-list > li {
+    opacity: 1;
+    transform: translateY(0);
+    transition:
+      opacity 500ms linear,
+      transform 500ms linear;
+  }
+
+  #for-list > li.pending-unmount {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+</style>
+
 <script nonce="{{{cspNonce}}}">
   window.structuralForDelayedMountIds = [];
   window.structuralForDelayedCleanupIds = [];
 
   const createItem = (id, message) => ({
-    id: window.HET.signals.signal(id),
+    id,
     message: window.HET.signals.signal(message),
   });
 
@@ -52,17 +69,37 @@
           createItem('d', 'Delta'),
         ];
       },
+      removeMiddle() {
+        signals.items.value = [
+          signals.items.value[0],
+          signals.items.value[2],
+        ];
+      },
+      readdMiddle() {
+        signals.items.value = [
+          signals.items.value[0],
+          createItem('b', 'Beta re-added'),
+          signals.items.value[1],
+        ];
+      },
     };
   });
 
-  window.HET.registerComponent('structural-for-delayed-item', ({ refs, signals, onCleanup }) => {
+  window.HET.registerComponent('structural-for-delayed-item', ({ key, refs, signals, onCleanup }) => {
     const nextMountId = window.structuralForDelayedMountIds.length + 1;
     signals.mountId = window.HET.signals.signal(String(nextMountId));
+    refs.root.dataset.key = key;
     refs.root.dataset.mountId = String(nextMountId);
     window.structuralForDelayedMountIds.push(nextMountId);
 
     onCleanup(() => {
       window.structuralForDelayedCleanupIds.push(nextMountId);
     });
+
+    return {
+      markClicked() {
+        refs.root.dataset.clicked = 'true';
+      },
+    };
   });
 </script>

@@ -42,6 +42,7 @@ function getExpressionMetadata(expression, bindingLoggingContext) {
   const metadata = {
     ast,
     signalNames: new Set(),
+    contextualNames: new Set(),
     hasContextuals: false,
   };
   validateExpressionAst(ast, metadata, bindingLoggingContext);
@@ -113,6 +114,7 @@ function validateIdentifierNode(node, metadata, bindingLoggingContext) {
   }
 
   if (CONTEXTUAL_IDENTIFIERS.has(node.name)) {
+    metadata.contextualNames.add(node.name);
     metadata.hasContextuals = true;
     return;
   }
@@ -211,6 +213,7 @@ function evaluateBindingExpression(binding, ctx, event) {
   return evaluateExpression(binding.expression, {
     binding,
     signals: ctx.signals,
+    structuralContext: ctx.structuralContext,
     event,
   });
 }
@@ -391,6 +394,15 @@ function getContextualValue(name, runtimeContext) {
   if (name === '$event') return runtimeContext.event;
   if (name === '$target') return runtimeContext.event?.target ?? runtimeContext.binding.el;
   if (name === '$currentTarget') return runtimeContext.event?.currentTarget ?? runtimeContext.binding.el;
+  if (name === '$key') {
+    if (!runtimeContext.structuralContext || !('key' in runtimeContext.structuralContext)) {
+      throw new Error(
+        'HET Error: $key is only available inside het-for',
+        { cause: getBindingCause(runtimeContext.binding) },
+      );
+    }
+    return runtimeContext.structuralContext.key;
+  }
   if (name === '$text') return runtimeContext.binding.el.textContent;
   if (name === '$props') return createPropsSnapshot(runtimeContext.binding.el);
   if (name === '$attrs') return createAttrsSnapshot(runtimeContext.binding.el);

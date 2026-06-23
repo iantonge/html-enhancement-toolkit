@@ -1,0 +1,23 @@
+<section class="card shadow-sm border-0" het-component="structural-invalid-key-type">
+  <div class="card-body">
+    <h1 class="h4 mb-3">{{title}}</h1>
+    <template het-for="items:id">
+      <div het-component="structural-invalid-key-type-item">
+        <span het-text="label"></span>
+      </div>
+    </template>
+  </div>
+</section>
+
+<script nonce="{{{cspNonce}}}">
+  window.HET.registerComponent('structural-invalid-key-type', ({ signals }) => {
+    signals.items = window.HET.signals.signal([
+      {
+        id: { value: 'invalid' },
+        label: window.HET.signals.signal('Invalid key type'),
+      },
+    ]);
+  });
+
+  window.HET.registerComponent('structural-invalid-key-type-item');
+</script>

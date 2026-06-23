@@ -139,7 +139,9 @@ function getStructuralBinding(el, componentLoggingContext) {
     bindingDeclaration: declaration,
     bindingElement: el,
   };
-  const source = getValidatedSignalIdentifier(declaration, bindingLoggingContext);
+  const structuralExpression = attrName === FOR_ATTR
+    ? getParsedForExpression(declaration, bindingLoggingContext)
+    : { source: getValidatedSignalIdentifier(declaration, bindingLoggingContext) };
 
   return {
     dirName: attrName,
@@ -148,8 +150,35 @@ function getStructuralBinding(el, componentLoggingContext) {
     componentElement: componentLoggingContext.componentElement,
     componentName: componentLoggingContext.componentName,
     componentRoot,
-    source,
+    ...structuralExpression,
     exp: declaration,
+  };
+}
+
+function getParsedForExpression(declaration, bindingLoggingContext) {
+  const splitIndex = findTopLevelOperatorIndex(declaration, ':');
+  if (
+    splitIndex === -1 ||
+    findTopLevelOperatorIndex(declaration.slice(splitIndex + 1), ':') !== -1
+  ) {
+    throw new Error(
+      'HET Error: het-for requires a key',
+      { cause: bindingLoggingContext },
+    );
+  }
+
+  const sourceExpression = declaration.slice(0, splitIndex).trim();
+  const keyExpression = declaration.slice(splitIndex + 1).trim();
+  if (!sourceExpression || !keyExpression) {
+    throw new Error(
+      'HET Error: het-for requires a key',
+      { cause: bindingLoggingContext },
+    );
+  }
+
+  return {
+    source: getValidatedSignalIdentifier(sourceExpression, bindingLoggingContext),
+    key: getValidatedSignalIdentifier(keyExpression, bindingLoggingContext),
   };
 }
 
@@ -280,7 +309,8 @@ function getParsedSignalBinding(
   if (
     directive.sourceType === SIGNAL_SOURCE_TYPE &&
     directive.name !== 'het-model' &&
-    expressionMetadata.hasContextuals
+    expressionMetadata.hasContextuals &&
+    !isStructuralKeyOnlyExpression(expressionMetadata)
   ) {
     throw new Error(
       'HET Error: Output binding expression cannot use contextual values',
@@ -303,6 +333,13 @@ function getParsedSignalBinding(
     expression: expressionMetadata,
     modelType,
   };
+}
+
+function isStructuralKeyOnlyExpression(expressionMetadata) {
+  return (
+    expressionMetadata.contextualNames.size === 1 &&
+    expressionMetadata.contextualNames.has('$key')
+  );
 }
 
 function getParsedEventDeclaration(

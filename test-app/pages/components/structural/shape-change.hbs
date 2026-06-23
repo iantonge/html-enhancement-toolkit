@@ -3,7 +3,7 @@
     <h1 class="h4 mb-3">{{title}}</h1>
     <div het-component="structural-shape-host">
       <ul id="shape-list" class="mb-3">
-        <template het-for="items">
+        <template het-for="items:id">
           <li het-component="structural-shape-item">
             <span class="shape-label" het-text="label"></span>
           </li>
@@ -19,6 +19,7 @@
   window.HET.registerComponent('structural-shape-host', ({ signals }) => {
     signals.items = window.HET.signals.signal([
       {
+        id: 'shape',
         label: window.HET.signals.signal('Alpha'),
       },
     ]);
@@ -27,6 +28,7 @@
       changeShape() {
         signals.items.value = [
           {
+            id: 'shape',
             label: window.HET.signals.signal('Beta'),
             extra: window.HET.signals.signal('Extra'),
           },

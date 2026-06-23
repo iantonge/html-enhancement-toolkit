@@ -9,6 +9,7 @@
 
 <script nonce="{{{cspNonce}}}">
   const createMountedItem = (label) => ({
+    id: 'mounted',
     label: window.HET.signals.signal(label),
   });
 
@@ -28,7 +29,7 @@
     host.setAttribute('het-mount-pending', '');
 
     const template = document.createElement('template');
-    template.setAttribute('het-for', 'items');
+    template.setAttribute('het-for', 'items:id');
     const item = document.createElement('div');
     item.setAttribute('het-component', 'structural-mounted-item');
     const label = document.createElement('span');

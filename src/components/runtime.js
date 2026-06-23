@@ -177,6 +177,7 @@ function configureSignalBinding(ctx, binding) {
 
   if (binding.expression) {
     assertExpressionSignalsExist(binding, ctx.signals);
+    assertContextualBindingAllowed(ctx, binding);
   }
 
   if (!binding.expression && !(binding.source in ctx.signals)) {
@@ -220,6 +221,24 @@ function configureSignalBinding(ctx, binding) {
     binding.el.addEventListener(eventName, updateFromEl);
     ctx.onCleanup(() => binding.el.removeEventListener(eventName, updateFromEl));
   }
+}
+
+function assertContextualBindingAllowed(ctx, binding) {
+  if (!binding.expression?.hasContextuals) return;
+
+  if (
+    binding.expression.contextualNames.size === 1 &&
+    binding.expression.contextualNames.has('$key') &&
+    ctx.structuralContext &&
+    'key' in ctx.structuralContext
+  ) {
+    return;
+  }
+
+  throw new Error(
+    'HET Error: $key is only available inside het-for',
+    { cause: getBindingCause(binding) },
+  );
 }
 
 function configureBoolAttributeBinding(ctx, binding) {

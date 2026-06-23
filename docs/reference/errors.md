@@ -352,7 +352,7 @@ Fix the declaration by removing the empty segment.
 
 ### `HET Error: Output binding expression cannot use contextual values`
 
-An output binding such as `het-text`, `het-props`, `het-attrs`, `het-bool-attrs`, or `het-class` used contextual snapshot values like `$target`, `$event`, or `$attrs`.
+An output binding such as `het-text`, `het-props`, `het-attrs`, `het-bool-attrs`, or `het-class` used contextual snapshot values like `$target`, `$event`, or `$attrs`. `$key` is allowed only inside components cloned by `het-for`.
 
 ```html
 <div het-component>
@@ -365,6 +365,24 @@ Fix the binding by reading from the DOM in `het-seed`, `het-sync`, or an event-t
 ```html
 <input het-seed="message=$props.value">
 <p het-text="message"></p>
+```
+
+### `HET Error: $key is only available inside het-for`
+
+An output binding used `$key` outside a component cloned by `het-for`.
+
+```html
+<section het-component>
+  <p het-text="$key"></p>
+</section>
+```
+
+Fix the binding by using `$key` only inside a keyed `het-for` clone, or by using an ordinary signal.
+
+```html
+<template het-for="items:id">
+  <article het-component="item" het-attrs="id=$key + '-section'"></article>
+</template>
 ```
 
 ### `HET Error: Invalid event modifier`
@@ -779,14 +797,14 @@ The structural template root named a component that was not registered.
 
 ```html
 <div het-component="list">
-  <template het-for="items">
+  <template het-for="items:id">
     <li het-component="list-item"></li>
   </template>
 </div>
 
 <script>
   HET.registerComponent('list', ({ signals }) => {
-    signals.items = HET.signals.signal([{ label: HET.signals.signal('One') }]);
+    signals.items = HET.signals.signal([{ id: 'one', label: HET.signals.signal('One') }]);
   });
 </script>
 ```
@@ -803,7 +821,7 @@ HET.registerComponent('list-item');
 
 ```js
 HET.registerComponent('list', ({ signals }) => {
-  signals.items = HET.signals.signal({ label: HET.signals.signal('One') });
+  signals.items = HET.signals.signal({ id: 'one', label: HET.signals.signal('One') });
 });
 ```
 
@@ -812,10 +830,77 @@ Fix the source signal so its value is always an array.
 ```js
 HET.registerComponent('list', ({ signals }) => {
   signals.items = HET.signals.signal([
-    { label: HET.signals.signal('One') },
+    { id: 'one', label: HET.signals.signal('One') },
   ]);
 });
 ```
+
+### `HET Error: het-for requires a key`
+
+`het-for` did not include both the array signal name and key property.
+
+```html
+<template het-for="items">
+  <article het-component="item"></article>
+</template>
+```
+
+Fix the declaration by using `signalName:keyProperty`.
+
+```html
+<template het-for="items:id">
+  <article het-component="item"></article>
+</template>
+```
+
+### `HET Error: het-for key is missing`
+
+One `het-for` item did not contain the configured key property.
+
+```js
+signals.items = HET.signals.signal([
+  { label: HET.signals.signal('One') },
+]);
+```
+
+Fix each item by adding the static key property.
+
+```js
+signals.items = HET.signals.signal([
+  { id: 'one', label: HET.signals.signal('One') },
+]);
+```
+
+### `HET Error: het-for key must be a string or number`
+
+One `het-for` item used an unsupported key value.
+
+```js
+signals.items = HET.signals.signal([
+  { id: { value: 'one' }, label: HET.signals.signal('One') },
+]);
+```
+
+Fix the item by using a stable string or number key.
+
+```js
+signals.items = HET.signals.signal([
+  { id: 'one', label: HET.signals.signal('One') },
+]);
+```
+
+### `HET Error: het-for keys must be unique`
+
+Two items in the same `het-for` array used the same key.
+
+```js
+signals.items = HET.signals.signal([
+  { id: 'one', label: HET.signals.signal('One') },
+  { id: 'one', label: HET.signals.signal('Duplicate') },
+]);
+```
+
+Fix the data so keys are unique among siblings.
 
 ### `HET Error: het-for item must be an object`
 
@@ -832,7 +917,7 @@ Fix each array item so it is an object whose properties are signals to forward i
 ```js
 HET.registerComponent('list', ({ signals }) => {
   signals.items = HET.signals.signal([
-    { label: HET.signals.signal('One') },
+    { id: 'one', label: HET.signals.signal('One') },
   ]);
 });
 ```

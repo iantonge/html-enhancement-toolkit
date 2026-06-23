@@ -50,6 +50,30 @@ router.get('/invalid-non-array', (request, response) => {
   });
 });
 
+router.get('/invalid-missing-key', (request, response) => {
+  response.render('components/structural/invalid-missing-key', {
+    title: 'Missing het-for key',
+  });
+});
+
+router.get('/invalid-missing-key-property', (request, response) => {
+  response.render('components/structural/invalid-missing-key-property', {
+    title: 'Missing het-for key property',
+  });
+});
+
+router.get('/invalid-key-type', (request, response) => {
+  response.render('components/structural/invalid-key-type', {
+    title: 'Invalid het-for key type',
+  });
+});
+
+router.get('/invalid-duplicate-key', (request, response) => {
+  response.render('components/structural/invalid-duplicate-key', {
+    title: 'Duplicate het-for key',
+  });
+});
+
 router.get('/invalid-property', (request, response) => {
   response.render('components/structural/invalid-property', {
     title: 'Invalid forwarded property',
@@ -71,6 +95,12 @@ router.get('/signal-name-conflict', (request, response) => {
 router.get('/shape-change', (request, response) => {
   response.render('components/structural/shape-change', {
     title: 'Structural shape change',
+  });
+});
+
+router.get('/key-outside-for', (request, response) => {
+  response.render('components/structural/key-outside-for', {
+    title: '$key outside het-for',
   });
 });
 

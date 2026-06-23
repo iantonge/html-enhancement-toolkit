@@ -8,10 +8,9 @@
     </div>
 
     <ul id="for-list" class="list-unstyled mb-0">
-      <template het-for="items">
-        <li het-component="structural-for-item" het-imports="items" het-ref="root" class="mb-2 border rounded p-2">
+      <template het-for="items:id">
+        <li het-component="structural-for-item" het-imports="items" het-ref="root" class="mb-2 border rounded p-2" het-attrs="id=$key + '-row'">
           <div class="d-flex align-items-center gap-2">
-            <span class="item-id" het-text="id"></span>
             <span class="item-message" het-text="message"></span>
             <span class="item-mount badge text-bg-secondary" het-text="mountId"></span>
             <button type="button" class="btn btn-sm btn-outline-dark append-mark" het-on="click->appendMark">Mutate</button>
@@ -28,11 +27,12 @@
   window.structuralForCleanupIds = [];
 
   const createItem = (id, message) => ({
-    id: window.HET.signals.signal(id),
+    id,
     message: window.HET.signals.signal(message),
   });
 
-  window.HET.registerComponent('structural-for-host', ({ signals }) => {
+  window.HET.registerComponent('structural-for-host', ({ key, signals }) => {
+    window.structuralForHostKey = key;
     signals.items = window.HET.signals.signal([
       createItem('a', 'Alpha'),
       createItem('b', 'Beta'),
@@ -41,8 +41,8 @@
     return {
       swapList() {
         signals.items.value = [
-          createItem('c', 'Gamma'),
-          createItem('d', 'Delta'),
+          signals.items.value[1],
+          signals.items.value[0],
         ];
       },
       growList() {
@@ -57,9 +57,10 @@
     };
   });
 
-  window.HET.registerComponent('structural-for-item', ({ refs, signals, onCleanup }) => {
+  window.HET.registerComponent('structural-for-item', ({ key, refs, signals, onCleanup }) => {
     const nextMountId = window.structuralForMountIds.length + 1;
     signals.mountId = window.HET.signals.signal(String(nextMountId));
+    refs.root.dataset.key = key;
     refs.root.dataset.mountId = String(nextMountId);
     window.structuralForMountIds.push(nextMountId);
 
@@ -73,7 +74,7 @@
       },
       removeItem() {
         signals.items.value = signals.items.value.filter(
-          (item) => item.id.value !== signals.id.value,
+          (item) => item.id !== key,
         );
       },
     };

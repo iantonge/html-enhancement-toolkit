@@ -751,7 +751,7 @@ Reference documentation:
 
 ## 20. Render repeated component instances with `het-for`
 
-`het-for` uses the same structural-template rules as `het-if`, but the source signal must hold an array. Each array item must be an object whose properties are signals.
+`het-for` uses the same structural-template rules as `het-if`, but the source signal must hold an array. Each array item must have a static key and signal properties.
 
 ```html
 <section het-component="todoList">
@@ -762,7 +762,7 @@ Reference documentation:
   <button type="button" het-on="click->addTodo">Add todo</button>
 
   <ul>
-    <template het-for="items">
+    <template het-for="items:id">
       <li het-component="todoItem">
         <span het-text="label"></span>
       </li>
@@ -771,8 +771,11 @@ Reference documentation:
 </section>
 
 <script>
+  let nextTodoId = 1;
+
   function todo(label) {
     return {
+      id: nextTodoId++,
       label: HET.signals.signal(label),
     };
   }
@@ -803,7 +806,7 @@ Reference documentation:
 </script>
 ```
 
-Each item object is forwarded into its cloned component root, so every `todoItem` receives its own `label` signal. The list component also owns the `newLabel` signal created by `het-model`, so the returned `addTodo()` handler can read the input value, append a new item object, and then clear the input.
+Each item object is keyed by `id` and its signal properties are forwarded into the cloned component root, so every `todoItem` receives its own `label` signal. The list component also owns the `newLabel` signal created by `het-model`, so the returned `addTodo()` handler can read the input value, append a new item object, and then clear the input.
 
 The source signal is still just a signal. To add an item, assign a new array:
 
@@ -834,7 +837,7 @@ When a delayed clone is due to be removed, HET adds a CSS class to the cloned ro
   <button type="button" het-on="click->addNotification">Add notification</button>
 
   <div class="notifications">
-    <template het-for="notifications">
+    <template het-for="notifications:id">
       <article
         het-component="notificationCard"
         het-imports="notifications"
@@ -853,7 +856,7 @@ let nextNotificationId = 1;
 
 function notification(message) {
   return {
-    id: HET.signals.signal(nextNotificationId++),
+    id: nextNotificationId++,
     message: HET.signals.signal(message),
   };
 }
@@ -879,11 +882,11 @@ HET.registerComponent('notificationCenter', ({ signals }) => {
   };
 });
 
-HET.registerComponent('notificationCard', ({ signals }) => {
+HET.registerComponent('notificationCard', ({ key, signals }) => {
   return {
     dismiss() {
       signals.notifications.value = signals.notifications.value.filter(
-        (item) => item.id.value !== signals.id.value,
+        (item) => item.id !== key,
       );
     },
   };
