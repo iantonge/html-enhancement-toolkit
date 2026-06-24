@@ -418,16 +418,15 @@ When `init({ structuralUnmountDelay })` is greater than `0`, falsy transitions c
 
 ### `het-for`
 
-`het-for="signalName:keyProperty"` expects the signal value to be an array.
-Each array item must be an object with a static key property and Preact signal properties. HET uses the key property to preserve clone identity as items move, and forwards the signal properties into the cloned component root.
+`het-for="signalName"` expects the signal value to be a `Map`.
+Each Map key must be a string or number, and each Map value must be an object with Preact signal properties. HET uses the Map key to preserve clone identity as entries move, and forwards the signal properties into the cloned component root.
 
 ```html
-<template het-for="items:id">
+<template het-for="items">
   <article het-component="todo-item" het-attrs="id=$key + '-section'"></article>
 </template>
 ```
 
-The key property must be a string or number. It is not forwarded as a signal, and it does not reserve that name inside the item component.
 Use `$key` in binding expressions and `key` from the setup context in component methods.
 
 Prefer ordinary visibility bindings such as `het-bool-attrs="hidden=isHidden"` when the DOM should stay mounted. Structural directives create and destroy component instances.

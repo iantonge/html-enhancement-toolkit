@@ -50,27 +50,9 @@ router.get('/invalid-non-array', (request, response) => {
   });
 });
 
-router.get('/invalid-missing-key', (request, response) => {
-  response.render('components/structural/invalid-missing-key', {
-    title: 'Missing het-for key',
-  });
-});
-
-router.get('/invalid-missing-key-property', (request, response) => {
-  response.render('components/structural/invalid-missing-key-property', {
-    title: 'Missing het-for key property',
-  });
-});
-
 router.get('/invalid-key-type', (request, response) => {
   response.render('components/structural/invalid-key-type', {
     title: 'Invalid het-for key type',
-  });
-});
-
-router.get('/invalid-duplicate-key', (request, response) => {
-  response.render('components/structural/invalid-duplicate-key', {
-    title: 'Duplicate het-for key',
   });
 });
 

@@ -80,16 +80,15 @@ function createStructuralBlock(binding) {
 }
 
 function reconcileForBlock(ctx, binding, block, value, mountApi) {
-  if (!Array.isArray(value)) {
+  if (!(value instanceof Map)) {
     throw new Error(
-      'HET Error: het-for source must be an array',
+      'HET Error: het-for source must be a Map',
       { cause: getBindingCause(binding, { signalName: binding.source }) },
     );
   }
 
-  const nextItems = value.map((item) => getKeyedForItem(item, binding));
+  const nextItems = Array.from(value, ([key, item]) => getKeyedForItem(key, item, binding));
   const nextKeys = nextItems.map((item) => item.key);
-  validateUniqueKeys(nextKeys, binding);
 
   const nextKeySet = new Set(nextKeys);
   for (const key of block.activeKeys) {
@@ -151,26 +150,11 @@ function reconcileIfBlock(ctx, binding, block, value, mountApi) {
   block.activeCount = 1;
 }
 
-function getKeyedForItem(value, binding) {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) {
-    throw new Error(
-      `HET Error: ${binding.dirName} item must be an object`,
-      { cause: getBindingCause(binding, { signalName: binding.source }) },
-    );
-  }
-
-  if (!Object.prototype.hasOwnProperty.call(value, binding.key)) {
-    throw new Error(
-      'HET Error: het-for key is missing',
-      { cause: getBindingCause(binding, { signalName: binding.key }) },
-    );
-  }
-
-  const itemKey = value[binding.key];
+function getKeyedForItem(itemKey, value, binding) {
   if (typeof itemKey !== 'string' && typeof itemKey !== 'number') {
     throw new Error(
       'HET Error: het-for key must be a string or number',
-      { cause: getBindingCause(binding, { signalName: binding.key }) },
+      { cause: getBindingCause(binding, { signalName: binding.source }) },
     );
   }
 
@@ -178,19 +162,6 @@ function getKeyedForItem(value, binding) {
     key: itemKey,
     signals: getForwardedSignalsForValue(value, binding),
   };
-}
-
-function validateUniqueKeys(keys, binding) {
-  const seen = new Set();
-  for (const key of keys) {
-    if (seen.has(key)) {
-      throw new Error(
-        'HET Error: het-for keys must be unique',
-        { cause: getBindingCause(binding, { signalName: binding.key }) },
-      );
-    }
-    seen.add(key);
-  }
 }
 
 function getForwardedSignalsForValue(value, binding) {
@@ -205,10 +176,6 @@ function getForwardedSignalsForValue(value, binding) {
   const signalsByName = Object.create(null);
 
   for (const [key, candidate] of entries) {
-    if (key === binding.key) {
-      continue;
-    }
-
     if (candidate?.brand !== PREACT_SIGNAL_BRAND) {
       throw new Error(
         'HET Error: Structural item property must be a signal',

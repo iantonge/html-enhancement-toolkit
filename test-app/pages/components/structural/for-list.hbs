@@ -8,7 +8,7 @@
     </div>
 
     <ul id="for-list" class="list-unstyled mb-0">
-      <template het-for="items:id">
+      <template het-for="items">
         <li het-component="structural-for-item" het-imports="items" het-ref="root" class="mb-2 border rounded p-2" het-attrs="id=$key + '-row'">
           <div class="d-flex align-items-center gap-2">
             <span class="item-message" het-text="message"></span>
@@ -26,33 +26,32 @@
   window.structuralForMountIds = [];
   window.structuralForCleanupIds = [];
 
-  const createItem = (id, message) => ({
-    id,
+  const createItem = (message) => ({
     message: window.HET.signals.signal(message),
   });
 
   window.HET.registerComponent('structural-for-host', ({ key, signals }) => {
     window.structuralForHostKey = key;
-    signals.items = window.HET.signals.signal([
-      createItem('a', 'Alpha'),
-      createItem('b', 'Beta'),
-    ]);
+    signals.items = window.HET.signals.signal(new Map([
+      ['a', createItem('Alpha')],
+      ['b', createItem('Beta')],
+    ]));
 
     return {
       swapList() {
-        signals.items.value = [
-          signals.items.value[1],
-          signals.items.value[0],
-        ];
+        signals.items.value = new Map([
+          ['b', signals.items.value.get('b')],
+          ['a', signals.items.value.get('a')],
+        ]);
       },
       growList() {
-        signals.items.value = [
+        signals.items.value = new Map([
           ...signals.items.value,
-          createItem('e', 'Epsilon'),
-        ];
+          ['e', createItem('Epsilon')],
+        ]);
       },
       shrinkList() {
-        signals.items.value = signals.items.value.slice(0, 1);
+        signals.items.value = new Map([...signals.items.value].slice(0, 1));
       },
     };
   });
@@ -73,9 +72,9 @@
         signals.message.value = `${signals.message.value}!`;
       },
       removeItem() {
-        signals.items.value = signals.items.value.filter(
-          (item) => item.id !== key,
-        );
+        const nextItems = new Map(signals.items.value);
+        nextItems.delete(key);
+        signals.items.value = nextItems;
       },
     };
   });

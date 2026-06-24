@@ -169,24 +169,10 @@ test.describe('components structural templates', () => {
     await expect(page.locator('.mounted-label')).toHaveText('Mounted after init');
   });
 
-  test('reports error when het-for source is not an array', async ({ page }) => {
+  test('reports error when het-for source is not a Map', async ({ page }) => {
     await page.goto('/components/structural/invalid-non-array');
     await page.waitForFunction(() =>
-      window.hetErrors.some((error) => error.message === 'HET Error: het-for source must be an array'),
-    );
-  });
-
-  test('reports error when het-for is missing a key declaration', async ({ page }) => {
-    await page.goto('/components/structural/invalid-missing-key');
-    await page.waitForFunction(() =>
-      window.hetErrors.some((error) => error.message === 'HET Error: het-for requires a key'),
-    );
-  });
-
-  test('reports error when a het-for item is missing the key property', async ({ page }) => {
-    await page.goto('/components/structural/invalid-missing-key-property');
-    await page.waitForFunction(() =>
-      window.hetErrors.some((error) => error.message === 'HET Error: het-for key is missing'),
+      window.hetErrors.some((error) => error.message === 'HET Error: het-for source must be a Map'),
     );
   });
 
@@ -194,13 +180,6 @@ test.describe('components structural templates', () => {
     await page.goto('/components/structural/invalid-key-type');
     await page.waitForFunction(() =>
       window.hetErrors.some((error) => error.message === 'HET Error: het-for key must be a string or number'),
-    );
-  });
-
-  test('reports error when het-for keys are duplicated', async ({ page }) => {
-    await page.goto('/components/structural/invalid-duplicate-key');
-    await page.waitForFunction(() =>
-      window.hetErrors.some((error) => error.message === 'HET Error: het-for keys must be unique'),
     );
   });
 

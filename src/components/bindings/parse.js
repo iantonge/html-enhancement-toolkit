@@ -2,7 +2,6 @@ import {
   ACQUISITION_STRATEGIES,
   ASSIGNMENT_SOURCE_TYPE,
   CONTEXTUAL_IDENTIFIERS,
-  FOR_ATTR,
   FUNC_SOURCE_TYPE,
   IF_ATTR,
   INTRINSIC_IDENTIFIERS,
@@ -139,10 +138,6 @@ function getStructuralBinding(el, componentLoggingContext) {
     bindingDeclaration: declaration,
     bindingElement: el,
   };
-  const structuralExpression = attrName === FOR_ATTR
-    ? getParsedForExpression(declaration, bindingLoggingContext)
-    : { source: getValidatedSignalIdentifier(declaration, bindingLoggingContext) };
-
   return {
     dirName: attrName,
     attrName,
@@ -150,35 +145,8 @@ function getStructuralBinding(el, componentLoggingContext) {
     componentElement: componentLoggingContext.componentElement,
     componentName: componentLoggingContext.componentName,
     componentRoot,
-    ...structuralExpression,
+    source: getValidatedSignalIdentifier(declaration, bindingLoggingContext),
     exp: declaration,
-  };
-}
-
-function getParsedForExpression(declaration, bindingLoggingContext) {
-  const splitIndex = findTopLevelOperatorIndex(declaration, ':');
-  if (
-    splitIndex === -1 ||
-    findTopLevelOperatorIndex(declaration.slice(splitIndex + 1), ':') !== -1
-  ) {
-    throw new Error(
-      'HET Error: het-for requires a key',
-      { cause: bindingLoggingContext },
-    );
-  }
-
-  const sourceExpression = declaration.slice(0, splitIndex).trim();
-  const keyExpression = declaration.slice(splitIndex + 1).trim();
-  if (!sourceExpression || !keyExpression) {
-    throw new Error(
-      'HET Error: het-for requires a key',
-      { cause: bindingLoggingContext },
-    );
-  }
-
-  return {
-    source: getValidatedSignalIdentifier(sourceExpression, bindingLoggingContext),
-    key: getValidatedSignalIdentifier(keyExpression, bindingLoggingContext),
   };
 }
 

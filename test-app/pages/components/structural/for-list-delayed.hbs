@@ -15,7 +15,7 @@
     </div>
 
     <ul id="for-list" class="list-unstyled mb-0">
-      <template het-for="items:id">
+      <template het-for="items">
         <li het-component="structural-for-delayed-item" het-imports="items" het-ref="root" class="mb-2 border rounded p-2" het-attrs="id=$key + '-delayed-row'">
           <div class="d-flex align-items-center gap-2">
             <span class="item-message" het-text="message"></span>
@@ -47,40 +47,39 @@
   window.structuralForDelayedMountIds = [];
   window.structuralForDelayedCleanupIds = [];
 
-  const createItem = (id, message) => ({
-    id,
+  const createItem = (message) => ({
     message: window.HET.signals.signal(message),
   });
 
   window.HET.registerComponent('structural-for-delayed-host', ({ signals }) => {
-    signals.items = window.HET.signals.signal([
-      createItem('a', 'Alpha'),
-      createItem('b', 'Beta'),
-      createItem('c', 'Gamma'),
-    ]);
+    signals.items = window.HET.signals.signal(new Map([
+      ['a', createItem('Alpha')],
+      ['b', createItem('Beta')],
+      ['c', createItem('Gamma')],
+    ]));
 
     return {
       shrinkList() {
-        signals.items.value = signals.items.value.slice(0, 1);
+        signals.items.value = new Map([...signals.items.value].slice(0, 1));
       },
       regrowList() {
-        signals.items.value = [
-          createItem('a', 'Alpha'),
-          createItem('d', 'Delta'),
-        ];
+        signals.items.value = new Map([
+          ['a', createItem('Alpha')],
+          ['d', createItem('Delta')],
+        ]);
       },
       removeMiddle() {
-        signals.items.value = [
-          signals.items.value[0],
-          signals.items.value[2],
-        ];
+        signals.items.value = new Map([
+          ['a', signals.items.value.get('a')],
+          ['c', signals.items.value.get('c')],
+        ]);
       },
       readdMiddle() {
-        signals.items.value = [
-          signals.items.value[0],
-          createItem('b', 'Beta re-added'),
-          signals.items.value[1],
-        ];
+        signals.items.value = new Map([
+          ['a', signals.items.value.get('a')],
+          ['b', createItem('Beta re-added')],
+          ['c', signals.items.value.get('c')],
+        ]);
       },
     };
   });

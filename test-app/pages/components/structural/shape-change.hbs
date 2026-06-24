@@ -3,7 +3,7 @@
     <h1 class="h4 mb-3">{{title}}</h1>
     <div het-component="structural-shape-host">
       <ul id="shape-list" class="mb-3">
-        <template het-for="items:id">
+        <template het-for="items">
           <li het-component="structural-shape-item">
             <span class="shape-label" het-text="label"></span>
           </li>
@@ -17,22 +17,26 @@
 </section>
 <script nonce="{{{cspNonce}}}">
   window.HET.registerComponent('structural-shape-host', ({ signals }) => {
-    signals.items = window.HET.signals.signal([
-      {
-        id: 'shape',
-        label: window.HET.signals.signal('Alpha'),
-      },
-    ]);
+    signals.items = window.HET.signals.signal(new Map([
+      [
+        'shape',
+        {
+          label: window.HET.signals.signal('Alpha'),
+        },
+      ],
+    ]));
 
     return {
       changeShape() {
-        signals.items.value = [
-          {
-            id: 'shape',
-            label: window.HET.signals.signal('Beta'),
-            extra: window.HET.signals.signal('Extra'),
-          },
-        ];
+        signals.items.value = new Map([
+          [
+            'shape',
+            {
+              label: window.HET.signals.signal('Beta'),
+              extra: window.HET.signals.signal('Extra'),
+            },
+          ],
+        ]);
       },
     };
   });

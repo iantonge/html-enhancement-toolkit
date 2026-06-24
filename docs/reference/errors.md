@@ -380,7 +380,7 @@ An output binding used `$key` outside a component cloned by `het-for`.
 Fix the binding by using `$key` only inside a keyed `het-for` clone, or by using an ordinary signal.
 
 ```html
-<template het-for="items:id">
+<template het-for="items">
   <article het-component="item" het-attrs="id=$key + '-section'"></article>
 </template>
 ```
@@ -797,14 +797,16 @@ The structural template root named a component that was not registered.
 
 ```html
 <div het-component="list">
-  <template het-for="items:id">
+  <template het-for="items">
     <li het-component="list-item"></li>
   </template>
 </div>
 
 <script>
   HET.registerComponent('list', ({ signals }) => {
-    signals.items = HET.signals.signal([{ id: 'one', label: HET.signals.signal('One') }]);
+    signals.items = HET.signals.signal(new Map([
+      ['one', { label: HET.signals.signal('One') }],
+    ]));
   });
 </script>
 ```
@@ -815,9 +817,9 @@ Fix the template by registering the cloned component, or make it anonymous if no
 HET.registerComponent('list-item');
 ```
 
-### `HET Error: het-for source must be an array`
+### `HET Error: het-for source must be a Map`
 
-`het-for` resolved to a non-array value.
+`het-for` resolved to a non-Map value.
 
 ```js
 HET.registerComponent('list', ({ signals }) => {
@@ -825,82 +827,33 @@ HET.registerComponent('list', ({ signals }) => {
 });
 ```
 
-Fix the source signal so its value is always an array.
+Fix the source signal so its value is always a Map.
 
 ```js
 HET.registerComponent('list', ({ signals }) => {
-  signals.items = HET.signals.signal([
-    { id: 'one', label: HET.signals.signal('One') },
-  ]);
+  signals.items = HET.signals.signal(new Map([
+    ['one', { label: HET.signals.signal('One') }],
+  ]));
 });
-```
-
-### `HET Error: het-for requires a key`
-
-`het-for` did not include both the array signal name and key property.
-
-```html
-<template het-for="items">
-  <article het-component="item"></article>
-</template>
-```
-
-Fix the declaration by using `signalName:keyProperty`.
-
-```html
-<template het-for="items:id">
-  <article het-component="item"></article>
-</template>
-```
-
-### `HET Error: het-for key is missing`
-
-One `het-for` item did not contain the configured key property.
-
-```js
-signals.items = HET.signals.signal([
-  { label: HET.signals.signal('One') },
-]);
-```
-
-Fix each item by adding the static key property.
-
-```js
-signals.items = HET.signals.signal([
-  { id: 'one', label: HET.signals.signal('One') },
-]);
 ```
 
 ### `HET Error: het-for key must be a string or number`
 
-One `het-for` item used an unsupported key value.
+One `het-for` Map entry used an unsupported key value.
 
 ```js
-signals.items = HET.signals.signal([
-  { id: { value: 'one' }, label: HET.signals.signal('One') },
-]);
+signals.items = HET.signals.signal(new Map([
+  [{ value: 'one' }, { label: HET.signals.signal('One') }],
+]));
 ```
 
-Fix the item by using a stable string or number key.
+Fix the entry by using a stable string or number key.
 
 ```js
-signals.items = HET.signals.signal([
-  { id: 'one', label: HET.signals.signal('One') },
-]);
+signals.items = HET.signals.signal(new Map([
+  ['one', { label: HET.signals.signal('One') }],
+]));
 ```
-
-### `HET Error: het-for keys must be unique`
-
-Two items in the same `het-for` array used the same key.
-
-```js
-signals.items = HET.signals.signal([
-  { id: 'one', label: HET.signals.signal('One') },
-  { id: 'one', label: HET.signals.signal('Duplicate') },
-]);
-```
-
-Fix the data so keys are unique among siblings.
 
 ### `HET Error: het-for item must be an object`
 
@@ -908,17 +861,19 @@ One `het-for` item was not an object.
 
 ```js
 HET.registerComponent('list', ({ signals }) => {
-  signals.items = HET.signals.signal(['One']);
+  signals.items = HET.signals.signal(new Map([
+    ['one', 'One'],
+  ]));
 });
 ```
 
-Fix each array item so it is an object whose properties are signals to forward into the cloned component.
+Fix each Map value so it is an object whose properties are signals to forward into the cloned component.
 
 ```js
 HET.registerComponent('list', ({ signals }) => {
-  signals.items = HET.signals.signal([
-    { id: 'one', label: HET.signals.signal('One') },
-  ]);
+  signals.items = HET.signals.signal(new Map([
+    ['one', { label: HET.signals.signal('One') }],
+  ]));
 });
 ```
 
@@ -948,7 +903,9 @@ A forwarded structural item property was not a Preact signal.
 
 ```js
 HET.registerComponent('list', ({ signals }) => {
-  signals.items = HET.signals.signal([{ label: 'One' }]);
+  signals.items = HET.signals.signal(new Map([
+    ['one', { label: 'One' }],
+  ]));
 });
 ```
 
@@ -956,9 +913,9 @@ Fix every forwarded property by wrapping it in a signal.
 
 ```js
 HET.registerComponent('list', ({ signals }) => {
-  signals.items = HET.signals.signal([
-    { label: HET.signals.signal('One') },
-  ]);
+  signals.items = HET.signals.signal(new Map([
+    ['one', { label: HET.signals.signal('One') }],
+  ]));
 });
 ```
 
@@ -968,42 +925,51 @@ An existing structural clone received a forwarded signal object with a different
 
 ```js
 HET.registerComponent('list', ({ signals }) => {
-  signals.items = HET.signals.signal([
-    { label: HET.signals.signal('One') },
-  ]);
+  signals.items = HET.signals.signal(new Map([
+    ['one', { label: HET.signals.signal('One') }],
+  ]));
 
   return {
     changeShape() {
-      signals.items.value = [
-        {
-          label: HET.signals.signal('Two'),
-          extra: HET.signals.signal('Extra'),
-        },
-      ];
+      signals.items.value = new Map([
+        [
+          'one',
+          {
+            label: HET.signals.signal('Two'),
+            extra: HET.signals.signal('Extra'),
+          },
+        ],
+      ]);
     },
   };
 });
 ```
 
-Fix the structural source by keeping the same forwarded property names for each reused position.
+Fix the structural source by keeping the same forwarded property names for each reused key.
 
 ```js
 HET.registerComponent('list', ({ signals }) => {
-  signals.items = HET.signals.signal([
-    {
-      label: HET.signals.signal('One'),
-      extra: HET.signals.signal(''),
-    },
-  ]);
+  signals.items = HET.signals.signal(new Map([
+    [
+      'one',
+      {
+        label: HET.signals.signal('One'),
+        extra: HET.signals.signal(''),
+      },
+    ],
+  ]));
 
   return {
     changeShape() {
-      signals.items.value = [
-        {
-          label: HET.signals.signal('Two'),
-          extra: HET.signals.signal('Extra'),
-        },
-      ];
+      signals.items.value = new Map([
+        [
+          'one',
+          {
+            label: HET.signals.signal('Two'),
+            extra: HET.signals.signal('Extra'),
+          },
+        ],
+      ]);
     },
   };
 });

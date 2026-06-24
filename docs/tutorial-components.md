@@ -751,7 +751,7 @@ Reference documentation:
 
 ## 20. Render repeated component instances with `het-for`
 
-`het-for` uses the same structural-template rules as `het-if`, but the source signal must hold an array. Each array item must have a static key and signal properties.
+`het-for` uses the same structural-template rules as `het-if`, but the source signal must hold a `Map`. Each Map key is the clone key, and each Map value must have signal properties.
 
 ```html
 <section het-component="todoList">
@@ -762,7 +762,7 @@ Reference documentation:
   <button type="button" het-on="click->addTodo">Add todo</button>
 
   <ul>
-    <template het-for="items:id">
+    <template het-for="items">
       <li het-component="todoItem">
         <span het-text="label"></span>
       </li>
@@ -775,16 +775,15 @@ Reference documentation:
 
   function todo(label) {
     return {
-      id: nextTodoId++,
       label: HET.signals.signal(label),
     };
   }
 
   HET.registerComponent('todoList', ({ signals }) => {
-    signals.items = HET.signals.signal([
-      todo('Write HTML'),
-      todo('Enhance behavior'),
-    ]);
+    signals.items = HET.signals.signal(new Map([
+      [nextTodoId++, todo('Write HTML')],
+      [nextTodoId++, todo('Enhance behavior')],
+    ]));
 
     return {
       addTodo() {
@@ -792,10 +791,10 @@ Reference documentation:
 
         if (!label) return;
 
-        signals.items.value = [
+        signals.items.value = new Map([
           ...signals.items.value,
-          todo(label),
-        ];
+          [nextTodoId++, todo(label)],
+        ]);
         signals.newLabel.value = '';
       },
     };
@@ -806,15 +805,15 @@ Reference documentation:
 </script>
 ```
 
-Each item object is keyed by `id` and its signal properties are forwarded into the cloned component root, so every `todoItem` receives its own `label` signal. The list component also owns the `newLabel` signal created by `het-model`, so the returned `addTodo()` handler can read the input value, append a new item object, and then clear the input.
+Each Map entry is keyed by its string or number key, and the entry value's signal properties are forwarded into the cloned component root, so every `todoItem` receives its own `label` signal. The list component also owns the `newLabel` signal created by `het-model`, so the returned `addTodo()` handler can read the input value, append a new entry, and then clear the input.
 
-The source signal is still just a signal. To add an item, assign a new array:
+The source signal is still just a signal. To add an item, assign a new Map:
 
 ```js
-signals.items.value = [
+signals.items.value = new Map([
   ...signals.items.value,
-  todo('Ship it'),
-];
+  [nextTodoId++, todo('Ship it')],
+]);
 ```
 
 Reference documentation:
@@ -837,7 +836,7 @@ When a delayed clone is due to be removed, HET adds a CSS class to the cloned ro
   <button type="button" het-on="click->addNotification">Add notification</button>
 
   <div class="notifications">
-    <template het-for="notifications:id">
+    <template het-for="notifications">
       <article
         het-component="notificationCard"
         het-imports="notifications"
@@ -856,16 +855,15 @@ let nextNotificationId = 1;
 
 function notification(message) {
   return {
-    id: nextNotificationId++,
     message: HET.signals.signal(message),
   };
 }
 
 HET.registerComponent('notificationCenter', ({ signals }) => {
-  signals.notifications = HET.signals.signal([
-    notification('Profile saved'),
-    notification('Report exported'),
-  ]);
+  signals.notifications = HET.signals.signal(new Map([
+    [nextNotificationId++, notification('Profile saved')],
+    [nextNotificationId++, notification('Report exported')],
+  ]));
 
   return {
     addNotification() {
@@ -873,10 +871,10 @@ HET.registerComponent('notificationCenter', ({ signals }) => {
 
       if (!message) return;
 
-      signals.notifications.value = [
+      signals.notifications.value = new Map([
         ...signals.notifications.value,
-        notification(message),
-      ];
+        [nextNotificationId++, notification(message)],
+      ]);
       signals.newMessage.value = '';
     },
   };
@@ -885,9 +883,9 @@ HET.registerComponent('notificationCenter', ({ signals }) => {
 HET.registerComponent('notificationCard', ({ key, signals }) => {
   return {
     dismiss() {
-      signals.notifications.value = signals.notifications.value.filter(
-        (item) => item.id !== key,
-      );
+      const nextNotifications = new Map(signals.notifications.value);
+      nextNotifications.delete(key);
+      signals.notifications.value = nextNotifications;
     },
   };
 });
