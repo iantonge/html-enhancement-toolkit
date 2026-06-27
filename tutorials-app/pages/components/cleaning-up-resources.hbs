@@ -1,0 +1,72 @@
+<div class="row g-4 tutorial-step">
+  <section class="col-12 col-lg-6 h-100">
+    <div class="bg-white border rounded p-4 tutorial-pane">
+      <div class="mb-3">
+        <a href="/components" class="small">&larr; Components Tutorial</a>
+      </div>
+      <nav class="d-flex justify-content-between gap-2 mb-3" aria-label="Tutorial section navigation">
+          <a class="btn btn-outline-primary" href="/components/register-a-component">Previous</a>
+          <a class="btn btn-outline-primary" href="/components/write-to-the-dom">Next</a>
+      </nav>
+      <h1 class="h4 mb-3">3. Cleaning up resources</h1>
+      <div class="tutorial-content mb-4">
+        <p>In a real application, components may be added and removed as the page is updated. If event listeners, timeouts, third party javascript widgets, or any other resources are created in <code>setup()</code> then they need to be disposed of properly when the component unmounts. The <code>onCleanup()</code> function on the context object passed into <code>setup()</code> is for registering callback functions that are called when the component is unmounted.</p>
+        <p>For this example we only need to register one callback function to remove the event listener. You can call <code>onCleanup()</code> multiple times and register as many callbacks as you need to. All registered callbacks will be run when the component is unmounted.</p>
+        <p>Callbacks registered with <code>onCleanup()</code> only run when a specific instance of a component is unmounted. If you need to shut HET down entirely, call <code>HET.destroy()</code>. That destroys all mounted components, runs their cleanup callbacks, and disposes of all internal HET resources.</p>
+        <p>In both cases you should see your message logged to the console or your alert fire. If you ran <code>HET.destroy()</code> you can also try clicking on the button now and confirming that the alert is no longer popping up.</p>
+        <p>Reference documentation:</p>
+        <ul>
+          <li><a href="reference/components#cleanup">Cleanup</a></li>
+          <li><a href="reference/api#destroy"><code>destroy()</code></a></li>
+        </ul>
+      </div>
+
+      <form method="post" action="/preview" target="tutorial-preview" data-tutorial-form>
+        <input type="hidden" name="html" data-editor-output="html">
+        <input type="hidden" name="js" data-editor-output="js">
+        <input type="hidden" name="css" data-editor-output="css">
+
+        <div class="mb-3">
+          <label class="form-label fw-semibold" for="html-source">HTML</label>
+          <textarea id="html-source" class="d-none" data-editor="html">&lt;section het-component="alerter">
+  &lt;button type="button" het-ref="alertButton">Alert&lt;/button>
+&lt;/section></textarea>
+          <div class="editor-host" data-editor-host="html"></div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label fw-semibold" for="js-source">JavaScript</label>
+          <textarea id="js-source" class="d-none" data-editor="js">HET.registerComponent('alerter', ({ refs, onCleanup }) => {
+  function handleClick() {
+    alert('Clicked');
+  }
+
+  refs.alertButton.addEventListener('click', handleClick);
+
+  onCleanup(() => {
+    refs.alertButton.removeEventListener('click', handleClick);
+  });
+});
+
+HET.init();</textarea>
+          <div class="editor-host" data-editor-host="js"></div>
+        </div>
+        <textarea class="d-none" data-editor="css"></textarea>
+
+        <button class="btn btn-primary" type="submit">Submit</button>
+      </form>
+
+      <nav class="d-flex justify-content-between gap-2 mt-4" aria-label="Tutorial section navigation">
+          <a class="btn btn-outline-primary" href="/components/register-a-component">Previous</a>
+          <a class="btn btn-outline-primary" href="/components/write-to-the-dom">Next</a>
+      </nav>
+    </div>
+  </section>
+
+  <section class="col-12 col-lg-6 h-100">
+    <div class="bg-white border rounded p-4 tutorial-pane">
+      <h2 class="h5 mb-3">Preview</h2>
+      <iframe class="preview-frame" name="tutorial-preview" title="3. Cleaning up resources preview"></iframe>
+    </div>
+  </section>
+</div>

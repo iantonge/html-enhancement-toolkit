@@ -1,0 +1,19 @@
+<section class="card shadow-sm border-0">
+  <div class="card-body">
+    <h1 class="h4 mb-3">{{title}}</h1>
+    <div het-component="het-props-string-match">
+      <button id="set-label" type="button" het-on="click->setLabel">Set label</button>
+      <p id="label-value" het-props="textContent=label" class="mb-0 text-muted">Ready</p>
+    </div>
+  </div>
+</section>
+<script nonce="{{{cspNonce}}}">
+  window.HET.registerComponent('het-props-string-match', ({ signals }) => {
+    signals.label = window.HET.signals.signal('Ready');
+    return {
+      setLabel() {
+        signals.label.value = 'Done';
+      },
+    };
+  });
+</script>

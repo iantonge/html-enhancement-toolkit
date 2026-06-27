@@ -1,0 +1,72 @@
+<div class="row g-4 tutorial-step">
+  <section class="col-12 col-lg-6 h-100">
+    <div class="bg-white border rounded p-4 tutorial-pane">
+      <div class="mb-3">
+        <a href="/components" class="small">&larr; Components Tutorial</a>
+      </div>
+      <nav class="d-flex justify-content-between gap-2 mb-3" aria-label="Tutorial section navigation">
+          <a class="btn btn-outline-primary" href="/components/use-het-on-instead-of-addeventlistener">Previous</a>
+          <a class="btn btn-outline-primary" href="/components/create-signals-from-html-with-het-seed">Next</a>
+      </nav>
+      <h1 class="h4 mb-3">8. Assign to signals directly in <code>het-on</code></h1>
+      <div class="tutorial-content mb-4">
+        <p>The next improvement we can make is to remove the <code>increment</code> method entirely. As an alternative to calling a method, <code>het-on</code> can assign a signal value directly from the result of an expression. In this case we're just incrementing a number, so the expression is quite simple and can be inlined.</p>
+        <p>It's important to understand the format here is not <code>het-on=&quot;event-&gt;expression&quot;</code>. The format is <code>het-on=&quot;event-&gt;signal=expression&quot;</code>. This format is referred to as assignment-style in this tutorial. Expressions are not arbitrary javascript, they are an intentionally restricted subset of javascript and assignment is not allowed. This is why we cannot use <code>het-on=&quot;click-&gt;count++&quot;</code> or <code>het-on=&quot;click-&gt;count += 1&quot;</code>. Expressions are limited to pure, single line code snippets. You can use arithmetic operators, comparison operators, logical operators, and ternaries. Code blocks, arbitrary function calls, or any other operations are not supported.</p>
+        <p>Signals are referenced by name only in expressions. <code>.value</code> is not used when reading from signal values, nor is it used in the <code>signal=</code> portion of the binding.</p>
+        <p>As you might expect, <code>count + 1</code> is evaluated when the click happens. There is no longer a need for a separate <code>increment()</code> function, which further reduces boilerplate and noise in the setup function.</p>
+        <p>IMPORTANT: In order to reference a signal by name in a binding, the signal <strong>must</strong> be assigned to the <code>signals</code> object that is passed into the setup function.</p>
+        <p>Reference documentation:</p>
+        <ul>
+          <li><a href="reference/components#het-on"><code>het-on</code></a></li>
+          <li><a href="reference/components#limited-javascript-expressions">Limited javascript expressions</a></li>
+        </ul>
+      </div>
+
+      <form method="post" action="/preview" target="tutorial-preview" data-tutorial-form>
+        <input type="hidden" name="html" data-editor-output="html">
+        <input type="hidden" name="js" data-editor-output="js">
+        <input type="hidden" name="css" data-editor-output="css">
+
+        <div class="mb-3">
+          <label class="form-label fw-semibold" for="html-source">HTML</label>
+          <textarea id="html-source" class="d-none" data-editor="html">&lt;section het-component="counter">
+  &lt;button type="button" het-on="click->count=count + 1">+&lt;/button>
+  &lt;p het-ref="countText">0&lt;/p>
+&lt;/section></textarea>
+          <div class="editor-host" data-editor-host="html"></div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label fw-semibold" for="js-source">JavaScript</label>
+          <textarea id="js-source" class="d-none" data-editor="js">HET.registerComponent('counter', ({ refs, signals, onCleanup }) => {
+  signals.count = HET.signals.signal(0);
+
+  const dispose = HET.signals.effect(() => {
+    refs.countText.textContent = signals.count.value;
+  });
+
+  onCleanup(dispose);
+});
+
+HET.init();</textarea>
+          <div class="editor-host" data-editor-host="js"></div>
+        </div>
+        <textarea class="d-none" data-editor="css"></textarea>
+
+        <button class="btn btn-primary" type="submit">Submit</button>
+      </form>
+
+      <nav class="d-flex justify-content-between gap-2 mt-4" aria-label="Tutorial section navigation">
+          <a class="btn btn-outline-primary" href="/components/use-het-on-instead-of-addeventlistener">Previous</a>
+          <a class="btn btn-outline-primary" href="/components/create-signals-from-html-with-het-seed">Next</a>
+      </nav>
+    </div>
+  </section>
+
+  <section class="col-12 col-lg-6 h-100">
+    <div class="bg-white border rounded p-4 tutorial-pane">
+      <h2 class="h5 mb-3">Preview</h2>
+      <iframe class="preview-frame" name="tutorial-preview" title="8. Assign to signals directly in `het-on` preview"></iframe>
+    </div>
+  </section>
+</div>

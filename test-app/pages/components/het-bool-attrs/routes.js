@@ -14,4 +14,10 @@ router.get('/coordinated-attrs', (request, response) => {
   });
 });
 
+router.get('/initial-matching', (request, response) => {
+  response.render('components/het-bool-attrs/initial-matching', {
+    title: 'Initial matching het-bool-attrs',
+  });
+});
+
 export default router;

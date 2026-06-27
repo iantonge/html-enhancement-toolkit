@@ -1,0 +1,65 @@
+<div class="row g-4 tutorial-step">
+  <section class="col-12 col-lg-6 h-100">
+    <div class="bg-white border rounded p-4 tutorial-pane">
+      <div class="mb-3">
+        <a href="/requests" class="small">&larr; Requests Tutorial</a>
+      </div>
+      <nav class="d-flex justify-content-between gap-2 mb-3" aria-label="Tutorial section navigation">
+          <a class="btn btn-outline-primary" href="/requests/replace-only-selected-descendants-with-het-select">Previous</a>
+          <a class="btn btn-outline-primary" href="/requests/control-in-flight-form-disabling-with-het-background">Next</a>
+      </nav>
+      <h1 class="h4 mb-3">6. Replace related content outside the target with <code>het-also</code></h1>
+      <div class="tutorial-content mb-4">
+        <p>Use <code>het-also</code> when one response should update the target pane and one or more elements elsewhere on the page.</p>
+        <p>Each listed id must exist both in the current document and in the response. <code>het-also</code> only applies to elements outside the target pane.</p>
+        <p>On submit buttons, <code>het-also=&quot;&quot;</code> clears a form-level <code>het-also</code>.</p>
+        <p>Relevant reference:</p>
+        <ul>
+          <li><a href="reference/requests#additional-replacements-with-het-also">Additional replacements with <code>het-also</code></a></li>
+          <li><a href="reference/errors#het-also"><code>het-also</code> errors</a></li>
+        </ul>
+      </div>
+
+      <form method="post" action="/preview" target="tutorial-preview" data-tutorial-form>
+        <input type="hidden" name="html" data-editor-output="html">
+        <input type="hidden" name="js" data-editor-output="js">
+        <input type="hidden" name="css" data-editor-output="css">
+
+        <div class="mb-3">
+          <label class="form-label fw-semibold" for="html-source">HTML</label>
+          <textarea id="html-source" class="d-none" data-editor="html">&lt;main het-pane="main">
+  &lt;p id="main-content">Main&lt;/p>
+  &lt;a href="/reports" het-target="main" het-also="sidebar flash">
+    Refresh page regions
+  &lt;/a>
+&lt;/main>
+
+&lt;aside id="sidebar">Sidebar&lt;/aside>
+&lt;p id="flash">Saved&lt;/p></textarea>
+          <div class="editor-host" data-editor-host="html"></div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label fw-semibold" for="js-source">JavaScript</label>
+          <textarea id="js-source" class="d-none" data-editor="js">HET.init();</textarea>
+          <div class="editor-host" data-editor-host="js"></div>
+        </div>
+        <textarea class="d-none" data-editor="css"></textarea>
+
+        <button class="btn btn-primary" type="submit">Submit</button>
+      </form>
+
+      <nav class="d-flex justify-content-between gap-2 mt-4" aria-label="Tutorial section navigation">
+          <a class="btn btn-outline-primary" href="/requests/replace-only-selected-descendants-with-het-select">Previous</a>
+          <a class="btn btn-outline-primary" href="/requests/control-in-flight-form-disabling-with-het-background">Next</a>
+      </nav>
+    </div>
+  </section>
+
+  <section class="col-12 col-lg-6 h-100">
+    <div class="bg-white border rounded p-4 tutorial-pane">
+      <h2 class="h5 mb-3">Preview</h2>
+      <iframe class="preview-frame" name="tutorial-preview" title="6. Replace related content outside the target with `het-also` preview"></iframe>
+    </div>
+  </section>
+</div>

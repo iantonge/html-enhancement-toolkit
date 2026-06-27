@@ -1,0 +1,89 @@
+<div class="row g-4 tutorial-step">
+  <section class="col-12 col-lg-6 h-100">
+    <div class="bg-white border rounded p-4 tutorial-pane">
+      <div class="mb-3">
+        <a href="/components" class="small">&larr; Components Tutorial</a>
+      </div>
+      <nav class="d-flex justify-content-between gap-2 mb-3" aria-label="Tutorial section navigation">
+          <a class="btn btn-outline-primary" href="/components/share-state-with-het-exports-and-het-imports">Previous</a>
+          <a class="btn btn-outline-primary" href="/components/render-repeated-component-instances-with-het-for">Next</a>
+      </nav>
+      <h1 class="h4 mb-3">19. Conditionally mount DOM with <code>het-if</code></h1>
+      <div class="tutorial-content mb-4">
+        <p>If you need some content to be shown or hidden depending on some criteria, it's fairly simple to define a CSS class like <code>hidden</code> with <code>display: none;</code> and toggle it on or off using <code>het-class</code>. Most of the time, this will be what you want, but it might not be suitable in every case.</p>
+        <p>When toggling a class, the setup function only runs when the component is mounted, not every time the content is shown. The elements remain in the DOM even while they are not visible. Cleanup functions only run when the component is unmounted, not every time the content is hidden.</p>
+        <p>If adding and removing a component is a better fit, <code>het-if</code> mounts and unmounts it as visibility changes.</p>
+        <p><code>het-if=&quot;details&quot;</code> mounts the template root when <code>details.value</code> is truthy and removes it when <code>details.value</code> is falsy. The <code>toggleDetails()</code> method assigns either <code>null</code> or an object of signals. When the value is an object, that object's signal properties are forwarded into the cloned component root, so <code>detailsPanel</code> can use <code>message</code>.</p>
+        <p>Structural templates have stricter rules than ordinary markup:</p>
+        <ul>
+          <li><code>het-if</code> <strong>must</strong> be on a <code>&lt;template&gt;</code> element. It is not valid on any other element.</li>
+          <li>There <strong>must</strong> be exactly one root element inside the template.</li>
+          <li>That root element <strong>must</strong> be a component.</li>
+          <li>The value of <code>het-if</code> <strong>must</strong> be the name of a signal.</li>
+          <li>Properties of the signal referenced in <code>het-if</code> <strong>must</strong> also be signals if they are referenced in the child component.</li>
+        </ul>
+        <p>Reference documentation:</p>
+        <ul>
+          <li><a href="reference/components#het-if"><code>het-if</code></a></li>
+          <li><a href="reference/components#structural-templates">Structural templates</a></li>
+        </ul>
+      </div>
+
+      <form method="post" action="/preview" target="tutorial-preview" data-tutorial-form>
+        <input type="hidden" name="html" data-editor-output="html">
+        <input type="hidden" name="js" data-editor-output="js">
+        <input type="hidden" name="css" data-editor-output="css">
+
+        <div class="mb-3">
+          <label class="form-label fw-semibold" for="html-source">HTML</label>
+          <textarea id="html-source" class="d-none" data-editor="html">&lt;section het-component="detailsToggle">
+  &lt;button type="button" het-on="click->toggleDetails">
+    Toggle details
+  &lt;/button>
+
+  &lt;template het-if="details">
+    &lt;article het-component="detailsPanel">
+      &lt;p het-text="message">&lt;/p>
+    &lt;/article>
+  &lt;/template>
+&lt;/section></textarea>
+          <div class="editor-host" data-editor-host="html"></div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label fw-semibold" for="js-source">JavaScript</label>
+          <textarea id="js-source" class="d-none" data-editor="js">HET.registerComponent('detailsToggle', ({ signals }) => {
+  signals.details = HET.signals.signal(null);
+
+  return {
+    toggleDetails() {
+      signals.details.value = signals.details.value
+        ? null
+        : { message: HET.signals.signal('More details') };
+    },
+  };
+});
+
+HET.registerComponent('detailsPanel');
+HET.init();</textarea>
+          <div class="editor-host" data-editor-host="js"></div>
+        </div>
+        <textarea class="d-none" data-editor="css"></textarea>
+
+        <button class="btn btn-primary" type="submit">Submit</button>
+      </form>
+
+      <nav class="d-flex justify-content-between gap-2 mt-4" aria-label="Tutorial section navigation">
+          <a class="btn btn-outline-primary" href="/components/share-state-with-het-exports-and-het-imports">Previous</a>
+          <a class="btn btn-outline-primary" href="/components/render-repeated-component-instances-with-het-for">Next</a>
+      </nav>
+    </div>
+  </section>
+
+  <section class="col-12 col-lg-6 h-100">
+    <div class="bg-white border rounded p-4 tutorial-pane">
+      <h2 class="h5 mb-3">Preview</h2>
+      <iframe class="preview-frame" name="tutorial-preview" title="19. Conditionally mount DOM with `het-if` preview"></iframe>
+    </div>
+  </section>
+</div>

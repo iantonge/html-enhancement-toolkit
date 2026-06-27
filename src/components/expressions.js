@@ -46,6 +46,8 @@ function getExpressionMetadata(expression, bindingLoggingContext) {
     hasContextuals: false,
   };
   validateExpressionAst(ast, metadata, bindingLoggingContext);
+  metadata.signalDependencyNames = Array.from(metadata.signalNames).sort();
+  metadata.signalDependencyKey = metadata.signalDependencyNames.join('\0');
   expressionCache.set(expression, metadata);
   return metadata;
 }

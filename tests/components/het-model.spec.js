@@ -15,6 +15,18 @@ test.describe('components het-model', () => {
     await expect(page.locator('#name-value')).toHaveText('Bravo');
   });
 
+  test('skips redundant initial model writes', async ({ page }) => {
+    await countInputValueWrites(page, 'name-input');
+
+    await page.goto('/components/het-model/text-input');
+    await expect(page.locator('#name-input')).toHaveValue('Alpha');
+    expect(await page.evaluate(() => window.__hetInputValueWrites)).toBe(0);
+
+    await page.click('#set-name');
+    await expect(page.locator('#name-input')).toHaveValue('Bravo');
+    expect(await page.evaluate(() => window.__hetInputValueWrites)).toBe(1);
+  });
+
   test('binds checkbox with two-way updates using change events', async ({ page }) => {
     await page.goto('/components/het-model/checkbox');
 
@@ -113,3 +125,22 @@ test.describe('components het-model', () => {
     );
   });
 });
+
+async function countInputValueWrites(page, targetId) {
+  await page.addInitScript((id) => {
+    window.__hetInputValueWrites = 0;
+    const descriptor = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
+    Object.defineProperty(HTMLInputElement.prototype, 'value', {
+      configurable: true,
+      get() {
+        return descriptor.get.call(this);
+      },
+      set(value) {
+        if (this.id === id) {
+          window.__hetInputValueWrites += 1;
+        }
+        return descriptor.set.call(this, value);
+      },
+    });
+  }, targetId);
+}

@@ -14,14 +14,20 @@ import {
 import { DIRECTIVE_BY_NAME } from '../directives.js';
 import { getExpressionMetadata, inferModelKey } from '../expressions.js';
 import { throwInvalidBindingExpression } from '../logging.js';
+import { recordMountCount } from '../metrics.js';
+
+const directiveAttributeCache = new Map();
+const bindingDescriptorCache = new Map();
+const splitDeclarationCache = new Map();
 
 function getBindings(boundEls, componentLoggingContext) {
   const bindings = [];
   for (const el of boundEls) {
+    const elementBindings = [];
     for (const attrName of el.getAttributeNames()) {
       const parsedAttr = getParsedDirectiveAttributeName(attrName);
       if (!parsedAttr) continue;
-      bindings.push(...getParsedBindingDeclarations(
+      elementBindings.push(...getParsedBindingDeclarations(
         parsedAttr.directive,
         parsedAttr.attrName,
         parsedAttr.acquisitionStrategy,
@@ -30,8 +36,61 @@ function getBindings(boundEls, componentLoggingContext) {
         parsedAttr.modelType,
       ));
     }
+    bindings.push(...coordinateElementBindings(elementBindings));
   }
   return bindings;
+}
+
+function coordinateElementBindings(bindings) {
+  const attrBindingKeys = new Set();
+  const boolBindingsByKey = new Map();
+
+  for (const binding of bindings) {
+    if (
+      binding.sourceType === SIGNAL_SOURCE_TYPE &&
+      binding.dirName === 'het-attrs'
+    ) {
+      attrBindingKeys.add(binding.key);
+    }
+
+    if (
+      binding.sourceType === SIGNAL_SOURCE_TYPE &&
+      binding.dirName === 'het-bool-attrs'
+    ) {
+      if (!boolBindingsByKey.has(binding.key)) {
+        boolBindingsByKey.set(binding.key, binding);
+      }
+    }
+  }
+
+  if (!boolBindingsByKey.size) return bindings;
+
+  return bindings.flatMap((binding) => {
+    if (
+      binding.sourceType === SIGNAL_SOURCE_TYPE &&
+      binding.dirName === 'het-attrs'
+    ) {
+      const boolBinding = boolBindingsByKey.get(binding.key);
+      if (!boolBinding) return [binding];
+
+      return [{
+        dirName: 'het-attrs+het-bool-attrs',
+        sourceType: SIGNAL_SOURCE_TYPE,
+        attrBinding: binding,
+        boolBinding,
+      }];
+    }
+
+    if (
+      binding.sourceType === SIGNAL_SOURCE_TYPE &&
+      binding.dirName === 'het-bool-attrs' &&
+      attrBindingKeys.has(binding.key)
+    ) {
+      return [];
+    }
+
+    return [binding];
+  });
 }
 
 function getStructuralBindings(templateEls, componentLoggingContext) {
@@ -39,6 +98,18 @@ function getStructuralBindings(templateEls, componentLoggingContext) {
 }
 
 function getParsedDirectiveAttributeName(attrName) {
+  if (directiveAttributeCache.has(attrName)) {
+    recordMountCount('directiveAttrCacheHits');
+    return directiveAttributeCache.get(attrName);
+  }
+
+  recordMountCount('directiveAttrCacheMisses');
+  const parsedAttr = getParsedDirectiveAttributeNameUncached(attrName);
+  directiveAttributeCache.set(attrName, parsedAttr);
+  return parsedAttr;
+}
+
+function getParsedDirectiveAttributeNameUncached(attrName) {
   if (DIRECTIVE_BY_NAME[attrName]) {
     return {
       directive: DIRECTIVE_BY_NAME[attrName],
@@ -81,6 +152,16 @@ function getParsedBindingDeclarations(
   modelType,
 ) {
   const rawAttr = el.getAttribute(attrName) || '';
+  const cacheKey = `${attrName}\n${rawAttr}`;
+  const cached = bindingDescriptorCache.get(cacheKey);
+  if (cached) {
+    recordMountCount('bindingParseCacheHits');
+    return cached.map((descriptor) =>
+      hydrateBindingDescriptor(descriptor, el, componentLoggingContext),
+    );
+  }
+
+  recordMountCount('bindingParseCacheMisses');
   const bindingLoggingContext = {
     ...componentLoggingContext,
     bindingAttribute: attrName,
@@ -92,26 +173,49 @@ function getParsedBindingDeclarations(
     : [rawAttr];
 
   if (directive.name === 'het-on') {
-    return declarations.map((declaration) =>
-      getParsedEventDeclaration(attrName, el, declaration, componentLoggingContext),
-    );
+    return cacheBindingDescriptors(cacheKey, declarations.map((declaration) =>
+      getParsedEventDeclarationDescriptor(attrName, declaration, componentLoggingContext, el),
+    ), el, componentLoggingContext);
   }
 
   if (directive.name === 'het-seed' || directive.name === 'het-sync') {
-    return declarations.map((declaration) =>
-      getParsedReadDeclaration(directive, attrName, el, declaration, componentLoggingContext),
-    );
+    return cacheBindingDescriptors(cacheKey, declarations.map((declaration) =>
+      getParsedReadDeclarationDescriptor(directive, attrName, declaration, componentLoggingContext, el),
+    ), el, componentLoggingContext);
   }
 
-  return declarations.map((declaration) => getParsedSignalBinding(
+  return cacheBindingDescriptors(cacheKey, declarations.map((declaration) => getParsedSignalBindingDescriptor(
     directive,
     attrName,
     acquisitionStrategy,
-    el,
     declaration,
     componentLoggingContext,
+    el,
     modelType,
-  ));
+  )), el, componentLoggingContext);
+}
+
+function cacheBindingDescriptors(cacheKey, descriptors, el, componentLoggingContext) {
+  bindingDescriptorCache.set(cacheKey, descriptors);
+  return descriptors.map((descriptor) =>
+    hydrateBindingDescriptor(descriptor, el, componentLoggingContext),
+  );
+}
+
+function hydrateBindingDescriptor(descriptor, el, componentLoggingContext) {
+  const binding = {
+    ...descriptor,
+    el,
+    componentElement: componentLoggingContext.componentElement,
+    componentName: componentLoggingContext.componentName,
+  };
+
+  if (descriptor.inferModelKey) {
+    binding.key = inferModelKey(el);
+    delete binding.inferModelKey;
+  }
+
+  return binding;
 }
 
 function getStructuralBinding(el, componentLoggingContext) {
@@ -195,8 +299,13 @@ function getTemplateComponentRoot(templateEl, componentLoggingContext) {
 }
 
 function getSplitBindingDeclarations(rawAttr, bindingLoggingContext) {
+  const cached = splitDeclarationCache.get(rawAttr);
+  if (cached) return cached;
+
   try {
-    return splitTopLevel(rawAttr, ';');
+    const declarations = splitTopLevel(rawAttr, ';');
+    splitDeclarationCache.set(rawAttr, declarations);
+    return declarations;
   } catch (error) {
     if (error.message === 'HET Error: Empty binding declaration') {
       throwInvalidBindingExpression(bindingLoggingContext, 'Empty binding declaration');
@@ -205,13 +314,13 @@ function getSplitBindingDeclarations(rawAttr, bindingLoggingContext) {
   }
 }
 
-function getParsedSignalBinding(
+function getParsedSignalBindingDescriptor(
   directive,
   attrName,
   acquisitionStrategy,
-  el,
   declaration,
   componentLoggingContext,
+  el,
   modelType,
 ) {
   const bindingLoggingContext = {
@@ -286,12 +395,9 @@ function getParsedSignalBinding(
     );
   }
 
-  return {
+  const descriptor = {
     dirName: directive.name,
     attrName,
-    el,
-    componentElement: componentLoggingContext.componentElement,
-    componentName: componentLoggingContext.componentName,
     key,
     source,
     sourceType: directive.sourceType,
@@ -301,6 +407,12 @@ function getParsedSignalBinding(
     expression: expressionMetadata,
     modelType,
   };
+
+  if (directive.name === 'het-model') {
+    descriptor.inferModelKey = true;
+  }
+
+  return descriptor;
 }
 
 function isStructuralKeyOnlyExpression(expressionMetadata) {
@@ -310,11 +422,11 @@ function isStructuralKeyOnlyExpression(expressionMetadata) {
   );
 }
 
-function getParsedEventDeclaration(
+function getParsedEventDeclarationDescriptor(
   attrName,
-  el,
   declaration,
   componentLoggingContext,
+  el,
 ) {
   const bindingLoggingContext = {
     ...componentLoggingContext,
@@ -356,9 +468,6 @@ function getParsedEventDeclaration(
     return {
       dirName: 'het-on',
       attrName,
-      el,
-      componentElement: componentLoggingContext.componentElement,
-      componentName: componentLoggingContext.componentName,
       key: parsedEvent.name,
       eventModifiers: parsedEvent.modifiers,
       source: actionExpression,
@@ -379,9 +488,6 @@ function getParsedEventDeclaration(
   return {
     dirName: 'het-on',
     attrName,
-    el,
-    componentElement: componentLoggingContext.componentElement,
-    componentName: componentLoggingContext.componentName,
     key: parsedEvent.name,
     eventModifiers: parsedEvent.modifiers,
     source: getValidatedSignalIdentifier(source, bindingLoggingContext),
@@ -391,12 +497,12 @@ function getParsedEventDeclaration(
   };
 }
 
-function getParsedReadDeclaration(
+function getParsedReadDeclarationDescriptor(
   directive,
   attrName,
-  el,
   declaration,
   componentLoggingContext,
+  el,
 ) {
   const bindingLoggingContext = {
     ...componentLoggingContext,
@@ -424,9 +530,6 @@ function getParsedReadDeclaration(
   return {
     dirName: directive.name,
     attrName,
-    el,
-    componentElement: componentLoggingContext.componentElement,
-    componentName: componentLoggingContext.componentName,
     source: getValidatedSignalIdentifier(signalName, bindingLoggingContext),
     sourceType: READ_SOURCE_TYPE,
     expression: getExpressionMetadata(sourceExpression, bindingLoggingContext),

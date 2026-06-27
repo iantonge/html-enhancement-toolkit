@@ -1,0 +1,55 @@
+<div class="row g-4 tutorial-step">
+  <section class="col-12 col-lg-6 h-100">
+    <div class="bg-white border rounded p-4 tutorial-pane">
+      <div class="mb-3">
+        <a href="/components" class="small">&larr; Components Tutorial</a>
+      </div>
+      <nav class="d-flex justify-content-between gap-2 mb-3" aria-label="Tutorial section navigation">
+          <span></span>
+          <a class="btn btn-outline-primary" href="/components/register-a-component">Next</a>
+      </nav>
+      <h1 class="h4 mb-3">1. Load HET on the page</h1>
+      <div class="tutorial-content mb-4">
+        <p>The first thing to do is reference the HET javascript file on your page, and then initialize it with <code>HET.init()</code>.</p>
+        <p>For components, <code>HET.init()</code> scans the page and mounts anything it recognizes. It also initializes HET's request enhancement behavior. Various configuration options can be passed into <code>HET.init()</code>, but we'll be sticking with the defaults for this tutorial.</p>
+        <p>Reference documentation:</p>
+        <ul>
+          <li><a href="reference/api#initconfig"><code>init(config)</code></a></li>
+        </ul>
+      </div>
+
+      <form method="post" action="/preview" target="tutorial-preview" data-tutorial-form>
+        <input type="hidden" name="html" data-editor-output="html">
+        <input type="hidden" name="js" data-editor-output="js">
+        <input type="hidden" name="css" data-editor-output="css">
+
+        <div class="mb-3">
+          <label class="form-label fw-semibold" for="html-source">HTML</label>
+          <textarea id="html-source" class="d-none" data-editor="html"></textarea>
+          <div class="editor-host" data-editor-host="html"></div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label fw-semibold" for="js-source">JavaScript</label>
+          <textarea id="js-source" class="d-none" data-editor="js">HET.init();</textarea>
+          <div class="editor-host" data-editor-host="js"></div>
+        </div>
+        <textarea class="d-none" data-editor="css"></textarea>
+
+        <button class="btn btn-primary" type="submit">Submit</button>
+      </form>
+
+      <nav class="d-flex justify-content-between gap-2 mt-4" aria-label="Tutorial section navigation">
+          <span></span>
+          <a class="btn btn-outline-primary" href="/components/register-a-component">Next</a>
+      </nav>
+    </div>
+  </section>
+
+  <section class="col-12 col-lg-6 h-100">
+    <div class="bg-white border rounded p-4 tutorial-pane">
+      <h2 class="h5 mb-3">Preview</h2>
+      <iframe class="preview-frame" name="tutorial-preview" title="1. Load HET on the page preview"></iframe>
+    </div>
+  </section>
+</div>

@@ -1,0 +1,66 @@
+<div class="row g-4 tutorial-step">
+  <section class="col-12 col-lg-6 h-100">
+    <div class="bg-white border rounded p-4 tutorial-pane">
+      <div class="mb-3">
+        <a href="/components" class="small">&larr; Components Tutorial</a>
+      </div>
+      <nav class="d-flex justify-content-between gap-2 mb-3" aria-label="Tutorial section navigation">
+          <a class="btn btn-outline-primary" href="/components/use-het-on-modifiers">Previous</a>
+          <a class="btn btn-outline-primary" href="/components/conditionally-mount-dom-with-het-if">Next</a>
+      </nav>
+      <h1 class="h4 mb-3">18. Share state with <code>het-exports</code> and <code>het-imports</code></h1>
+      <div class="tutorial-content mb-4">
+        <p>Signals are local to one component by default. When a descendant component needs to use state owned by an ancestor, the ancestor can export selected signals and the descendant can import them.</p>
+        <p><code>het-exports=&quot;query&quot;</code> exposes the parent's <code>query</code> signal to descendants. <code>het-imports=&quot;summaryQuery=query&quot;</code> imports that signal into the child component using the local name <code>summaryQuery</code>.</p>
+        <p>If the local name and exported name are the same, the import can be shorter:</p>
+        <p>When multiple ancestors export the same signal name, HET imports from the nearest matching ancestor.</p>
+        <p>Reference documentation:</p>
+        <ul>
+          <li><a href="reference/components#het-exports"><code>het-exports</code></a></li>
+          <li><a href="reference/components#het-imports"><code>het-imports</code></a></li>
+        </ul>
+      </div>
+
+      <form method="post" action="/preview" target="tutorial-preview" data-tutorial-form>
+        <input type="hidden" name="html" data-editor-output="html">
+        <input type="hidden" name="js" data-editor-output="js">
+        <input type="hidden" name="css" data-editor-output="css">
+
+        <div class="mb-3">
+          <label class="form-label fw-semibold" for="html-source">HTML</label>
+          <textarea id="html-source" class="d-none" data-editor="html">&lt;section het-component="searchPage" het-exports="query"&gt;
+  &lt;input type="search" value="Ada" het-model="query"&gt;
+
+  &lt;aside het-component="searchSummary" het-imports="summaryQuery=query"&gt;
+    &lt;p&gt;Current search: &lt;span het-text="summaryQuery"&gt;&lt;/span&gt;&lt;/p&gt;
+  &lt;/aside&gt;
+&lt;/section&gt;</textarea>
+          <div class="editor-host" data-editor-host="html"></div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label fw-semibold" for="js-source">JavaScript</label>
+          <textarea id="js-source" class="d-none" data-editor="js">HET.registerComponent('searchPage');
+HET.registerComponent('searchSummary');
+HET.init();</textarea>
+          <div class="editor-host" data-editor-host="js"></div>
+        </div>
+        <textarea class="d-none" data-editor="css"></textarea>
+
+        <button class="btn btn-primary" type="submit">Submit</button>
+      </form>
+
+      <nav class="d-flex justify-content-between gap-2 mt-4" aria-label="Tutorial section navigation">
+          <a class="btn btn-outline-primary" href="/components/use-het-on-modifiers">Previous</a>
+          <a class="btn btn-outline-primary" href="/components/conditionally-mount-dom-with-het-if">Next</a>
+      </nav>
+    </div>
+  </section>
+
+  <section class="col-12 col-lg-6 h-100">
+    <div class="bg-white border rounded p-4 tutorial-pane">
+      <h2 class="h5 mb-3">Preview</h2>
+      <iframe class="preview-frame" name="tutorial-preview" title="18. Share state with `het-exports` and `het-imports` preview"></iframe>
+    </div>
+  </section>
+</div>

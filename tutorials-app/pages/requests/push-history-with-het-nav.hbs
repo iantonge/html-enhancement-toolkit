@@ -1,0 +1,60 @@
+<div class="row g-4 tutorial-step">
+  <section class="col-12 col-lg-6 h-100">
+    <div class="bg-white border rounded p-4 tutorial-pane">
+      <div class="mb-3">
+        <a href="/requests" class="small">&larr; Requests Tutorial</a>
+      </div>
+      <nav class="d-flex justify-content-between gap-2 mb-3" aria-label="Tutorial section navigation">
+          <a class="btn btn-outline-primary" href="/requests/enhance-forms-with-the-same-target-model">Previous</a>
+          <a class="btn btn-outline-primary" href="/requests/replace-only-selected-descendants-with-het-select">Next</a>
+      </nav>
+      <h1 class="h4 mb-3">4. Push history with <code>het-nav</code></h1>
+      <div class="tutorial-content mb-4">
+        <p>Add <code>het-nav</code> to a pane when successful replacements should behave like navigation.</p>
+        <p>For <code>het-nav</code> panes, HET updates browser history and synchronizes selected <code>&lt;head&gt;</code> content from the response, including <code>&lt;title&gt;</code> by default.</p>
+        <p>Use <code>het-nav</code> for page-like content areas. Leave it off for background updates that should not change the current URL or page metadata.</p>
+        <p>Relevant reference:</p>
+        <ul>
+          <li><a href="reference/requests#navigation-panes-het-nav">Navigation panes (<code>het-nav</code>)</a></li>
+          <li><a href="reference/requests#server-contract">Server contract</a></li>
+        </ul>
+      </div>
+
+      <form method="post" action="/preview" target="tutorial-preview" data-tutorial-form>
+        <input type="hidden" name="html" data-editor-output="html">
+        <input type="hidden" name="js" data-editor-output="js">
+        <input type="hidden" name="css" data-editor-output="css">
+
+        <div class="mb-3">
+          <label class="form-label fw-semibold" for="html-source">HTML</label>
+          <textarea id="html-source" class="d-none" data-editor="html">&lt;main het-pane="main" het-nav>
+  &lt;h1>Dashboard&lt;/h1>
+  &lt;a href="/reports" het-target="main">Reports&lt;/a>
+&lt;/main></textarea>
+          <div class="editor-host" data-editor-host="html"></div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label fw-semibold" for="js-source">JavaScript</label>
+          <textarea id="js-source" class="d-none" data-editor="js">HET.init();</textarea>
+          <div class="editor-host" data-editor-host="js"></div>
+        </div>
+        <textarea class="d-none" data-editor="css"></textarea>
+
+        <button class="btn btn-primary" type="submit">Submit</button>
+      </form>
+
+      <nav class="d-flex justify-content-between gap-2 mt-4" aria-label="Tutorial section navigation">
+          <a class="btn btn-outline-primary" href="/requests/enhance-forms-with-the-same-target-model">Previous</a>
+          <a class="btn btn-outline-primary" href="/requests/replace-only-selected-descendants-with-het-select">Next</a>
+      </nav>
+    </div>
+  </section>
+
+  <section class="col-12 col-lg-6 h-100">
+    <div class="bg-white border rounded p-4 tutorial-pane">
+      <h2 class="h5 mb-3">Preview</h2>
+      <iframe class="preview-frame" name="tutorial-preview" title="4. Push history with `het-nav` preview"></iframe>
+    </div>
+  </section>
+</div>

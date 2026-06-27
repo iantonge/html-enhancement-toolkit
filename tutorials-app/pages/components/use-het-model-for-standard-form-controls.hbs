@@ -1,0 +1,70 @@
+<div class="row g-4 tutorial-step">
+  <section class="col-12 col-lg-6 h-100">
+    <div class="bg-white border rounded p-4 tutorial-pane">
+      <div class="mb-3">
+        <a href="/components" class="small">&larr; Components Tutorial</a>
+      </div>
+      <nav class="d-flex justify-content-between gap-2 mb-3" aria-label="Tutorial section navigation">
+          <a class="btn btn-outline-primary" href="/components/parse-dom-values-with-conversion-helpers">Previous</a>
+          <a class="btn btn-outline-primary" href="/components/use-het-on-modifiers">Next</a>
+      </nav>
+      <h1 class="h4 mb-3">16. Use <code>het-model</code> for standard form controls</h1>
+      <div class="tutorial-content mb-4">
+        <p>Using <code>het-seed</code>, <code>het-props</code>, and <code>het-on</code> on every form control is a lot of boilerplate. <code>het-model</code> achieves the same outcome without needing to wire everything up explicitly.</p>
+        <p>Typed variants move coercion into the declaration:</p>
+        <p><code>het-model</code> reads from and writes to the <code>value</code> property for most form controls, and listens for the <code>input</code> event. Some form controls are treated differently:</p>
+        <ul>
+          <li>For inputs with <code>type=&quot;checkbox&quot;</code> or <code>type=&quot;radio&quot;</code>, HET reads and writes the <code>checked</code> property and listens for the <code>change</code> event.</li>
+          <li>For single inputs with <code>type=&quot;checkbox&quot;</code>, the signal reflects the boolean <code>checked</code> property.</li>
+          <li>For multiple inputs with <code>type=&quot;checkbox&quot;</code> and the same value for <code>het-model</code>, the signal is an array containing the <code>value</code> property of the selected checkboxes. Typed <code>het-model</code> variants are honored on the individual array items.</li>
+          <li>For multiple inputs with <code>type=&quot;radio&quot;</code> and the same value for <code>het-model</code>, the signal is the <code>value</code> property of the currently selected radio button or <code>undefined</code> if no radio button is selected.</li>
+        </ul>
+        <p>Reference documentation:</p>
+        <ul>
+          <li><a href="reference/components#het-model"><code>het-model</code></a></li>
+        </ul>
+      </div>
+
+      <form method="post" action="/preview" target="tutorial-preview" data-tutorial-form>
+        <input type="hidden" name="html" data-editor-output="html">
+        <input type="hidden" name="js" data-editor-output="js">
+        <input type="hidden" name="css" data-editor-output="css">
+
+        <div class="mb-3">
+          <label class="form-label fw-semibold" for="html-source">HTML</label>
+          <textarea id="html-source" class="d-none" data-editor="html">&lt;section het-component>
+  &lt;label>
+    Message
+    &lt;input type="text" value="Nothing yet" het-model="message">
+  &lt;/label>
+
+  &lt;button type="button" het-on="click->message=''">Reset&lt;/button>
+  &lt;p het-text="message">&lt;/p>
+&lt;/section></textarea>
+          <div class="editor-host" data-editor-host="html"></div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label fw-semibold" for="js-source">JavaScript</label>
+          <textarea id="js-source" class="d-none" data-editor="js">HET.init();</textarea>
+          <div class="editor-host" data-editor-host="js"></div>
+        </div>
+        <textarea class="d-none" data-editor="css"></textarea>
+
+        <button class="btn btn-primary" type="submit">Submit</button>
+      </form>
+
+      <nav class="d-flex justify-content-between gap-2 mt-4" aria-label="Tutorial section navigation">
+          <a class="btn btn-outline-primary" href="/components/parse-dom-values-with-conversion-helpers">Previous</a>
+          <a class="btn btn-outline-primary" href="/components/use-het-on-modifiers">Next</a>
+      </nav>
+    </div>
+  </section>
+
+  <section class="col-12 col-lg-6 h-100">
+    <div class="bg-white border rounded p-4 tutorial-pane">
+      <h2 class="h5 mb-3">Preview</h2>
+      <iframe class="preview-frame" name="tutorial-preview" title="16. Use `het-model` for standard form controls preview"></iframe>
+    </div>
+  </section>
+</div>

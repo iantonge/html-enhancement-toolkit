@@ -1,0 +1,132 @@
+<div class="row g-4 tutorial-step">
+  <section class="col-12 col-lg-6 h-100">
+    <div class="bg-white border rounded p-4 tutorial-pane">
+      <div class="mb-3">
+        <a href="/components" class="small">&larr; Components Tutorial</a>
+      </div>
+      <nav class="d-flex justify-content-between gap-2 mb-3" aria-label="Tutorial section navigation">
+          <a class="btn btn-outline-primary" href="/components/delay-structural-teardown">Previous</a>
+          <span></span>
+      </nav>
+      <h1 class="h4 mb-3">22. Avoid initial flicker with <code>het-mount-pending</code></h1>
+      <div class="tutorial-content mb-4">
+        <p>Declarative bindings run when a component mounts. If the pre-mounted HTML would briefly show the wrong state, add <code>het-mount-pending</code> to hide the component until the mount batch finishes.</p>
+        <p>HET removes <code>het-mount-pending</code> automatically after mounting. HET does not provide CSS for this marker, so the page needs to define any hiding rule. Prefer <code>visibility: hidden</code> over <code>display: none</code> when hidden content should preserve layout.</p>
+        <p>Reference documentation:</p>
+        <ul>
+          <li><a href="reference/components#het-mount-pending"><code>het-mount-pending</code></a></li>
+        </ul>
+      </div>
+
+      <form method="post" action="/preview" target="tutorial-preview" data-tutorial-form>
+        <input type="hidden" name="html" data-editor-output="html">
+        <input type="hidden" name="js" data-editor-output="js">
+        <input type="hidden" name="css" data-editor-output="css">
+
+        <div class="mb-3">
+          <label class="form-label fw-semibold" for="html-source">HTML</label>
+          <textarea id="html-source" class="d-none" data-editor="html">&lt;div class="comparison">
+  &lt;div>
+    &lt;h2>Without het-mount-pending&lt;/h2>
+    &lt;section het-component het-seed="ready=true">
+      &lt;p het-props="hidden=ready">This paragraph flashes before mount.&lt;/p>
+      &lt;p het-props="hidden=!ready">This paragraph is visible after mount.&lt;/p>
+    &lt;/section>
+  &lt;/div>
+
+  &lt;div>
+    &lt;h2>With het-mount-pending&lt;/h2>
+    &lt;section het-component het-mount-pending het-seed="ready=true">
+      &lt;p het-props="hidden=ready">This paragraph flashes before mount.&lt;/p>
+      &lt;p het-props="hidden=!ready">This paragraph is visible after mount.&lt;/p>
+    &lt;/section>
+  &lt;/div>
+&lt;/div></textarea>
+          <div class="editor-host" data-editor-host="html"></div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label fw-semibold" for="js-source">JavaScript</label>
+          <textarea id="js-source" class="d-none" data-editor="js">setTimeout(() => {
+  HET.init();
+}, 2500);</textarea>
+          <div class="editor-host" data-editor-host="js"></div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold" for="css-source">CSS</label>
+          <textarea id="css-source" class="d-none" data-editor="css">.comparison {
+    display: grid;
+    gap: 1rem;
+  }
+
+  .comparison > div {
+    border: 1px solid #ddd;
+    padding: 1rem;
+  }
+
+  .comparison h2 {
+    font-size: 1rem;
+    margin-top: 0;
+  }
+
+  [het-mount-pending] {
+    position: relative;
+  }
+
+  [het-mount-pending] > * {
+    visibility: hidden;
+  }
+
+  [het-mount-pending]::before {
+    align-items: center;
+    background: #f8f9fa;
+    border: 1px dashed #adb5bd;
+    border-radius: 0.5rem;
+    color: #495057;
+    content: "Loading...";
+    display: flex;
+    font-weight: 600;
+    inset: 0;
+    justify-content: center;
+    padding-left: 2rem;
+    position: absolute;
+  }
+
+  [het-mount-pending]::after {
+    animation: spin 0.8s linear infinite;
+    border: 0.2rem solid #ced4da;
+    border-top-color: #0d6efd;
+    border-radius: 50%;
+    content: "";
+    height: 1.5rem;
+    left: calc(50% - 4.5rem);
+    position: absolute;
+    top: calc(50% - 0.75rem);
+    width: 1.5rem;
+  }
+
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }</textarea>
+          <div class="editor-host" data-editor-host="css"></div>
+        </div>
+
+        <button class="btn btn-primary" type="submit">Submit</button>
+      </form>
+
+      <nav class="d-flex justify-content-between gap-2 mt-4" aria-label="Tutorial section navigation">
+          <a class="btn btn-outline-primary" href="/components/delay-structural-teardown">Previous</a>
+          <span></span>
+      </nav>
+    </div>
+  </section>
+
+  <section class="col-12 col-lg-6 h-100">
+    <div class="bg-white border rounded p-4 tutorial-pane">
+      <h2 class="h5 mb-3">Preview</h2>
+      <iframe class="preview-frame" name="tutorial-preview" title="22. Avoid initial flicker with `het-mount-pending` preview"></iframe>
+    </div>
+  </section>
+</div>

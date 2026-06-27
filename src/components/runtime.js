@@ -11,11 +11,108 @@ import {
   inferInputEvent,
 } from './expressions.js';
 import { getBindingCause } from './logging.js';
+import {
+  recordMountCount,
+  recordRuntimeDomWrite,
+  recordRuntimeDomWriteAttempt,
+  recordRuntimeDomWriteCoalesced,
+  recordRuntimeDomWriteFlushed,
+  recordRuntimeDomWriteQueued,
+  recordRuntimeDomWriteSkip,
+} from './metrics.js';
+
+let initialWriteBatch;
+let initialWriteBatchEnabled = false;
+let groupedSignalEffectsEnabled = false;
+
+function configureInitialRuntimeWriteBatch(config) {
+  initialWriteBatchEnabled = config?.batchInitialWrites === true;
+}
+
+function configureGroupedSignalEffects(config) {
+  groupedSignalEffectsEnabled = config?.groupSignalEffects === true;
+}
+
+function beginInitialRuntimeWriteBatch() {
+  if (!initialWriteBatchEnabled) return undefined;
+
+  if (initialWriteBatch) {
+    initialWriteBatch.depth += 1;
+    return false;
+  }
+
+  initialWriteBatch = {
+    depth: 1,
+    jobs: [],
+    jobIndexesByElement: new WeakMap(),
+    afterFlush: [],
+  };
+  return true;
+}
+
+function flushInitialRuntimeWriteBatch() {
+  if (!initialWriteBatch) return;
+
+  initialWriteBatch.depth -= 1;
+  if (initialWriteBatch.depth > 0) return;
+
+  const batch = initialWriteBatch;
+  initialWriteBatch = undefined;
+
+  for (const job of batch.jobs) {
+    if (!job) continue;
+    try {
+      recordRuntimeDomWriteFlushed();
+      job.write();
+    } catch (error) {
+      handleError(error);
+    }
+  }
+
+  for (const callback of batch.afterFlush) {
+    callback();
+  }
+}
+
+function cancelInitialRuntimeWriteBatch() {
+  initialWriteBatch = undefined;
+}
+
+function afterInitialRuntimeWriteBatchFlush(callback) {
+  if (!initialWriteBatch) {
+    callback();
+    return;
+  }
+
+  initialWriteBatch.afterFlush.push(callback);
+}
 
 function initializeBindings(ctx, bindings, methods) {
-  const runtimeBindings = getRuntimeBindings(bindings);
+  recordMountCount('runtimeBindingCount', bindings.length);
+  if (!groupedSignalEffectsEnabled) {
+    initializeBindingsWithoutGrouping(ctx, bindings, methods);
+    return;
+  }
 
-  for (const binding of runtimeBindings) {
+  const signalBindingGroups = getSignalBindingGroups(bindings);
+
+  for (const binding of bindings) {
+    if (signalBindingGroups.configuredBindings.has(binding)) continue;
+
+    if (signalBindingGroups.groupedBindings.has(binding)) {
+      configureGroupedSignalBindings(ctx, signalBindingGroups.groupedBindings.get(binding));
+    } else if (binding.sourceType === SIGNAL_SOURCE_TYPE) {
+      configureSignalBinding(ctx, binding);
+    } else if (binding.sourceType === FUNC_SOURCE_TYPE) {
+      configureEventBinding(methods, binding, ctx.onCleanup);
+    } else if (binding.sourceType === ASSIGNMENT_SOURCE_TYPE) {
+      configureAssignmentBinding(ctx, binding);
+    }
+  }
+}
+
+function initializeBindingsWithoutGrouping(ctx, bindings, methods) {
+  for (const binding of bindings) {
     if (binding.sourceType === SIGNAL_SOURCE_TYPE) {
       configureSignalBinding(ctx, binding);
     } else if (binding.sourceType === FUNC_SOURCE_TYPE) {
@@ -26,46 +123,112 @@ function initializeBindings(ctx, bindings, methods) {
   }
 }
 
-function getRuntimeBindings(bindings) {
-  const coordinatedBindings = new Map();
-  const coordinatedAttrBindings = new Set();
-  const coordinatedBoolBindings = new Set();
+function getSignalBindingGroups(bindings) {
+  const firstGroupByDependencyKey = new Map();
+  const candidateGroups = [];
+  const groupedBindings = new Map();
+  const configuredBindings = new Set();
 
   for (const binding of bindings) {
-    if (binding.sourceType !== SIGNAL_SOURCE_TYPE || binding.dirName !== 'het-attrs') {
-      continue;
+    if (!isPotentialGroupedSignalBinding(binding)) continue;
+
+    const dependencyNames = getSignalBindingDependencyNames(binding);
+    const dependencyKey = getSignalBindingDependencyKey(binding);
+    let group = firstGroupByDependencyKey.get(dependencyKey);
+    if (!group) {
+      group = {
+        dependencyNames,
+        bindings: [],
+      };
+      firstGroupByDependencyKey.set(dependencyKey, group);
+    } else if (group.bindings.length === 1) {
+      candidateGroups.push(group);
     }
-
-    const boolBinding = bindings.find((candidate) => (
-      candidate.sourceType === SIGNAL_SOURCE_TYPE &&
-      candidate.dirName === 'het-bool-attrs' &&
-      candidate.el === binding.el &&
-      candidate.key === binding.key
-    ));
-
-    if (!boolBinding) continue;
-
-    const coordinatedBinding = {
-      dirName: 'het-attrs+het-bool-attrs',
-      sourceType: SIGNAL_SOURCE_TYPE,
-      attrBinding: binding,
-      boolBinding,
-    };
-
-    coordinatedBindings.set(binding, coordinatedBinding);
-    coordinatedAttrBindings.add(binding);
-    coordinatedBoolBindings.add(boolBinding);
+    group.bindings.push(binding);
   }
 
-  return bindings.flatMap((binding) => {
-    if (coordinatedAttrBindings.has(binding)) {
-      return [coordinatedBindings.get(binding)];
+  if (!candidateGroups.length) {
+    recordMountCount('runtimeSignalEffectGroupCount', 0);
+    recordMountCount('runtimeGroupedSignalBindingCount', 0);
+    return { groupedBindings, configuredBindings };
+  }
+
+  const writeCounts = getBindingWriteCounts(bindings);
+
+  for (const group of candidateGroups) {
+    const safeBindings = group.bindings.filter((binding) =>
+      writeCounts.get(getSignalBindingWriteIdentity(binding)) === 1,
+    );
+    if (safeBindings.length < 2) continue;
+
+    const safeGroup = {
+      dependencyNames: group.dependencyNames,
+      bindings: safeBindings,
+    };
+    groupedBindings.set(safeBindings[0], safeGroup);
+    for (let i = 1; i < safeBindings.length; i += 1) {
+      configuredBindings.add(safeBindings[i]);
     }
-    if (coordinatedBoolBindings.has(binding)) {
-      return [];
-    }
-    return [binding];
-  });
+  }
+
+  recordMountCount('runtimeSignalEffectGroupCount', groupedBindings.size);
+  recordMountCount('runtimeGroupedSignalBindingCount', configuredBindings.size + groupedBindings.size);
+  return { groupedBindings, configuredBindings };
+}
+
+function getBindingWriteCounts(bindings) {
+  const writeCounts = new Map();
+
+  for (const binding of bindings) {
+    if (!isPotentialGroupedSignalBinding(binding)) continue;
+    const writeKey = getSignalBindingWriteIdentity(binding);
+    writeCounts.set(writeKey, (writeCounts.get(writeKey) || 0) + 1);
+  }
+
+  return writeCounts;
+}
+
+function isPotentialGroupedSignalBinding(binding) {
+  return (
+    binding.sourceType === SIGNAL_SOURCE_TYPE &&
+    binding.dirName !== 'het-model' &&
+    binding.dirName !== 'het-bool-attrs' &&
+    binding.dirName !== 'het-attrs+het-bool-attrs'
+  );
+}
+
+function getSignalBindingWriteIdentity(binding) {
+  if (!binding.__hetWriteIdentity) {
+    binding.__hetWriteIdentity = `${getElementBindingId(binding.el)}:${getSignalBindingWriteCategory(binding)}:${binding.key}`;
+  }
+  return binding.__hetWriteIdentity;
+}
+
+const elementBindingIds = new WeakMap();
+let nextElementBindingId = 1;
+
+function getElementBindingId(el) {
+  let id = elementBindingIds.get(el);
+  if (!id) {
+    id = nextElementBindingId;
+    nextElementBindingId += 1;
+    elementBindingIds.set(el, id);
+  }
+  return id;
+}
+
+function getSignalBindingDependencyNames(binding) {
+  if (binding.expression) {
+    return binding.expression.signalDependencyNames;
+  }
+
+  return [binding.source];
+}
+
+function getSignalBindingDependencyKey(binding) {
+  return binding.expression
+    ? binding.expression.signalDependencyKey
+    : binding.source;
 }
 
 function configureEventBinding(methods, binding, onCleanup) {
@@ -164,6 +327,39 @@ function eventMatchesKeyModifier(event, keyModifier) {
   return true;
 }
 
+function configureGroupedSignalBindings(ctx, group) {
+  for (const binding of group.bindings) {
+    assertSignalBinding(ctx, binding);
+    assertContextualBindingAllowed(ctx, binding);
+  }
+
+  recordMountCount('runtimeEffectCount');
+  const dispose = effect(() => {
+    readDependencySignals(ctx, group.dependencyNames);
+
+    for (const binding of group.bindings) {
+      try {
+        writeSignalBindingValue(binding, getSignalBindingValue(ctx, binding));
+      } catch (error) {
+        handleError(error);
+      }
+    }
+  });
+  ctx.onCleanup(dispose);
+}
+
+function readDependencySignals(ctx, dependencyNames) {
+  for (const name of dependencyNames) {
+    ctx.signals[name].value;
+  }
+}
+
+function getSignalBindingValue(ctx, binding) {
+  return binding.expression
+    ? getBindingInputValue(ctx, binding)
+    : ctx.signals[binding.source].value;
+}
+
 function configureSignalBinding(ctx, binding) {
   if (binding.dirName === 'het-attrs+het-bool-attrs') {
     configureCoordinatedAttributeBinding(ctx, binding);
@@ -191,14 +387,10 @@ function configureSignalBinding(ctx, binding) {
     ? computed(() => binding.expression && getBindingInputValue(ctx, binding))
     : ctx.signals[binding.source];
 
+  recordMountCount('runtimeEffectCount');
   const dispose = effect(() => {
     try {
-      binding.write(
-        binding.el,
-        binding.key,
-        boundSignal.value,
-        binding,
-      );
+      writeSignalBindingValue(binding, boundSignal.value);
     } catch (error) {
       handleError(error);
     }
@@ -246,16 +438,42 @@ function configureBoolAttributeBinding(ctx, binding) {
   let storedValue = initialValue ?? '';
 
   configureSignalBindingEffect(ctx, binding, (value) => {
-    if (value) {
-      binding.el.setAttribute(binding.key, storedValue);
+    recordRuntimeDomWriteAttempt();
+    queueOrRunBindingWrite(binding, 'bool-attr', () => {
+      writeBoolAttributeBindingValue(binding, value, {
+        get storedValue() {
+          return storedValue;
+        },
+        set storedValue(nextValue) {
+          storedValue = nextValue;
+        },
+      });
+    });
+  });
+}
+
+function writeBoolAttributeBindingValue(binding, value, storedValueRef) {
+  if (value) {
+    if (
+      binding.el.hasAttribute(binding.key) &&
+      binding.el.getAttribute(binding.key) === storedValueRef.storedValue
+    ) {
+      recordRuntimeDomWriteSkip();
       return;
     }
+    binding.el.setAttribute(binding.key, storedValueRef.storedValue);
+    recordRuntimeDomWrite();
+    return;
+  }
 
-    if (binding.el.hasAttribute(binding.key)) {
-      storedValue = binding.el.getAttribute(binding.key) ?? '';
-    }
-    binding.el.removeAttribute(binding.key);
-  });
+  if (!binding.el.hasAttribute(binding.key)) {
+    recordRuntimeDomWriteSkip();
+    return;
+  }
+
+  storedValueRef.storedValue = binding.el.getAttribute(binding.key) ?? '';
+  binding.el.removeAttribute(binding.key);
+  recordRuntimeDomWrite();
 }
 
 function configureCoordinatedAttributeBinding(ctx, binding) {
@@ -267,16 +485,16 @@ function configureCoordinatedAttributeBinding(ctx, binding) {
   const attrSignal = getBoundSignal(ctx, attrBinding);
   const boolSignal = getBoundSignal(ctx, boolBinding);
 
+  recordMountCount('runtimeEffectCount');
   const dispose = effect(() => {
     try {
       const attrValue = attrSignal.value;
       const boolValue = boolSignal.value;
 
-      if (boolValue) {
-        attrBinding.el.setAttribute(attrBinding.key, String(attrValue));
-      } else {
-        attrBinding.el.removeAttribute(attrBinding.key);
-      }
+      recordRuntimeDomWriteAttempt();
+      queueOrRunBindingWrite(attrBinding, 'coordinated-attr', () =>
+        writeCoordinatedAttributeBindingValue(attrBinding, attrValue, boolValue),
+      );
     } catch (error) {
       handleError(error);
     }
@@ -284,11 +502,31 @@ function configureCoordinatedAttributeBinding(ctx, binding) {
   ctx.onCleanup(dispose);
 }
 
+function writeCoordinatedAttributeBindingValue(attrBinding, attrValue, boolValue) {
+  if (boolValue) {
+    const nextValue = String(attrValue);
+    if (attrBinding.el.getAttribute(attrBinding.key) === nextValue) {
+      recordRuntimeDomWriteSkip();
+      return;
+    }
+    attrBinding.el.setAttribute(attrBinding.key, nextValue);
+    recordRuntimeDomWrite();
+  } else {
+    if (!attrBinding.el.hasAttribute(attrBinding.key)) {
+      recordRuntimeDomWriteSkip();
+      return;
+    }
+    attrBinding.el.removeAttribute(attrBinding.key);
+    recordRuntimeDomWrite();
+  }
+}
+
 function configureSignalBindingEffect(ctx, binding, write) {
   assertSignalBinding(ctx, binding);
 
   const boundSignal = getBoundSignal(ctx, binding);
 
+  recordMountCount('runtimeEffectCount');
   const dispose = effect(() => {
     try {
       write(boundSignal.value);
@@ -318,6 +556,128 @@ function getBoundSignal(ctx, binding) {
     : ctx.signals[binding.source];
 }
 
+function writeSignalBindingValue(binding, value) {
+  recordRuntimeDomWriteAttempt();
+
+  queueOrRunBindingWrite(binding, getSignalBindingWriteCategory(binding), () =>
+    writeSignalBindingValueNow(binding, value),
+  );
+}
+
+function writeSignalBindingValueNow(binding, value) {
+
+  if (shouldSkipSignalBindingWrite(binding, value)) {
+    recordRuntimeDomWriteSkip();
+    return;
+  }
+
+  binding.write(
+    binding.el,
+    binding.key,
+    value,
+    binding,
+  );
+  recordRuntimeDomWrite();
+}
+
+function queueOrRunBindingWrite(binding, category, write) {
+  if (!initialWriteBatch) {
+    write();
+    return;
+  }
+
+  recordRuntimeDomWriteQueued();
+  const jobKey = `${category}:${binding.key}`;
+  let jobIndexes = initialWriteBatch.jobIndexesByElement.get(binding.el);
+  if (!jobIndexes) {
+    jobIndexes = new Map();
+    initialWriteBatch.jobIndexesByElement.set(binding.el, jobIndexes);
+  }
+
+  const existingIndex = jobIndexes.get(jobKey);
+  const job = { write };
+  if (existingIndex !== undefined) {
+    initialWriteBatch.jobs[existingIndex] = job;
+    recordRuntimeDomWriteCoalesced();
+    return;
+  }
+
+  jobIndexes.set(jobKey, initialWriteBatch.jobs.length);
+  initialWriteBatch.jobs.push(job);
+}
+
+function getSignalBindingWriteCategory(binding) {
+  if (binding.dirName === 'het-attrs') return 'attr';
+  if (binding.dirName === 'het-class') return 'class';
+  if (binding.dirName === 'het-model') return 'model';
+  return 'prop';
+}
+
+function shouldSkipSignalBindingWrite(binding, value) {
+  if (binding.dirName === 'het-attrs') {
+    return binding.el.getAttribute(binding.key) === String(value);
+  }
+
+  if (binding.dirName === 'het-class') {
+    return binding.el.classList.contains(binding.key) === Boolean(value);
+  }
+
+  if (binding.dirName === 'het-model') {
+    return binding.el[binding.key] === getExpectedModelPropertyValue(binding, value);
+  }
+
+  return binding.el[binding.key] === value;
+}
+
+function getExpectedModelPropertyValue(binding, value) {
+  if (isCheckboxModelBinding(binding) && Array.isArray(value)) {
+    return value.includes(getModelOptionValue(binding));
+  }
+
+  if (isRadioModelBinding(binding)) {
+    return getModelOptionValue(binding) === value;
+  }
+
+  return value;
+}
+
+function isCheckboxModelBinding(binding) {
+  return (
+    binding.el instanceof HTMLInputElement &&
+    binding.el.type === 'checkbox'
+  );
+}
+
+function isRadioModelBinding(binding) {
+  return (
+    binding.el instanceof HTMLInputElement &&
+    binding.el.type === 'radio'
+  );
+}
+
+function getModelOptionValue(binding) {
+  return coerceModelValue(binding.el.value, binding.modelType);
+}
+
+function coerceModelValue(rawValue, modelType) {
+  if (modelType === 'int') {
+    return parseInt(rawValue, 10);
+  }
+  if (modelType === 'float') {
+    return parseFloat(rawValue);
+  }
+  if (modelType === 'bool') {
+    return rawValue === true || rawValue === 'true';
+  }
+  return rawValue;
+}
+
 export {
+  afterInitialRuntimeWriteBatchFlush,
+  beginInitialRuntimeWriteBatch,
+  cancelInitialRuntimeWriteBatch,
+  configureGroupedSignalEffects,
+  configureInitialRuntimeWriteBatch,
+  flushInitialRuntimeWriteBatch,
   initializeBindings,
 };

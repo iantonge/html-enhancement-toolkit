@@ -1,0 +1,101 @@
+<div class="row g-4 tutorial-step">
+  <section class="col-12 col-lg-6 h-100">
+    <div class="bg-white border rounded p-4 tutorial-pane">
+      <div class="mb-3">
+        <a href="/components" class="small">&larr; Components Tutorial</a>
+      </div>
+      <nav class="d-flex justify-content-between gap-2 mb-3" aria-label="Tutorial section navigation">
+          <a class="btn btn-outline-primary" href="/components/conditionally-mount-dom-with-het-if">Previous</a>
+          <a class="btn btn-outline-primary" href="/components/delay-structural-teardown">Next</a>
+      </nav>
+      <h1 class="h4 mb-3">20. Render repeated component instances with <code>het-for</code></h1>
+      <div class="tutorial-content mb-4">
+        <p><code>het-for</code> uses the same structural-template rules as <code>het-if</code>, but the source signal must hold a <code>Map</code>. Each Map key is the clone key, and each Map value must have signal properties.</p>
+        <p>Each Map entry is keyed by its string or number key, and the entry value's signal properties are forwarded into the cloned component root, so every <code>todoItem</code> receives its own <code>label</code> signal.</p>
+        <p>The source signal is still just a signal. To add an item, assign a new Map:</p>
+        <p>Reference documentation:</p>
+        <ul>
+          <li><a href="reference/components#het-for"><code>het-for</code></a></li>
+          <li><a href="reference/components#structural-templates">Structural templates</a></li>
+        </ul>
+      </div>
+
+      <form method="post" action="/preview" target="tutorial-preview" data-tutorial-form>
+        <input type="hidden" name="html" data-editor-output="html">
+        <input type="hidden" name="js" data-editor-output="js">
+        <input type="hidden" name="css" data-editor-output="css">
+
+        <div class="mb-3">
+          <label class="form-label fw-semibold" for="html-source">HTML</label>
+          <textarea id="html-source" class="d-none" data-editor="html">&lt;section het-component="todoList"&gt;
+  &lt;label&gt;
+    New todo
+    &lt;input type="text" value="Ship it" het-model="newLabel"&gt;
+  &lt;/label&gt;
+  &lt;button type="button" het-on="click-&gt;addTodo"&gt;Add todo&lt;/button&gt;
+
+  &lt;ul&gt;
+    &lt;template het-for="items"&gt;
+      &lt;li het-component="todoItem"&gt;
+        &lt;span het-text="label"&gt;&lt;/span&gt;
+      &lt;/li&gt;
+    &lt;/template&gt;
+  &lt;/ul&gt;
+&lt;/section&gt;</textarea>
+          <div class="editor-host" data-editor-host="html"></div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label fw-semibold" for="js-source">JavaScript</label>
+          <textarea id="js-source" class="d-none" data-editor="js">let nextTodoId = 1;
+
+function todo(label) {
+  return {
+    label: HET.signals.signal(label),
+  };
+}
+
+HET.registerComponent('todoList', ({ signals }) => {
+  signals.items = HET.signals.signal(new Map([
+    [nextTodoId++, todo('Write HTML')],
+    [nextTodoId++, todo('Enhance behavior')],
+  ]));
+
+  return {
+    addTodo() {
+      const label = signals.newLabel.value.trim();
+
+      if (!label) return;
+
+      signals.items.value = new Map([
+        ...signals.items.value,
+        [nextTodoId++, todo(label)],
+      ]);
+      signals.newLabel.value = '';
+    },
+  };
+});
+
+HET.registerComponent('todoItem');
+HET.init();</textarea>
+          <div class="editor-host" data-editor-host="js"></div>
+        </div>
+        <textarea class="d-none" data-editor="css"></textarea>
+
+        <button class="btn btn-primary" type="submit">Submit</button>
+      </form>
+
+      <nav class="d-flex justify-content-between gap-2 mt-4" aria-label="Tutorial section navigation">
+          <a class="btn btn-outline-primary" href="/components/conditionally-mount-dom-with-het-if">Previous</a>
+          <a class="btn btn-outline-primary" href="/components/delay-structural-teardown">Next</a>
+      </nav>
+    </div>
+  </section>
+
+  <section class="col-12 col-lg-6 h-100">
+    <div class="bg-white border rounded p-4 tutorial-pane">
+      <h2 class="h5 mb-3">Preview</h2>
+      <iframe class="preview-frame" name="tutorial-preview" title="20. Render repeated component instances with `het-for` preview"></iframe>
+    </div>
+  </section>
+</div>

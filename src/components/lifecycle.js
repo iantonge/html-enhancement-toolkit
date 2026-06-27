@@ -1,12 +1,17 @@
 import { setOnError, handleError } from './error-handler.js';
-import { getMountableComponent } from './registry.js';
 import { getNodeDepth } from './dom-scope.js';
 import {
   destroyComponent,
-  mountComponent,
   mountComponents,
-  removeMountPendingAttributes,
 } from './mount.js';
+import {
+  finishComponentMountMetrics,
+  resetComponentMountMetrics,
+} from './metrics.js';
+import {
+  configureGroupedSignalEffects,
+  configureInitialRuntimeWriteBatch,
+} from './runtime.js';
 import { configureStructuralTeardown } from './structural.js';
 import { initializeSyncEvents, destroySyncEvents } from './sync.js';
 
@@ -17,11 +22,16 @@ let observer;
 function init(config) {
   setOnError(config?.onError);
   configureStructuralTeardown(config);
+  configureInitialRuntimeWriteBatch(config);
+  configureGroupedSignalEffects(config);
+  resetComponentMountMetrics(config);
   try {
     mountComponents(document);
+    finishComponentMountMetrics();
     initializeObserver();
     initializeSyncEvents();
   } catch (error) {
+    finishComponentMountMetrics();
     handleError(error);
   }
 }
@@ -62,10 +72,7 @@ function initializeObserver() {
 
           for (const node of record.addedNodes) {
             if (node.nodeType !== Node.ELEMENT_NODE) continue;
-            if (node.hasAttribute('het-component')) pendingAdditions.add(node);
-            node
-              .querySelectorAll('[het-component]')
-              .forEach((child) => pendingAdditions.add(child));
+            pendingAdditions.add(node);
           }
         } else if (
           record.type === 'attributes' &&
@@ -91,21 +98,15 @@ function initializeObserver() {
       const removals = Array.from(pendingRemovals).sort(
         (a, b) => getNodeDepth(b) - getNodeDepth(a),
       );
-      const mountedComponents = [];
 
       for (const el of additions) {
         try {
           if (!el.isConnected) continue;
-          if (!el.hasAttribute('het-component')) continue;
-          const component = getMountableComponent(el);
-          if (component && mountComponent(el, component.setup)) {
-            mountedComponents.push(el);
-          }
+          mountComponents(el);
         } catch (error) {
           handleError(error);
         }
       }
-      removeMountPendingAttributes(mountedComponents);
       pendingAdditions.clear();
 
       for (const el of removals) {

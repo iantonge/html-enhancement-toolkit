@@ -14,6 +14,12 @@ router.get('/binds-signal', (request, response) => {
   });
 });
 
+router.get('/string-match', (request, response) => {
+  response.render('components/het-props/string-match', {
+    title: 'String match',
+  });
+});
+
 router.get('/negation', (request, response) => {
   response.render('components/het-props/negation', {
     title: 'Negation',

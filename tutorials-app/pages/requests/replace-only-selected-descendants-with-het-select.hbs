@@ -1,0 +1,64 @@
+<div class="row g-4 tutorial-step">
+  <section class="col-12 col-lg-6 h-100">
+    <div class="bg-white border rounded p-4 tutorial-pane">
+      <div class="mb-3">
+        <a href="/requests" class="small">&larr; Requests Tutorial</a>
+      </div>
+      <nav class="d-flex justify-content-between gap-2 mb-3" aria-label="Tutorial section navigation">
+          <a class="btn btn-outline-primary" href="/requests/push-history-with-het-nav">Previous</a>
+          <a class="btn btn-outline-primary" href="/requests/replace-related-content-outside-the-target-with-het-also">Next</a>
+      </nav>
+      <h1 class="h4 mb-3">5. Replace only selected descendants with <code>het-select</code></h1>
+      <div class="tutorial-content mb-4">
+        <p>By default, HET replaces the entire target pane. Use <code>het-select</code> when the response contains a full pane but only some descendants inside that pane should be replaced.</p>
+        <p>The response still needs to contain the matching target pane. HET then replaces only the listed ids inside that pane.</p>
+        <p>The value is a whitespace-separated id list. On submit buttons, <code>het-select=&quot;&quot;</code> explicitly clears a form-level <code>het-select</code>.</p>
+        <p>Relevant reference:</p>
+        <ul>
+          <li><a href="reference/requests#partial-updates-with-het-select">Partial updates with <code>het-select</code></a></li>
+          <li><a href="reference/errors#het-select"><code>het-select</code> errors</a></li>
+        </ul>
+      </div>
+
+      <form method="post" action="/preview" target="tutorial-preview" data-tutorial-form>
+        <input type="hidden" name="html" data-editor-output="html">
+        <input type="hidden" name="js" data-editor-output="js">
+        <input type="hidden" name="css" data-editor-output="css">
+
+        <div class="mb-3">
+          <label class="form-label fw-semibold" for="html-source">HTML</label>
+          <textarea id="html-source" class="d-none" data-editor="html">&lt;main het-pane="main">
+  &lt;p id="summary">Old summary&lt;/p>
+  &lt;p id="detail">Old detail&lt;/p>
+
+  &lt;a href="/reports/summary" het-target="main" het-select="summary">
+    Refresh summary
+  &lt;/a>
+&lt;/main></textarea>
+          <div class="editor-host" data-editor-host="html"></div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label fw-semibold" for="js-source">JavaScript</label>
+          <textarea id="js-source" class="d-none" data-editor="js">HET.init();</textarea>
+          <div class="editor-host" data-editor-host="js"></div>
+        </div>
+        <textarea class="d-none" data-editor="css"></textarea>
+
+        <button class="btn btn-primary" type="submit">Submit</button>
+      </form>
+
+      <nav class="d-flex justify-content-between gap-2 mt-4" aria-label="Tutorial section navigation">
+          <a class="btn btn-outline-primary" href="/requests/push-history-with-het-nav">Previous</a>
+          <a class="btn btn-outline-primary" href="/requests/replace-related-content-outside-the-target-with-het-also">Next</a>
+      </nav>
+    </div>
+  </section>
+
+  <section class="col-12 col-lg-6 h-100">
+    <div class="bg-white border rounded p-4 tutorial-pane">
+      <h2 class="h5 mb-3">Preview</h2>
+      <iframe class="preview-frame" name="tutorial-preview" title="5. Replace only selected descendants with `het-select` preview"></iframe>
+    </div>
+  </section>
+</div>

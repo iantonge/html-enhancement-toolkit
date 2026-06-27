@@ -1,0 +1,69 @@
+<div class="row g-4 tutorial-step">
+  <section class="col-12 col-lg-6 h-100">
+    <div class="bg-white border rounded p-4 tutorial-pane">
+      <div class="mb-3">
+        <a href="/components" class="small">&larr; Components Tutorial</a>
+      </div>
+      <nav class="d-flex justify-content-between gap-2 mb-3" aria-label="Tutorial section navigation">
+          <a class="btn btn-outline-primary" href="/components/create-signals-from-html-with-het-seed">Previous</a>
+          <a class="btn btn-outline-primary" href="/components/use-het-text-for-text-output">Next</a>
+      </nav>
+      <h1 class="h4 mb-3">10. Bind <code>textContent</code> with <code>het-props</code></h1>
+      <div class="tutorial-content mb-4">
+        <p>The last thing in the <code>setup()</code> function is the effect we are creating and the associated call to <code>onCleanup()</code>. We can remove those too by using the <code>het-props</code> attribute.</p>
+        <p><code>het-props</code> creates an effect that takes the result of an expression and writes it to the specified DOM property. When signals referenced in the expression are mutated, the expression runs again just like it does in the manual version. The dispose function is also automatically called when the component is unmounted, just like the manual version. The sample code here is functionally identical to the previous example, but now without any work required in the <code>setup()</code> function.</p>
+        <p>Since there is no work to do in the setup function now, we can omit it entirely.</p>
+        <p>Attributes and classes can also be bound using the same <code>target=expression</code> pattern:</p>
+        <ul>
+          <li><code>het-props</code> writes DOM properties such as <code>textContent</code>, <code>value</code>, and <code>checked</code></li>
+          <li><code>het-attrs</code> writes value-bearing attributes such as <code>aria-expanded</code></li>
+          <li><code>het-bool-attrs</code> toggles boolean attribute presence, such as <code>disabled</code></li>
+          <li><code>het-class</code> toggles classes based on expression truthiness</li>
+        </ul>
+        <p>Reference documentation:</p>
+        <ul>
+          <li><a href="reference/components#het-props"><code>het-props</code></a></li>
+          <li><a href="reference/components#output-bindings">Output bindings</a></li>
+        </ul>
+      </div>
+
+      <form method="post" action="/preview" target="tutorial-preview" data-tutorial-form>
+        <input type="hidden" name="html" data-editor-output="html">
+        <input type="hidden" name="js" data-editor-output="js">
+        <input type="hidden" name="css" data-editor-output="css">
+
+        <div class="mb-3">
+          <label class="form-label fw-semibold" for="html-source">HTML</label>
+          <textarea id="html-source" class="d-none" data-editor="html">&lt;section het-component="counter" het-seed="count=0">
+  &lt;button type="button" het-on="click->count=count + 1">+&lt;/button>
+  &lt;p het-props="textContent=count">&lt;/p>
+&lt;/section></textarea>
+          <div class="editor-host" data-editor-host="html"></div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label fw-semibold" for="js-source">JavaScript</label>
+          <textarea id="js-source" class="d-none" data-editor="js">HET.registerComponent('counter');
+
+HET.init();</textarea>
+          <div class="editor-host" data-editor-host="js"></div>
+        </div>
+        <textarea class="d-none" data-editor="css"></textarea>
+
+        <button class="btn btn-primary" type="submit">Submit</button>
+      </form>
+
+      <nav class="d-flex justify-content-between gap-2 mt-4" aria-label="Tutorial section navigation">
+          <a class="btn btn-outline-primary" href="/components/create-signals-from-html-with-het-seed">Previous</a>
+          <a class="btn btn-outline-primary" href="/components/use-het-text-for-text-output">Next</a>
+      </nav>
+    </div>
+  </section>
+
+  <section class="col-12 col-lg-6 h-100">
+    <div class="bg-white border rounded p-4 tutorial-pane">
+      <h2 class="h5 mb-3">Preview</h2>
+      <iframe class="preview-frame" name="tutorial-preview" title="10. Bind `textContent` with `het-props` preview"></iframe>
+    </div>
+  </section>
+</div>

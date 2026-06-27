@@ -1,7 +1,11 @@
 import { signal } from '@preact/signals-core';
-import { PREACT_SIGNAL_BRAND } from './constants.js';
-import { DIRECTIVES_SELECTOR, STRUCTURAL_TEMPLATES_SELECTOR } from './directives.js';
-import { scopedQuerySelectorAll, isComponentRoot, getNodeDepth } from './dom-scope.js';
+import { PREACT_SIGNAL_BRAND, STRUCTURAL_ATTRS } from './constants.js';
+import {
+  DIRECTIVE_ATTR_NAMES,
+  DIRECTIVES_SELECTOR,
+  STRUCTURAL_TEMPLATES_SELECTOR,
+} from './directives.js';
+import { scopedQuerySelectorAll, isComponentRoot } from './dom-scope.js';
 import { handleError } from './error-handler.js';
 import {
   getBindingInputValue,
@@ -16,150 +20,225 @@ import {
   initializeForwardedSignals,
   resolveImports,
 } from './imports.js';
-import { initializeBindings } from './runtime.js';
+import { measureMountBucket, recordMountCount } from './metrics.js';
+import {
+  afterInitialRuntimeWriteBatchFlush,
+  beginInitialRuntimeWriteBatch,
+  cancelInitialRuntimeWriteBatch,
+  flushInitialRuntimeWriteBatch,
+  initializeBindings,
+} from './runtime.js';
 import { initializeStructuralBindings } from './structural.js';
 
+const DIRECTIVE_ATTR_NAME_SET = new Set(DIRECTIVE_ATTR_NAMES);
+const STRUCTURAL_ATTR_SET = new Set(STRUCTURAL_ATTRS);
+
 function mountComponents(root) {
-  const componentsToMount = [];
+  const batchOwner = beginInitialRuntimeWriteBatch();
   const mountedComponents = [];
 
-  if (isComponentRoot(root)) componentsToMount.push(root);
-  if (typeof root.querySelectorAll === 'function') {
-    componentsToMount.push(...root.querySelectorAll('[het-component]'));
-  }
+  try {
+    const roots = measureMountBucket('discoverRoots', () => getComponentRoots(root));
 
-  componentsToMount.sort((a, b) => getNodeDepth(a) - getNodeDepth(b));
-
-  for (const el of componentsToMount) {
-    try {
-      const component = getMountableComponent(el);
-      if (!component) {
-        throw new Error(
-          'HET Error: Component is not registered',
-          { cause: getComponentCause(el) },
-        );
-      }
-
-      if (mountComponent(el, component.setup)) {
-        mountedComponents.push(el);
-      }
-    } catch (error) {
-      handleError(error);
+    for (const el of roots) {
+      mountComponentTree(el, mountedComponents);
     }
+
+    if (batchOwner === true) {
+      measureMountBucket('flushInitialRuntimeWrites', () => flushInitialRuntimeWriteBatch());
+      measureMountBucket('removeMountPending', () => removeMountPendingAttributes(mountedComponents));
+    } else if (batchOwner === false) {
+      afterInitialRuntimeWriteBatchFlush(() => {
+        measureMountBucket('removeMountPending', () => removeMountPendingAttributes(mountedComponents));
+      });
+      flushInitialRuntimeWriteBatch();
+    } else {
+      measureMountBucket('removeMountPending', () => removeMountPendingAttributes(mountedComponents));
+    }
+  } catch (error) {
+    if (batchOwner === true) cancelInitialRuntimeWriteBatch();
+    throw error;
+  }
+}
+
+function mountComponentTree(rootEl, mountedComponents) {
+  const scopedDom = measureMountBucket(
+    'collectScopedDom',
+    () => collectScopedComponentDom(rootEl),
+  );
+
+  try {
+    const component = measureMountBucket(
+      'componentLookup',
+      () => getMountableComponent(rootEl),
+    );
+    if (!component) {
+      throw new Error(
+        'HET Error: Component is not registered',
+        { cause: getComponentCause(rootEl) },
+      );
+    }
+
+    if (mountComponent(rootEl, component.setup, { scopedDom })) {
+      mountedComponents.push(rootEl);
+      recordMountCount('mountedComponents');
+    }
+  } catch (error) {
+    recordMountCount('failedComponents');
+    handleError(error);
   }
 
-  removeMountPendingAttributes(mountedComponents);
+  for (const childEl of scopedDom.childComponents) {
+    mountComponentTree(childEl, mountedComponents);
+  }
 }
 
 function mountComponent(rootEl, setup, options = {}) {
   if (rootEl.__het_instance) return false;
 
-  const rawSignals = {};
-  const signalMeta = Object.create(null);
-  const signalInitBindings = Object.create(null);
-  const componentLoggingContext = getComponentCause(rootEl);
-  const signals = createSignalsProxy(rawSignals, componentLoggingContext);
-  const importDeclarations = getImportDeclarations(rootEl, componentLoggingContext);
-  const rawRefs = Object.fromEntries(
-    scopedQuerySelectorAll(rootEl, '[het-ref]').map((refEl) => [
-      refEl.getAttribute('het-ref'),
-      refEl,
-    ]),
-  );
-  const refs = createRefsProxy(rawRefs, componentLoggingContext);
-  const cleanups = [];
-  const onCleanup = (fn) => {
-    if (typeof fn !== 'function') {
-      throw new Error(
-        'HET Error: Cleanup callback must be a function',
-        { cause: componentLoggingContext },
-      );
-    }
-    cleanups.push(fn);
-  };
-  const ctx = {
-    el: rootEl,
-    key: options.structuralContext?.key,
-    refs,
+  const scopedDom = options.scopedDom;
+  const {
+    rawSignals,
+    signalMeta,
+    signalInitBindings,
+    componentLoggingContext,
     signals,
-    onCleanup,
-    structuralContext: options.structuralContext,
-  };
-  const boundEls = scopedQuerySelectorAll(rootEl, DIRECTIVES_SELECTOR);
-  const structuralTemplateEls = scopedQuerySelectorAll(rootEl, STRUCTURAL_TEMPLATES_SELECTOR);
-  const bindings = getBindings(boundEls, componentLoggingContext);
-  const structuralBindings = getStructuralBindings(structuralTemplateEls, componentLoggingContext);
+    importDeclarations,
+    cleanups,
+    ctx,
+  } = measureMountBucket('refsAndContext', () => {
+    const rawSignals = {};
+    const signalMeta = Object.create(null);
+    const signalInitBindings = Object.create(null);
+    const componentLoggingContext = getComponentCause(rootEl);
+    const signals = createSignalsProxy(rawSignals, componentLoggingContext);
+    const importDeclarations = getImportDeclarations(rootEl, componentLoggingContext);
+    const rawRefs = Object.fromEntries(
+      (scopedDom?.refEls ?? scopedQuerySelectorAll(rootEl, '[het-ref]')).map((refEl) => [
+        refEl.getAttribute('het-ref'),
+        refEl,
+      ]),
+    );
+    const refs = createRefsProxy(rawRefs, componentLoggingContext);
+    const cleanups = [];
+    const onCleanup = (fn) => {
+      if (typeof fn !== 'function') {
+        throw new Error(
+          'HET Error: Cleanup callback must be a function',
+          { cause: componentLoggingContext },
+        );
+      }
+      cleanups.push(fn);
+    };
+    const ctx = {
+      el: rootEl,
+      key: options.structuralContext?.key,
+      refs,
+      signals,
+      onCleanup,
+      structuralContext: options.structuralContext,
+    };
+
+    return {
+      rawSignals,
+      signalMeta,
+      signalInitBindings,
+      componentLoggingContext,
+      signals,
+      importDeclarations,
+      cleanups,
+      ctx,
+    };
+  });
+  const boundEls = scopedDom?.boundEls ?? scopedQuerySelectorAll(rootEl, DIRECTIVES_SELECTOR);
+  const structuralTemplateEls = scopedDom?.structuralTemplateEls ??
+    scopedQuerySelectorAll(rootEl, STRUCTURAL_TEMPLATES_SELECTOR);
+  const { bindings, structuralBindings } = measureMountBucket('parseBindings', () => ({
+    bindings: getBindings(boundEls, componentLoggingContext),
+    structuralBindings: getStructuralBindings(structuralTemplateEls, componentLoggingContext),
+  }));
+  recordMountCount('bindingCount', bindings.length);
+  recordMountCount('structuralBindingCount', structuralBindings.length);
   const syncBindings = bindings.filter((binding) => binding.acquisitionStrategy === 'sync');
   const bindingsToInit = bindings.filter((binding) => binding.acquisitionStrategy);
 
-  initializeForwardedSignals(
-    options.importedSignals,
-    rawSignals,
-    signalMeta,
-    componentLoggingContext,
-  );
+  measureMountBucket('initializeSignals', () => {
+    initializeForwardedSignals(
+      options.importedSignals,
+      rawSignals,
+      signalMeta,
+      componentLoggingContext,
+    );
 
-  resolveImports(
-    rootEl,
-    importDeclarations,
-    rawSignals,
-    signalMeta,
-    componentLoggingContext,
-  );
+    resolveImports(
+      rootEl,
+      importDeclarations,
+      rawSignals,
+      signalMeta,
+      componentLoggingContext,
+    );
 
-  const initBindingGroups = getInitBindingGroups(bindingsToInit);
-  for (const [source, sourceBindings] of initBindingGroups) {
-    const binding = sourceBindings[0];
-    if (signalMeta[source] === 'imported' || signalMeta[source] === 'forwarded') {
-      throw new Error(
-        'HET Error: Imported signal conflicts with local initialization',
-        { cause: getBindingCause(binding, { signalName: source }) },
-      );
+    const initBindingGroups = getInitBindingGroups(bindingsToInit);
+    for (const [source, sourceBindings] of initBindingGroups) {
+      const binding = sourceBindings[0];
+      if (signalMeta[source] === 'imported' || signalMeta[source] === 'forwarded') {
+        throw new Error(
+          'HET Error: Imported signal conflicts with local initialization',
+          { cause: getBindingCause(binding, { signalName: source }) },
+        );
+      }
+      if (rawSignals[source]) {
+        const existingBinding = signalInitBindings[source];
+        throw new Error(
+          'HET Error: Duplicate signal initialization',
+          {
+            cause: getBindingCause(binding, {
+              signalName: source,
+              existingBindingAttribute: existingBinding.attrName ?? existingBinding.dirName,
+              existingBindingDeclaration: existingBinding.exp,
+              existingBindingElement: existingBinding.el,
+            }),
+          },
+        );
+      }
+      rawSignals[source] = signal(getSeedValue(rawSignals, sourceBindings));
+      signalMeta[source] = 'local';
+      signalInitBindings[source] = binding;
     }
-    if (rawSignals[source]) {
-      const existingBinding = signalInitBindings[source];
-      throw new Error(
-        'HET Error: Duplicate signal initialization',
-        {
-          cause: getBindingCause(binding, {
-            signalName: source,
-            existingBindingAttribute: existingBinding.attrName ?? existingBinding.dirName,
-            existingBindingDeclaration: existingBinding.exp,
-            existingBindingElement: existingBinding.el,
-          }),
-        },
-      );
-    }
-    rawSignals[source] = signal(getSeedValue(rawSignals, sourceBindings));
-    signalMeta[source] = 'local';
-    signalInitBindings[source] = binding;
-  }
-  const methods = (setup && setup(ctx)) || {};
+  });
+  const methods = measureMountBucket('setup', () => {
+    recordMountCount('setupCallCount');
+    return (setup && setup(ctx)) || {};
+  });
 
-  initializeBindings(ctx, bindings, methods);
+  measureMountBucket('initializeRuntimeBindings', () => initializeBindings(ctx, bindings, methods));
 
-  rootEl.__het_instance = {
-    rootEl,
-    methods,
-    signals,
-    rawSignals,
-    signalMeta,
-    importDeclarations,
-    bindings,
-    syncBindings,
-    structuralBindings,
-    structuralContext: options.structuralContext,
-    cleanup: () => {
-      cleanups.forEach((fn) => fn());
-    },
-  };
+  measureMountBucket('createInstance', () => {
+    rootEl.__het_instance = {
+      rootEl,
+      methods,
+      signals,
+      rawSignals,
+      signalMeta,
+      importDeclarations,
+      bindings,
+      syncBindings,
+      structuralBindings,
+      structuralContext: options.structuralContext,
+      cleanup: () => {
+        cleanups.forEach((fn) => fn());
+      },
+    };
+  });
 
-  initializeStructuralBindings(ctx, structuralBindings, {
-    destroyComponent,
-    getMountableComponent,
-    mountComponent,
-    mountComponents,
-    removeMountPendingAttributes,
+  measureMountBucket('initializeStructuralBindings', () => {
+    initializeStructuralBindings(ctx, structuralBindings, {
+      destroyComponent,
+      getMountableComponent,
+      mountComponent,
+      mountComponents,
+      removeMountPendingAttributes,
+    });
   });
 
   return true;
@@ -169,6 +248,66 @@ function removeMountPendingAttributes(components) {
   for (const el of components) {
     el.removeAttribute('het-mount-pending');
   }
+}
+
+function getComponentRoots(root) {
+  if (isComponentRoot(root)) return [root];
+
+  const roots = [];
+  walkElementChildren(root, (el) => {
+    if (!isComponentRoot(el)) return true;
+    roots.push(el);
+    return false;
+  });
+  return roots;
+}
+
+function collectScopedComponentDom(rootEl) {
+  const scopedDom = {
+    boundEls: [],
+    structuralTemplateEls: [],
+    refEls: [],
+    childComponents: [],
+  };
+
+  collectScopedElement(rootEl, scopedDom, true);
+  walkElementChildren(rootEl, (el) => collectScopedElement(el, scopedDom));
+  recordMountCount('scopedElementsVisited', scopedDom.elementsVisited);
+  recordMountCount('directiveElementCount', scopedDom.boundEls.length);
+  return scopedDom;
+}
+
+function collectScopedElement(el, scopedDom, isRoot = false) {
+  scopedDom.elementsVisited = (scopedDom.elementsVisited || 0) + 1;
+  if (!isRoot && isComponentRoot(el)) {
+    scopedDom.childComponents.push(el);
+    return false;
+  }
+
+  if (hasAnyAttribute(el, DIRECTIVE_ATTR_NAME_SET)) scopedDom.boundEls.push(el);
+  if (el.tagName === 'TEMPLATE' && hasAnyAttribute(el, STRUCTURAL_ATTR_SET)) {
+    scopedDom.structuralTemplateEls.push(el);
+  }
+  if (el.hasAttribute('het-ref')) scopedDom.refEls.push(el);
+
+  return true;
+}
+
+function walkElementChildren(root, visit) {
+  let child = root.firstElementChild;
+  while (child) {
+    const next = child.nextElementSibling;
+    const shouldDescend = visit(child);
+    if (shouldDescend) walkElementChildren(child, visit);
+    child = next;
+  }
+}
+
+function hasAnyAttribute(el, attrNames) {
+  for (const attrName of attrNames) {
+    if (el.hasAttribute(attrName)) return true;
+  }
+  return false;
 }
 
 function destroyComponent(el) {

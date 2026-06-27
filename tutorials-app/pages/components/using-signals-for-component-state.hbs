@@ -1,0 +1,81 @@
+<div class="row g-4 tutorial-step">
+  <section class="col-12 col-lg-6 h-100">
+    <div class="bg-white border rounded p-4 tutorial-pane">
+      <div class="mb-3">
+        <a href="/components" class="small">&larr; Components Tutorial</a>
+      </div>
+      <nav class="d-flex justify-content-between gap-2 mb-3" aria-label="Tutorial section navigation">
+          <a class="btn btn-outline-primary" href="/components/adding-local-state">Previous</a>
+          <a class="btn btn-outline-primary" href="/components/use-het-on-instead-of-addeventlistener">Next</a>
+      </nav>
+      <h1 class="h4 mb-3">6. Using signals for component state</h1>
+      <div class="tutorial-content mb-4">
+        <p>HET uses Preact Signals for storing mutable component state. Signals allow us to describe what should happen when state is mutated so we don't need to manage it manually ourselves. There is a link to the official Preact Signals documentation at the bottom of this section.</p>
+        <p>We create a new signal with <code>HET.signals.signal(0)</code>. The <code>0</code> is the initial value of the signal. In this case it's a number, but it could be any javascript value, such as a string or an object. Once the signal is created we write to it, and read from it, using <code>.value</code> instead of using <code>count</code> directly. This is why we can now say <code>const count = ...</code> rather than <code>let count = ...</code>.</p>
+        <p>We can also set up a callback that runs once immediately, then re-runs any time the value of <code>count</code> changes using <code>HET.signals.effect()</code>. In this case we're saying that any time the <code>count</code> signal changes, we want to write the new value of the signal into <code>refs.countText.textContent</code>. Note that we do not need to explicitly call this effect in the <code>handleClick</code> function, all we need to do is update the value of the signal, and the effect callback runs automatically. It's also important to note that <code>HET.signals.effect()</code> returns a dispose function which needs to be registered as part of the component cleanup with <code>onCleanup()</code>.</p>
+        <p>There's much more to signals than just <code>signal()</code> and <code>effect()</code>. The IIFE build exposes the signals API through <code>HET.signals</code> which includes: <code>signal</code>, <code>computed</code>, <code>effect</code>, <code>batch</code>, and <code>untracked</code>. See the <a href="https://github.com/preactjs/signals">official Preact Signals documentation</a> for more details.</p>
+        <p>Reference documentation:</p>
+        <ul>
+          <li><a href="reference/components#signals">Signals</a></li>
+          <li><a href="reference/api#signal-helpers">Signal helpers</a></li>
+        </ul>
+      </div>
+
+      <form method="post" action="/preview" target="tutorial-preview" data-tutorial-form>
+        <input type="hidden" name="html" data-editor-output="html">
+        <input type="hidden" name="js" data-editor-output="js">
+        <input type="hidden" name="css" data-editor-output="css">
+
+        <div class="mb-3">
+          <label class="form-label fw-semibold" for="html-source">HTML</label>
+          <textarea id="html-source" class="d-none" data-editor="html">&lt;section het-component="counter">
+  &lt;button type="button" het-ref="button">+&lt;/button>
+  &lt;p het-ref="countText">0&lt;/p>
+&lt;/section></textarea>
+          <div class="editor-host" data-editor-host="html"></div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label fw-semibold" for="js-source">JavaScript</label>
+          <textarea id="js-source" class="d-none" data-editor="js">HET.registerComponent('counter', ({ refs, onCleanup }) => {
+  const count = HET.signals.signal(0);
+
+  const dispose = HET.signals.effect(() => {
+    refs.countText.textContent = count.value;
+  });
+
+  function handleClick() {
+    count.value += 1;
+  }
+
+  refs.button.addEventListener('click', handleClick);
+
+  onCleanup(dispose);
+
+  onCleanup(() => {
+    refs.button.removeEventListener('click', handleClick);
+  });
+});
+
+HET.init();</textarea>
+          <div class="editor-host" data-editor-host="js"></div>
+        </div>
+        <textarea class="d-none" data-editor="css"></textarea>
+
+        <button class="btn btn-primary" type="submit">Submit</button>
+      </form>
+
+      <nav class="d-flex justify-content-between gap-2 mt-4" aria-label="Tutorial section navigation">
+          <a class="btn btn-outline-primary" href="/components/adding-local-state">Previous</a>
+          <a class="btn btn-outline-primary" href="/components/use-het-on-instead-of-addeventlistener">Next</a>
+      </nav>
+    </div>
+  </section>
+
+  <section class="col-12 col-lg-6 h-100">
+    <div class="bg-white border rounded p-4 tutorial-pane">
+      <h2 class="h5 mb-3">Preview</h2>
+      <iframe class="preview-frame" name="tutorial-preview" title="6. Using signals for component state preview"></iframe>
+    </div>
+  </section>
+</div>

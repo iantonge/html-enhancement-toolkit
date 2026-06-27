@@ -1,0 +1,65 @@
+<div class="row g-4 tutorial-step">
+  <section class="col-12 col-lg-6 h-100">
+    <div class="bg-white border rounded p-4 tutorial-pane">
+      <div class="mb-3">
+        <a href="/requests" class="small">&larr; Requests Tutorial</a>
+      </div>
+      <nav class="d-flex justify-content-between gap-2 mb-3" aria-label="Tutorial section navigation">
+          <a class="btn btn-outline-primary" href="/requests/initialize-het-on-a-normal-page">Previous</a>
+          <a class="btn btn-outline-primary" href="/requests/enhance-forms-with-the-same-target-model">Next</a>
+      </nav>
+      <h1 class="h4 mb-3">2. Replace a pane from an enhanced link</h1>
+      <div class="tutorial-content mb-4">
+        <p><code>het-pane</code> marks a replaceable region. <code>het-target</code> names the pane that a link should update.</p>
+        <p>When the link is clicked, HET fetches <code>/reports</code>, finds <code>het-pane=&quot;main&quot;</code> in the response, and replaces the current pane with the matching pane from that response.</p>
+        <p>Link enhancement is intentionally narrow:</p>
+        <ul>
+          <li>the link must be same-origin</li>
+          <li>the link must not use the native <code>target</code> attribute</li>
+          <li>modifier clicks still use normal browser navigation</li>
+        </ul>
+        <p>Relevant reference:</p>
+        <ul>
+          <li><a href="reference/requests#links">Links</a></li>
+          <li><a href="reference/errors#target-panes">Target pane errors</a></li>
+        </ul>
+      </div>
+
+      <form method="post" action="/preview" target="tutorial-preview" data-tutorial-form>
+        <input type="hidden" name="html" data-editor-output="html">
+        <input type="hidden" name="js" data-editor-output="js">
+        <input type="hidden" name="css" data-editor-output="css">
+
+        <div class="mb-3">
+          <label class="form-label fw-semibold" for="html-source">HTML</label>
+          <textarea id="html-source" class="d-none" data-editor="html">&lt;main het-pane="main">
+  &lt;h1>Dashboard&lt;/h1>
+  &lt;a href="/reports" het-target="main">Reports&lt;/a>
+&lt;/main></textarea>
+          <div class="editor-host" data-editor-host="html"></div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label fw-semibold" for="js-source">JavaScript</label>
+          <textarea id="js-source" class="d-none" data-editor="js">HET.init();</textarea>
+          <div class="editor-host" data-editor-host="js"></div>
+        </div>
+        <textarea class="d-none" data-editor="css"></textarea>
+
+        <button class="btn btn-primary" type="submit">Submit</button>
+      </form>
+
+      <nav class="d-flex justify-content-between gap-2 mt-4" aria-label="Tutorial section navigation">
+          <a class="btn btn-outline-primary" href="/requests/initialize-het-on-a-normal-page">Previous</a>
+          <a class="btn btn-outline-primary" href="/requests/enhance-forms-with-the-same-target-model">Next</a>
+      </nav>
+    </div>
+  </section>
+
+  <section class="col-12 col-lg-6 h-100">
+    <div class="bg-white border rounded p-4 tutorial-pane">
+      <h2 class="h5 mb-3">Preview</h2>
+      <iframe class="preview-frame" name="tutorial-preview" title="2. Replace a pane from an enhanced link preview"></iframe>
+    </div>
+  </section>
+</div>

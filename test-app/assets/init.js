@@ -52,4 +52,6 @@ window.hetInitConfig.onError = (err) => {
   window.hetErrors.push(err);
   console.error(err, err.cause);
 };
-window.HET.init(window.hetInitConfig);
+if (window.hetInitConfig.autoInit !== false) {
+  window.HET.init(window.hetInitConfig);
+}

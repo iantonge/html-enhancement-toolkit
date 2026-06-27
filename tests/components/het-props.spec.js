@@ -8,6 +8,34 @@ test.describe('components het-props', () => {
     await expect(page.locator('#count-value')).toHaveText('1');
   });
 
+  test('skips redundant initial property writes', async ({ page }) => {
+    await countTextContentWrites(page, 'label-value');
+
+    await page.goto('/components/het-props/string-match');
+    await expect(page.locator('#label-value')).toHaveText('Ready');
+    expect(await page.evaluate(() => window.__hetTextContentWrites)).toBe(0);
+
+    await page.click('#set-label');
+    await expect(page.locator('#label-value')).toHaveText('Done');
+    expect(await page.evaluate(() => window.__hetTextContentWrites)).toBe(1);
+  });
+
+  test('reports runtime DOM write attempts, skips, and writes when metrics are enabled', async ({ page }) => {
+    await page.addInitScript(() => {
+      window.hetInitConfig = {
+        ...window.hetInitConfig,
+        measureComponents: true,
+      };
+    });
+
+    await page.goto('/components/het-props/string-match');
+
+    const counters = await page.evaluate(() => window.__hetComponentMountMetrics.counters);
+    expect(counters.runtimeDomWriteAttempts).toBe(1);
+    expect(counters.runtimeDomWriteSkips).toBe(1);
+    expect(counters.runtimeDomWrites || 0).toBe(0);
+  });
+
   test('binds negated signal values to element properties', async ({ page }) => {
     await page.goto('/components/het-props/negation');
     await expect(page.locator('#prop-negation-target')).toBeVisible();
@@ -71,3 +99,22 @@ test.describe('components het-props', () => {
     });
   });
 });
+
+async function countTextContentWrites(page, targetId) {
+  await page.addInitScript((id) => {
+    window.__hetTextContentWrites = 0;
+    const descriptor = Object.getOwnPropertyDescriptor(Node.prototype, 'textContent');
+    Object.defineProperty(Node.prototype, 'textContent', {
+      configurable: true,
+      get() {
+        return descriptor.get.call(this);
+      },
+      set(value) {
+        if (this instanceof Element && this.id === id) {
+          window.__hetTextContentWrites += 1;
+        }
+        return descriptor.set.call(this, value);
+      },
+    });
+  }, targetId);
+}

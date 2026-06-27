@@ -10,6 +10,36 @@ test.describe('components het-bool-attrs directive', () => {
     await expect(page.locator('#bool-attr-target')).not.toBeDisabled();
   });
 
+  test('skips redundant initial boolean attribute removals', async ({ page }) => {
+    await countAttributeRemovals(page, 'bool-attr-target', 'disabled');
+
+    await page.goto('/components/het-bool-attrs');
+    await expect(page.locator('#bool-attr-target')).not.toBeDisabled();
+    expect(await page.evaluate(() => window.__hetAttributeRemovals)).toBe(0);
+
+    await page.click('#disable-target');
+    await expect(page.locator('#bool-attr-target')).toBeDisabled();
+    await page.click('#enable-target');
+    await expect(page.locator('#bool-attr-target')).not.toBeDisabled();
+    expect(await page.evaluate(() => window.__hetAttributeRemovals)).toBe(1);
+  });
+
+  test('skips redundant initial valued boolean attribute writes', async ({ page }) => {
+    await countAttributeWrites(page, 'initial-valued-bool-target', 'hidden');
+
+    await page.goto('/components/het-bool-attrs/initial-matching');
+    await expect(page.locator('#initial-valued-bool-target')).toHaveAttribute('hidden', 'until-found');
+    expect(await page.evaluate(() => window.__hetAttributeWrites)).toBe(0);
+  });
+
+  test('skips redundant initial coordinated attribute writes', async ({ page }) => {
+    await countAttributeWrites(page, 'initial-combined-target', 'hidden');
+
+    await page.goto('/components/het-bool-attrs/initial-matching');
+    await expect(page.locator('#initial-combined-target')).toHaveAttribute('hidden', 'until-found');
+    expect(await page.evaluate(() => window.__hetAttributeWrites)).toBe(0);
+  });
+
   test('restores prior values for bool-only attributes', async ({ page }) => {
     await page.goto('/components/het-bool-attrs/coordinated-attrs');
 
@@ -57,4 +87,30 @@ function expectNotToHaveAttribute(locator, name) {
   return expect.poll(() => locator.evaluate((el, attrName) => (
     el.hasAttribute(attrName)
   ), name)).toBe(false);
+}
+
+async function countAttributeWrites(page, targetId, attrName) {
+  await page.addInitScript(({ id, name }) => {
+    window.__hetAttributeWrites = 0;
+    const originalSetAttribute = Element.prototype.setAttribute;
+    Element.prototype.setAttribute = function setAttribute(nextName, value) {
+      if (this.id === id && nextName === name) {
+        window.__hetAttributeWrites += 1;
+      }
+      return originalSetAttribute.call(this, nextName, value);
+    };
+  }, { id: targetId, name: attrName });
+}
+
+async function countAttributeRemovals(page, targetId, attrName) {
+  await page.addInitScript(({ id, name }) => {
+    window.__hetAttributeRemovals = 0;
+    const originalRemoveAttribute = Element.prototype.removeAttribute;
+    Element.prototype.removeAttribute = function removeAttribute(nextName) {
+      if (this.id === id && nextName === name) {
+        window.__hetAttributeRemovals += 1;
+      }
+      return originalRemoveAttribute.call(this, nextName);
+    };
+  }, { id: targetId, name: attrName });
 }

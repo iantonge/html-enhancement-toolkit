@@ -1,0 +1,149 @@
+<div class="row g-4 tutorial-step">
+  <section class="col-12 col-lg-6 h-100">
+    <div class="bg-white border rounded p-4 tutorial-pane">
+      <div class="mb-3">
+        <a href="/components" class="small">&larr; Components Tutorial</a>
+      </div>
+      <nav class="d-flex justify-content-between gap-2 mb-3" aria-label="Tutorial section navigation">
+          <a class="btn btn-outline-primary" href="/components/render-repeated-component-instances-with-het-for">Previous</a>
+          <a class="btn btn-outline-primary" href="/components/avoid-initial-flicker-with-het-mount-pending">Next</a>
+      </nav>
+      <h1 class="h4 mb-3">21. Delay structural teardown</h1>
+      <div class="tutorial-content mb-4">
+        <p>Structural clones are normally destroyed as soon as <code>het-if</code> or <code>het-for</code> removes them. If you need time for a CSS exit animation, put <code>het-unmount-delay</code> on the root element inside the template.</p>
+        <p>When a delayed clone is due to be removed, HET adds a CSS class to the cloned root element for the duration of the delay. By default, that class is <code>het-unmounting</code>.</p>
+        <p>When a notification is dismissed from the Map, HET keeps the cloned <code>notificationCard</code> mounted for 300 milliseconds before destroying it. During that delay, the cloned <code>notificationCard</code> root has the configured <code>is-exiting</code> class.</p>
+        <p>The same behavior can be configured globally, including the class HET adds while removal is pending:</p>
+        <p><code>het-unmount-delay</code> only applies to structural clones created by <code>het-if</code> and <code>het-for</code>. It is exit-only: it does not add enter hooks or affect ordinary component teardown.</p>
+        <p>The delay can be overridden per clone with <code>het-unmount-delay</code>, however the unmount class is only configured globally with <code>structuralUnmountClass</code>.</p>
+        <p>Reference documentation:</p>
+        <ul>
+          <li><a href="reference/components#het-unmount-delay"><code>het-unmount-delay</code></a></li>
+          <li><a href="reference/api#structuralunmountdelay"><code>structuralUnmountDelay</code></a></li>
+          <li><a href="reference/api#structuralunmountclass"><code>structuralUnmountClass</code></a></li>
+        </ul>
+      </div>
+
+      <form method="post" action="/preview" target="tutorial-preview" data-tutorial-form>
+        <input type="hidden" name="html" data-editor-output="html">
+        <input type="hidden" name="js" data-editor-output="js">
+        <input type="hidden" name="css" data-editor-output="css">
+
+        <div class="mb-3">
+          <label class="form-label fw-semibold" for="html-source">HTML</label>
+          <textarea id="html-source" class="d-none" data-editor="html">&lt;section het-component="notificationCenter" het-exports="notifications"&gt;
+  &lt;label&gt;
+    New notification
+    &lt;input type="text" value="Deploy finished" het-model="newMessage"&gt;
+  &lt;/label&gt;
+  &lt;button type="button" het-on="click-&gt;addNotification"&gt;Add notification&lt;/button&gt;
+
+  &lt;div class="notifications"&gt;
+    &lt;template het-for="notifications"&gt;
+      &lt;article
+        het-component="notificationCard"
+        het-imports="notifications"
+        het-unmount-delay="300"
+        class="notification"&gt;
+        &lt;p het-text="message"&gt;&lt;/p&gt;
+        &lt;button type="button" het-on="click-&gt;dismiss"&gt;Dismiss&lt;/button&gt;
+      &lt;/article&gt;
+    &lt;/template&gt;
+  &lt;/div&gt;
+&lt;/section&gt;</textarea>
+          <div class="editor-host" data-editor-host="html"></div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label fw-semibold" for="js-source">JavaScript</label>
+          <textarea id="js-source" class="d-none" data-editor="js">let nextNotificationId = 1;
+
+function notification(message) {
+  return {
+    message: HET.signals.signal(message),
+  };
+}
+
+HET.registerComponent('notificationCenter', ({ signals }) => {
+  signals.notifications = HET.signals.signal(new Map([
+    [nextNotificationId++, notification('Profile saved')],
+    [nextNotificationId++, notification('Report exported')],
+  ]));
+
+  return {
+    addNotification() {
+      const message = signals.newMessage.value.trim();
+
+      if (!message) return;
+
+      signals.notifications.value = new Map([
+        ...signals.notifications.value,
+        [nextNotificationId++, notification(message)],
+      ]);
+      signals.newMessage.value = '';
+    },
+  };
+});
+
+HET.registerComponent('notificationCard', ({ key, signals }) => {
+  return {
+    dismiss() {
+      const nextNotifications = new Map(signals.notifications.value);
+      nextNotifications.delete(key);
+      signals.notifications.value = nextNotifications;
+    },
+  };
+});
+
+HET.init({
+  structuralUnmountDelay: 300,
+  structuralUnmountClass: 'is-exiting',
+});</textarea>
+          <div class="editor-host" data-editor-host="js"></div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label fw-semibold" for="css-source">CSS</label>
+          <textarea id="css-source" class="d-none" data-editor="css">body {
+  padding: 1rem;
+}
+
+.notifications {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.notification {
+  border: 1px solid #ced4da;
+  border-radius: 0.375rem;
+  padding: 0.75rem;
+  transition:
+    opacity 300ms ease,
+    transform 300ms ease;
+}
+
+.notification.is-exiting {
+  opacity: 0;
+  transform: translateY(-0.5rem);
+}</textarea>
+          <div class="editor-host" data-editor-host="css"></div>
+        </div>
+
+        <button class="btn btn-primary" type="submit">Submit</button>
+      </form>
+
+      <nav class="d-flex justify-content-between gap-2 mt-4" aria-label="Tutorial section navigation">
+          <a class="btn btn-outline-primary" href="/components/render-repeated-component-instances-with-het-for">Previous</a>
+          <a class="btn btn-outline-primary" href="/components/avoid-initial-flicker-with-het-mount-pending">Next</a>
+      </nav>
+    </div>
+  </section>
+
+  <section class="col-12 col-lg-6 h-100">
+    <div class="bg-white border rounded p-4 tutorial-pane">
+      <h2 class="h5 mb-3">Preview</h2>
+      <iframe class="preview-frame" name="tutorial-preview" title="21. Delay structural teardown preview"></iframe>
+    </div>
+  </section>
+</div>

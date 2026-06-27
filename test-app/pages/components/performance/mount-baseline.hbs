@@ -1,0 +1,153 @@
+<section
+  id="mount-baseline-root"
+  class="card shadow-sm border-0"
+  het-component="perf-page"
+  het-mount-pending>
+  <div class="card-body">
+    <h1 class="h4 mb-3" het-ref="heading" het-props="textContent=title">Pending</h1>
+    <p
+      id="mount-baseline-summary"
+      class="text-muted"
+      het-props="textContent=summary"
+      het-attrs="data-state=status"
+      het-class="is-ready=ready">
+      Pending
+    </p>
+    <button
+      id="mount-baseline-button"
+      type="button"
+      class="btn btn-sm btn-primary"
+      het-on="click->toggle"
+      het-bool-attrs="disabled=locked">
+      Toggle
+    </button>
+
+    <div id="mount-baseline-groups" class="row g-3 mt-1">
+      {{#each groups}}
+        <section
+          class="col-12 col-md-6 col-xl-3"
+          het-component="perf-group"
+          het-mount-pending
+          data-group-id="{{id}}">
+          <div class="border rounded p-3 bg-white">
+            <h2
+              class="h6"
+              het-ref="title"
+              het-props="textContent=label"
+              het-attrs="data-group-status=status">
+              Pending
+            </h2>
+            <input
+              class="form-control form-control-sm mb-2"
+              value="Group {{id}}"
+              het-model="label">
+            <div class="vstack gap-2">
+              {{#each items}}
+                <article
+                  class="border rounded p-2"
+                  het-component="perf-item"
+                  het-mount-pending
+                  {{#if ../../groupedBindings}}
+                  het-attrs="data-card-name=name; data-card-status=status"
+                  het-class="is-ready=ready"
+                  {{/if}}
+                  data-item-id="{{id}}">
+                  <div class="d-flex justify-content-between gap-2">
+                    <strong
+                      het-ref="label"
+                      het-props="textContent=name"
+                      het-attrs="data-item-state=status"
+                      het-class="text-success=ready">
+                      Pending
+                    </strong>
+                    <button
+                      type="button"
+                      class="btn btn-sm btn-outline-secondary"
+                      het-on="click->toggle"
+                      het-bool-attrs="disabled=locked">
+                      Toggle
+                    </button>
+                  </div>
+                  <p class="mb-0 small text-muted" het-props="textContent=description">Pending</p>
+                </article>
+              {{/each}}
+            </div>
+          </div>
+        </section>
+      {{/each}}
+    </div>
+  </div>
+</section>
+
+<script nonce="{{{cspNonce}}}">
+  (() => {
+    window.hetInitConfig = {
+      ...window.hetInitConfig,
+      autoInit: false,
+      groupSignalEffects: {{#if groupSignalEffects}}true{{else}}false{{/if}},
+      measureComponents: true,
+    };
+    window.hetMountBenchmark = {
+      expectedComponentCount: {{expectedComponentCount}},
+      scale: '{{scaleName}}',
+    };
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const start = performance.now();
+      window.HET.init(window.hetInitConfig);
+      const end = performance.now();
+      const mountedComponentCount = document.querySelectorAll('[het-component]').length;
+      const initializedComponentCount = Array
+        .from(document.querySelectorAll('[het-component]'))
+        .filter((el) => el.__het_instance).length;
+
+      window.hetMountBenchmark = {
+        ...window.hetMountBenchmark,
+        duration: end - start,
+        initializedComponentCount,
+        metrics: window.__hetComponentMountMetrics,
+        mountedComponentCount,
+        startedAt: start,
+        endedAt: end,
+      };
+    });
+
+    window.HET.registerComponent('perf-page', ({ el, signals }) => {
+      signals.title = window.HET.signals.signal('Component Mount Performance Baseline');
+      signals.ready = window.HET.signals.signal(true);
+      signals.locked = window.HET.signals.signal(false);
+      signals.status = window.HET.signals.signal('ready');
+      signals.summary = window.HET.signals.signal(
+        `Mounted ${el.querySelectorAll('[het-component]').length + 1} components`,
+      );
+
+      return {
+        toggle() {
+          signals.ready.value = !signals.ready.value;
+          signals.status.value = signals.ready.value ? 'ready' : 'idle';
+        },
+      };
+    });
+
+    window.HET.registerComponent('perf-group', ({ el, signals }) => {
+      el.dataset.mounted = 'true';
+      signals.status = window.HET.signals.signal('ready');
+    });
+
+    window.HET.registerComponent('perf-item', ({ el, signals }) => {
+      const id = el.dataset.itemId;
+      signals.name = window.HET.signals.signal(`Item ${id}`);
+      signals.description = window.HET.signals.signal(`Moderately complex nested item ${id}`);
+      signals.ready = window.HET.signals.signal(true);
+      signals.locked = window.HET.signals.signal(false);
+      signals.status = window.HET.signals.signal('ready');
+
+      return {
+        toggle() {
+          signals.ready.value = !signals.ready.value;
+          signals.status.value = signals.ready.value ? 'ready' : 'idle';
+        },
+      };
+    });
+  })();
+</script>

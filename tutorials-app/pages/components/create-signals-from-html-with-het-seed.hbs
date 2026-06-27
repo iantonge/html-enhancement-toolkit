@@ -1,0 +1,66 @@
+<div class="row g-4 tutorial-step">
+  <section class="col-12 col-lg-6 h-100">
+    <div class="bg-white border rounded p-4 tutorial-pane">
+      <div class="mb-3">
+        <a href="/components" class="small">&larr; Components Tutorial</a>
+      </div>
+      <nav class="d-flex justify-content-between gap-2 mb-3" aria-label="Tutorial section navigation">
+          <a class="btn btn-outline-primary" href="/components/assign-to-signals-directly-in-het-on">Previous</a>
+          <a class="btn btn-outline-primary" href="/components/bind-textcontent-with-het-props">Next</a>
+      </nav>
+      <h1 class="h4 mb-3">9. Create signals from HTML with <code>het-seed</code></h1>
+      <div class="tutorial-content mb-4">
+        <p>Instead of creating the <code>count</code> signal with an initial value using <code>signals.count = HET.signals.signal(0)</code>, we can declare the signal with an initial value using <code>het-seed</code>.</p>
+        <p><code>het-seed</code> initializes the signal and assigns it to the <code>signals</code> object before <code>setup()</code> is called. The initial value for the signal is the result of the expression on the RHS, in this case the literal number <code>0</code>. By the time <code>setup()</code> runs, <code>signals.count</code> already exists with its initial value of <code>0</code>, so we can reference it directly in the effect.</p>
+        <p>Reference documentation:</p>
+        <ul>
+          <li><a href="reference/components#het-seed"><code>het-seed</code></a></li>
+        </ul>
+      </div>
+
+      <form method="post" action="/preview" target="tutorial-preview" data-tutorial-form>
+        <input type="hidden" name="html" data-editor-output="html">
+        <input type="hidden" name="js" data-editor-output="js">
+        <input type="hidden" name="css" data-editor-output="css">
+
+        <div class="mb-3">
+          <label class="form-label fw-semibold" for="html-source">HTML</label>
+          <textarea id="html-source" class="d-none" data-editor="html">&lt;section het-component="counter" het-seed="count=0">
+  &lt;button type="button" het-on="click->count=count + 1">+&lt;/button>
+  &lt;p het-ref="countText">0&lt;/p>
+&lt;/section></textarea>
+          <div class="editor-host" data-editor-host="html"></div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label fw-semibold" for="js-source">JavaScript</label>
+          <textarea id="js-source" class="d-none" data-editor="js">HET.registerComponent('counter', ({ refs, signals, onCleanup }) => {
+  const dispose = HET.signals.effect(() => {
+    refs.countText.textContent = signals.count.value;
+  });
+
+  onCleanup(dispose);
+});
+
+HET.init();</textarea>
+          <div class="editor-host" data-editor-host="js"></div>
+        </div>
+        <textarea class="d-none" data-editor="css"></textarea>
+
+        <button class="btn btn-primary" type="submit">Submit</button>
+      </form>
+
+      <nav class="d-flex justify-content-between gap-2 mt-4" aria-label="Tutorial section navigation">
+          <a class="btn btn-outline-primary" href="/components/assign-to-signals-directly-in-het-on">Previous</a>
+          <a class="btn btn-outline-primary" href="/components/bind-textcontent-with-het-props">Next</a>
+      </nav>
+    </div>
+  </section>
+
+  <section class="col-12 col-lg-6 h-100">
+    <div class="bg-white border rounded p-4 tutorial-pane">
+      <h2 class="h5 mb-3">Preview</h2>
+      <iframe class="preview-frame" name="tutorial-preview" title="9. Create signals from HTML with `het-seed` preview"></iframe>
+    </div>
+  </section>
+</div>

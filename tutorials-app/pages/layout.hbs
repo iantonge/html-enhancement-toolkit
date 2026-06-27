@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>html enhancement toolkit - {{title}}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csp-nonce" content="{{{cspNonce}}}">
+    <link rel="stylesheet" href="/css/bootstrap.css">
+    <style nonce="{{{cspNonce}}}">
+      html,
+      body {
+        height: 100%;
+      }
+
+      body {
+        overflow: hidden;
+      }
+
+      .tutorial-shell {
+        height: calc(100vh - 56px);
+        overflow: hidden;
+      }
+
+      .tutorial-step {
+        height: 100%;
+      }
+
+      .tutorial-pane {
+        height: 100%;
+        max-height: 100%;
+        overflow: auto;
+      }
+
+      .editor-host {
+        min-height: 11rem;
+        border: var(--bs-border-width) solid var(--bs-border-color);
+        border-radius: var(--bs-border-radius);
+        overflow: hidden;
+      }
+
+      .editor-host .cm-editor {
+        min-height: 11rem;
+      }
+
+      .preview-frame {
+        width: 100%;
+        height: calc(100% - 3rem);
+        min-height: 20rem;
+        border: var(--bs-border-width) solid var(--bs-border-color);
+        border-radius: var(--bs-border-radius);
+        background: white;
+      }
+    </style>
+    <script nonce="{{{cspNonce}}}" type="importmap">
+      {
+        "imports": {
+          "codemirror": "/vendor/codemirror/dist/index.js",
+          "@codemirror/autocomplete": "/vendor/@codemirror/autocomplete/dist/index.js",
+          "@codemirror/commands": "/vendor/@codemirror/commands/dist/index.js",
+          "@codemirror/lang-css": "/vendor/@codemirror/lang-css/dist/index.js",
+          "@codemirror/lang-html": "/vendor/@codemirror/lang-html/dist/index.js",
+          "@codemirror/lang-javascript": "/vendor/@codemirror/lang-javascript/dist/index.js",
+          "@codemirror/language": "/vendor/@codemirror/language/dist/index.js",
+          "@codemirror/lint": "/vendor/@codemirror/lint/dist/index.js",
+          "@codemirror/search": "/vendor/@codemirror/search/dist/index.js",
+          "@codemirror/state": "/vendor/@codemirror/state/dist/index.js",
+          "@codemirror/view": "/vendor/@codemirror/view/dist/index.js",
+          "@lezer/common": "/vendor/@lezer/common/dist/index.js",
+          "@lezer/css": "/vendor/@lezer/css/dist/index.js",
+          "@lezer/highlight": "/vendor/@lezer/highlight/dist/index.js",
+          "@lezer/html": "/vendor/@lezer/html/dist/index.js",
+          "@lezer/javascript": "/vendor/@lezer/javascript/dist/index.js",
+          "@lezer/lr": "/vendor/@lezer/lr/dist/index.js",
+          "@marijn/find-cluster-break": "/vendor/@marijn/find-cluster-break/src/index.js",
+          "crelt": "/vendor/crelt/index.js",
+          "style-mod": "/vendor/style-mod/src/style-mod.js",
+          "w3c-keyname": "/vendor/w3c-keyname/index.js"
+        }
+      }
+    </script>
+    <script nonce="{{{cspNonce}}}" type="module" src="/assets/tutorials.js"></script>
+  </head>
+  <body class="bg-light">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+      <div class="container-fluid">
+        <a class="navbar-brand fw-semibold" href="/">HET Tutorials</a>
+        <div class="navbar-nav">
+          <a class="nav-link" href="/components">Components</a>
+          <a class="nav-link" href="/requests">Requests</a>
+        </div>
+      </div>
+    </nav>
+    <main class="container-fluid py-4 tutorial-shell">
+      {{{body}}}
+    </main>
+  </body>
+</html>

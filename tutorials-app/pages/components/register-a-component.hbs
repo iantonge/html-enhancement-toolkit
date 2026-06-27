@@ -1,0 +1,71 @@
+<div class="row g-4 tutorial-step">
+  <section class="col-12 col-lg-6 h-100">
+    <div class="bg-white border rounded p-4 tutorial-pane">
+      <div class="mb-3">
+        <a href="/components" class="small">&larr; Components Tutorial</a>
+      </div>
+      <nav class="d-flex justify-content-between gap-2 mb-3" aria-label="Tutorial section navigation">
+          <a class="btn btn-outline-primary" href="/components/load-het-on-the-page">Previous</a>
+          <a class="btn btn-outline-primary" href="/components/cleaning-up-resources">Next</a>
+      </nav>
+      <h1 class="h4 mb-3">2. Register a component</h1>
+      <div class="tutorial-content mb-4">
+        <p>We'll start with something simple. This component is just a button you can click to open an alert dialog.</p>
+        <p>The first thing to draw your attention to is <code>het-component=&quot;alerter&quot;</code> and <code>registerComponent('alerter', ...)</code>. When you add <code>het-component</code> to an element you are telling HET that element is the root of a component. In this example, we are also telling HET that the name of this component is &quot;alerter&quot;, so HET will look for a component that has been registered with that name. Components are registered with the <code>registerComponent</code> function. The first argument is the component name, which must match the name in the <code>het-component</code> attribute, and the second argument is the component's setup function which we'll look at shortly.</p>
+        <p>Try changing the names in <code>het-component</code> and <code>registerComponent</code> so that they do not match anymore and reload the page. Using your browser dev tools, check the javascript console and you should find the error message &quot;HET Error: Component is not registered&quot;. The default error handler also logs <code>error.cause</code>, a context object with a reference to the root component element and the unregistered component name. Almost all HET component errors include similar contextual data to help diagnose the root cause of the error. As you progress through the tutorial, try to break the samples in different ways to familiarize yourself with the kinds of errors you receive.</p>
+        <p>The setup function runs once when each component instance mounts. It is where you perform any setup logic that your component requires. The setup function is passed a context object as an argument which has various properties that can be useful when building a component, in this case we're using destructuring to pull out the <code>refs</code> property from the context object since that's the only property we need right now. We'll get into the details of the <code>refs</code> property next, while the other context properties will be covered later in the tutorial.</p>
+        <p>By adding <code>het-ref=&quot;alertButton&quot;</code> to the button element, we're telling HET that we want a reference to this element to be made available in our component setup function. As you may have guessed, this is provided on the <code>refs</code> property of the context object passed into the setup function. We can then use normal imperative javascript code to wire up an event listener with <code>refs.alertButton.addEventListener('click', handleClick);</code>. Refs are scoped only to their component, meaning a component cannot access refs belonging to any parent, child or sibling components.</p>
+        <p>Reference documentation:</p>
+        <ul>
+          <li><a href="reference/api#registercomponentname-setup"><code>registerComponent(name, setup)</code></a></li>
+          <li><a href="reference/components#component-roots-and-mounting">Component roots and mounting</a></li>
+          <li><a href="reference/components#het-ref"><code>het-ref</code></a></li>
+          <li><a href="reference/errors"><code>errors</code></a></li>
+        </ul>
+      </div>
+
+      <form method="post" action="/preview" target="tutorial-preview" data-tutorial-form>
+        <input type="hidden" name="html" data-editor-output="html">
+        <input type="hidden" name="js" data-editor-output="js">
+        <input type="hidden" name="css" data-editor-output="css">
+
+        <div class="mb-3">
+          <label class="form-label fw-semibold" for="html-source">HTML</label>
+          <textarea id="html-source" class="d-none" data-editor="html">&lt;section het-component="alerter"&gt;
+  &lt;button type="button" het-ref="alertButton"&gt;Alert&lt;/button&gt;
+&lt;/section&gt;</textarea>
+          <div class="editor-host" data-editor-host="html"></div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label fw-semibold" for="js-source">JavaScript</label>
+          <textarea id="js-source" class="d-none" data-editor="js">HET.registerComponent('alerter', ({ refs }) => {
+  function handleClick() {
+    alert('Clicked');
+  }
+
+  refs.alertButton.addEventListener('click', handleClick);
+});
+
+HET.init();</textarea>
+          <div class="editor-host" data-editor-host="js"></div>
+        </div>
+        <textarea class="d-none" data-editor="css"></textarea>
+
+        <button class="btn btn-primary" type="submit">Submit</button>
+      </form>
+
+      <nav class="d-flex justify-content-between gap-2 mt-4" aria-label="Tutorial section navigation">
+          <a class="btn btn-outline-primary" href="/components/load-het-on-the-page">Previous</a>
+          <a class="btn btn-outline-primary" href="/components/cleaning-up-resources">Next</a>
+      </nav>
+    </div>
+  </section>
+
+  <section class="col-12 col-lg-6 h-100">
+    <div class="bg-white border rounded p-4 tutorial-pane">
+      <h2 class="h5 mb-3">Preview</h2>
+      <iframe class="preview-frame" name="tutorial-preview" title="2. Register a component preview"></iframe>
+    </div>
+  </section>
+</div>

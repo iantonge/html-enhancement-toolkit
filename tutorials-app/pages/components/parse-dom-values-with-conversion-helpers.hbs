@@ -1,0 +1,74 @@
+<div class="row g-4 tutorial-step">
+  <section class="col-12 col-lg-6 h-100">
+    <div class="bg-white border rounded p-4 tutorial-pane">
+      <div class="mb-3">
+        <a href="/components" class="small">&larr; Components Tutorial</a>
+      </div>
+      <nav class="d-flex justify-content-between gap-2 mb-3" aria-label="Tutorial section navigation">
+          <a class="btn btn-outline-primary" href="/components/binding-form-controls">Previous</a>
+          <a class="btn btn-outline-primary" href="/components/use-het-model-for-standard-form-controls">Next</a>
+      </nav>
+      <h1 class="h4 mb-3">15. Parse DOM values with conversion helpers</h1>
+      <div class="tutorial-content mb-4">
+        <p>Seeding a signal value from <code>$props.value</code> is great if the signal value happens to be a string, but you might want to parse the value as another type. For values like that, conversion helpers exist and can be called like functions from any expression.</p>
+        <p>The conversion helpers are:</p>
+        <ul>
+          <li><code>$int(value)</code> parses an integer</li>
+          <li><code>$float(value)</code> parses a floating-point number</li>
+          <li><code>$bool(value)</code> treats only <code>true</code> and <code>&quot;true&quot;</code> as true</li>
+        </ul>
+        <p>These helpers work anywhere expressions are supported. They are especially useful in <code>het-seed</code>, <code>het-sync</code>, and assignment-style <code>het-on</code>, where contextual snapshots such as <code>$text</code>, <code>$props</code>, <code>$attrs</code>, and <code>$target.value</code> often start as strings.</p>
+        <p>Reference documentation:</p>
+        <ul>
+          <li><a href="reference/components#contextual-functions">Contextual functions</a></li>
+        </ul>
+      </div>
+
+      <form method="post" action="/preview" target="tutorial-preview" data-tutorial-form>
+        <input type="hidden" name="html" data-editor-output="html">
+        <input type="hidden" name="js" data-editor-output="js">
+        <input type="hidden" name="css" data-editor-output="css">
+
+        <div class="mb-3">
+          <label class="form-label fw-semibold" for="html-source">HTML</label>
+          <textarea id="html-source" class="d-none" data-editor="html">&lt;section het-component>
+  &lt;label>
+    Count
+    &lt;input
+      type="number"
+      value="12"
+      het-seed="count=$int($props.value)"
+      het-props="value=count"
+      het-on="input->count=$int($event.target.value)">
+  &lt;/label>
+
+  &lt;button type="button" het-on="click->count=count + 1">Increment&lt;/button>
+  &lt;p>Current count: &lt;span het-text="count">&lt;/span>&lt;/p>
+&lt;/section></textarea>
+          <div class="editor-host" data-editor-host="html"></div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label fw-semibold" for="js-source">JavaScript</label>
+          <textarea id="js-source" class="d-none" data-editor="js">HET.init();</textarea>
+          <div class="editor-host" data-editor-host="js"></div>
+        </div>
+        <textarea class="d-none" data-editor="css"></textarea>
+
+        <button class="btn btn-primary" type="submit">Submit</button>
+      </form>
+
+      <nav class="d-flex justify-content-between gap-2 mt-4" aria-label="Tutorial section navigation">
+          <a class="btn btn-outline-primary" href="/components/binding-form-controls">Previous</a>
+          <a class="btn btn-outline-primary" href="/components/use-het-model-for-standard-form-controls">Next</a>
+      </nav>
+    </div>
+  </section>
+
+  <section class="col-12 col-lg-6 h-100">
+    <div class="bg-white border rounded p-4 tutorial-pane">
+      <h2 class="h5 mb-3">Preview</h2>
+      <iframe class="preview-frame" name="tutorial-preview" title="15. Parse DOM values with conversion helpers preview"></iframe>
+    </div>
+  </section>
+</div>

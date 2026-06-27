@@ -1,0 +1,85 @@
+<div class="row g-4 tutorial-step">
+  <section class="col-12 col-lg-6 h-100">
+    <div class="bg-white border rounded p-4 tutorial-pane">
+      <div class="mb-3">
+        <a href="/components" class="small">&larr; Components Tutorial</a>
+      </div>
+      <nav class="d-flex justify-content-between gap-2 mb-3" aria-label="Tutorial section navigation">
+          <a class="btn btn-outline-primary" href="/components/format-output-with-expressions">Previous</a>
+          <a class="btn btn-outline-primary" href="/components/parse-dom-values-with-conversion-helpers">Next</a>
+      </nav>
+      <h1 class="h4 mb-3">14. Binding form controls</h1>
+      <div class="tutorial-content mb-4">
+        <p><code>het-seed</code>, <code>het-props</code> and <code>het-on</code> can be combined on an input element to achieve a two-way binding, that reads the initial value from the DOM, writes changes into the DOM on signal changes, and updates the signal value when the input value changes. This requires using contextual values, which allow expressions to access values from the current element or event.</p>
+        <p><code>het-seed=&quot;message=$props.value&quot;</code> handles the initial state by reading the input's current <code>value</code> property during mount and creating the <code>message</code> signal from it. <code>$props</code> provides access to a snapshot of all of the element's properties, and can be used in expressions belonging to <code>het-seed</code>, <code>het-sync</code> or assignment-style <code>het-on</code> attributes. In addition to <code>$props</code>, those expressions can also reference the following contextual snapshots:</p>
+        <ul>
+          <li><code>$attrs</code> provides access to attribute values. Kebab case attributes such as <code>aria-label</code> can be accessed by converting the attribute name to camel case, e.g. <code>$attrs.ariaLabel</code> or <code>$attrs[&quot;ariaLabel&quot;]</code>. Use string literal bracket access for attribute names that cannot be written with dot access, e.g. <code>$attrs[&quot;foo:bar&quot;]</code>.</li>
+          <li><code>$boolAttrs</code> provides true/false values reflecting on the presence/absence of an attribute. If the attribute exists on the element it returns <code>true</code>, if not it returns <code>false</code>. It uses the same attribute name mapping as <code>$attrs</code>.</li>
+          <li><code>$classes</code> provides true/false values reflecting on the presence/absence of a class. Use <code>$classes[&quot;some-class&quot;]</code> for class names that cannot be written with dot access.</li>
+          <li><code>$text</code> is sugar for <code>$props.textContent</code>.</li>
+        </ul>
+        <p>Output bindings such as <code>het-text</code>, <code>het-props</code>, <code>het-attrs</code>, <code>het-bool-attrs</code>, and <code>het-class</code> use signal expressions and cannot read contextual values directly.</p>
+        <p><code>$event</code> is another contextual value available in assignment-style <code>het-on</code> attribute expressions. Other event-based contextual values are:</p>
+        <ul>
+          <li><code>$target</code> is sugar for <code>$event.target</code>.</li>
+          <li><code>$currentTarget</code> is sugar for <code>$event.currentTarget</code>.</li>
+        </ul>
+        <p><code>het-sync</code> is the related feature to use when DOM snapshots can change after mount. <code>het-seed</code> reads once during mount; <code>het-sync</code> reads during mount and again whenever a <code>het:sync</code> event bubbles through the component subtree. This is useful whenever anything outside the component, such as the HET requests module, updates the DOM and those changes need to be reflected in component state.</p>
+        <p>Reference documentation:</p>
+        <ul>
+          <li><a href="reference/components#het-props"><code>het-props</code></a></li>
+          <li><a href="reference/components#het-on"><code>het-on</code></a></li>
+          <li><a href="reference/components#het-seed"><code>het-seed</code></a></li>
+          <li><a href="reference/components#het-sync"><code>het-sync</code></a></li>
+          <li><a href="reference/components#contextual-values">Contextual values</a></li>
+        </ul>
+      </div>
+
+      <form method="post" action="/preview" target="tutorial-preview" data-tutorial-form>
+        <input type="hidden" name="html" data-editor-output="html">
+        <input type="hidden" name="js" data-editor-output="js">
+        <input type="hidden" name="css" data-editor-output="css">
+
+        <div class="mb-3">
+          <label class="form-label fw-semibold" for="html-source">HTML</label>
+          <textarea id="html-source" class="d-none" data-editor="html">&lt;section het-component>
+  &lt;label>
+    Message
+    &lt;input
+      type="text"
+      value="Nothing yet"
+      het-seed="message=$props.value"
+      het-props="value=message"
+      het-on="input->message=$event.target.value">
+  &lt;/label>
+
+  &lt;button type="button" het-on="click->message=''">Reset&lt;/button>
+  &lt;p het-text="message">&lt;/p>
+&lt;/section></textarea>
+          <div class="editor-host" data-editor-host="html"></div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label fw-semibold" for="js-source">JavaScript</label>
+          <textarea id="js-source" class="d-none" data-editor="js">HET.init();</textarea>
+          <div class="editor-host" data-editor-host="js"></div>
+        </div>
+        <textarea class="d-none" data-editor="css"></textarea>
+
+        <button class="btn btn-primary" type="submit">Submit</button>
+      </form>
+
+      <nav class="d-flex justify-content-between gap-2 mt-4" aria-label="Tutorial section navigation">
+          <a class="btn btn-outline-primary" href="/components/format-output-with-expressions">Previous</a>
+          <a class="btn btn-outline-primary" href="/components/parse-dom-values-with-conversion-helpers">Next</a>
+      </nav>
+    </div>
+  </section>
+
+  <section class="col-12 col-lg-6 h-100">
+    <div class="bg-white border rounded p-4 tutorial-pane">
+      <h2 class="h5 mb-3">Preview</h2>
+      <iframe class="preview-frame" name="tutorial-preview" title="14. Binding form controls preview"></iframe>
+    </div>
+  </section>
+</div>

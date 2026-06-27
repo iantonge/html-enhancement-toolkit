@@ -9,4 +9,21 @@ test.describe('components het-class directive', () => {
     await page.click('#deactivate-target');
     await expect(page.locator('#class-target')).not.toHaveClass(/active/);
   });
+
+  test('keeps matching initial class state without a DOM write', async ({ page }) => {
+    await page.addInitScript(() => {
+      window.hetInitConfig = {
+        ...window.hetInitConfig,
+        measureComponents: true,
+      };
+    });
+
+    await page.goto('/components/het-class');
+    await expect(page.locator('#class-target')).not.toHaveClass(/active/);
+
+    const counters = await page.evaluate(() => window.__hetComponentMountMetrics.counters);
+    expect(counters.runtimeDomWriteAttempts).toBe(1);
+    expect(counters.runtimeDomWriteSkips).toBe(1);
+    expect(counters.runtimeDomWrites || 0).toBe(0);
+  });
 });

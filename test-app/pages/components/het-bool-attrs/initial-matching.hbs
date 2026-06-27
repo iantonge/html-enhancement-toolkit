@@ -1,0 +1,27 @@
+<section class="card shadow-sm border-0">
+  <div class="card-body">
+    <h1 class="h4 mb-3">{{title}}</h1>
+    <div het-component="het-bool-attrs-initial-matching">
+      <div
+        id="initial-valued-bool-target"
+        hidden="until-found"
+        het-bool-attrs="hidden=isValuedBoolHidden">
+        Initial valued bool target
+      </div>
+      <div
+        id="initial-combined-target"
+        hidden="until-found"
+        het-attrs="hidden=combinedHiddenValue"
+        het-bool-attrs="hidden=isCombinedHidden">
+        Initial combined target
+      </div>
+    </div>
+  </div>
+</section>
+<script nonce="{{{cspNonce}}}">
+  window.HET.registerComponent('het-bool-attrs-initial-matching', ({ signals }) => {
+    signals.isValuedBoolHidden = window.HET.signals.signal(true);
+    signals.isCombinedHidden = window.HET.signals.signal(true);
+    signals.combinedHiddenValue = window.HET.signals.signal('until-found');
+  });
+</script>
